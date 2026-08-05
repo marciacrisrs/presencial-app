@@ -32,6 +32,8 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 
 @Composable
 fun SettingsScreen(viewModel: SettingsViewModel = hiltViewModel()) {
@@ -87,9 +89,9 @@ fun SettingsScreen(viewModel: SettingsViewModel = hiltViewModel()) {
                     Text("Percentual obrigatório", style = MaterialTheme.typography.titleLarge)
                     Row(
                         modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                        horizontalArrangement = Arrangement.spacedBy(16.dp)
                     ) {
-                        listOf(20, 30, 40, 50, 60, 70, 80).forEach { pct ->
+                        listOf(20, 40, 60).forEach { pct ->
                             FilterChip(
                                 selected = settings.requiredPercentage == pct,
                                 onClick = { viewModel.updatePercentage(pct) },

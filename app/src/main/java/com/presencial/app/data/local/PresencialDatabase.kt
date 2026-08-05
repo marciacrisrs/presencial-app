@@ -2,6 +2,7 @@ package com.presencial.app.data.local
 
 import android.content.Context
 import androidx.room.Database
+import androidx.room.Room
 import androidx.room.RoomDatabase
 import com.presencial.app.data.local.dao.CheckInDao
 import com.presencial.app.data.local.dao.MonthlySummaryDao
@@ -21,13 +22,21 @@ abstract class PresencialDatabase : RoomDatabase() {
         @Volatile
         private var INSTANCE: PresencialDatabase? = null
 
-        fun getInstance(context: Context): PresencialDatabase =
-            INSTANCE ?: synchronized(this) {
-                INSTANCE ?: Room.databaseBuilder(
-                    context.applicationContext,
-                    PresencialDatabase::class.java,
-                    "presencial.db"
-                ).fallbackToDestructiveMigration().build().also { INSTANCE = it }
+        fun getInstance(context: Context): PresencialDatabase {
+            return INSTANCE ?: synchronized(this) {
+                val instance = INSTANCE
+                if (instance != null) {
+                    instance
+                } else {
+                    val newInstance = Room.databaseBuilder(
+                        context.applicationContext,
+                        PresencialDatabase::class.java,
+                        "presencial.db"
+                    ).fallbackToDestructiveMigration().build()
+                    INSTANCE = newInstance
+                    newInstance
+                }
             }
+        }
     }
 }

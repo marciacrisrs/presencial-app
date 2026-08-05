@@ -35,7 +35,8 @@ class SettingsDataStore @Inject constructor(
     }
 
     override suspend fun updateRequiredPercentage(percentage: Int) {
-        val value = percentage.coerceIn(1, 100)
+        val allowedValues = listOf(20, 40, 60)
+        val value = if (percentage in allowedValues) percentage else 40
         context.dataStore.edit { it[Keys.REQUIRED_PERCENTAGE] = value }
         syncToSharedPreferences(value, null)
     }
