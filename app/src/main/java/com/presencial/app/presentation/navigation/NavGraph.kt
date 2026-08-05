@@ -13,6 +13,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
+import com.presencial.app.presentation.about.AboutScreen
 import com.presencial.app.presentation.calendar.CalendarScreen
 import com.presencial.app.presentation.dashboard.DashboardScreen
 import com.presencial.app.presentation.history.HistoryScreen
@@ -69,7 +70,12 @@ fun PresencialNavHost(
             composable(Screen.Calendar.route) { CalendarScreen() }
             composable(Screen.History.route) { HistoryScreen() }
             composable(Screen.Statistics.route) { StatisticsScreen() }
-            composable(Screen.Settings.route) { SettingsScreen() }
+            composable(Screen.Settings.route) {
+                SettingsScreen(onNavigateToAbout = { navController.navigate(Screen.About.route) })
+            }
+            composable(Screen.About.route) {
+                AboutScreen(onBack = { navController.popBackStack() })
+            }
         }
     }
 }

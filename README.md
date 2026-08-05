@@ -10,7 +10,8 @@ Aplicativo Android para controle de comparecimento presencial no trabalho. Calcu
 - **Estatísticas** — gráficos de evolução, média anual, sequências e exportação PDF
 - **Configurações** — percentual de presença, sábados como dias úteis, backup/restauração JSON
 - **Notificações** — lembrete às 18h em dias úteis (se ainda não confirmou presença)
-- **Widget** — dias restantes na tela inicial
+- **Widget** — exibe "Faltam X dias presenciais" diretamente na tela inicial
+- **Sobre** — informações da versão, política de privacidade (dados locais) e link para o desenvolvedor
 - **Tema claro/escuro** — Material Design 3 com Material You
 
 ## Tecnologias
@@ -108,4 +109,8 @@ Testes unitários na camada de domínio:
 
 ## Licença
 
-Projeto de demonstração — uso livre.
+Projeto desenvolvido por Márcia Cristina.
+Uso livre para fins de estudo e demonstração.
+
+---
+GitHub: [https://github.com/marciacrisrs/presencial-app](https://github.com/marciacrisrs/presencial-app)
