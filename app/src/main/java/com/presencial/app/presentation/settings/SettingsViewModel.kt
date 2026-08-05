@@ -1,8 +1,5 @@
 package com.presencial.app.presentation.settings
 
-import android.net.Uri
-import androidx.activity.compose.rememberLauncherForActivityResult
-import androidx.activity.result.contract.ActivityResultContracts
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.presencial.app.data.backup.BackupManager
@@ -14,6 +11,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import java.io.File
+import java.io.OutputStream
 import javax.inject.Inject
 
 @HiltViewModel
@@ -40,16 +38,12 @@ class SettingsViewModel @Inject constructor(
         }
     }
 
-    fun exportBackup(outputStream: java.io.OutputStream) {
+    fun exportBackup(outputStream: OutputStream?) {
+        if (outputStream == null) return
         viewModelScope.launch {
-            val temp = java.io.File.createTempFile("presencial_backup", ".json")
-            backupManager.exportToFile(temp)
-                .onSuccess {
-                    temp.inputStream().use { input -> input.copyTo(outputStream) }
-                    _message.value = "Backup exportado com sucesso!"
-                }
+            backupManager.exportToStream(outputStream)
+                .onSuccess { _message.value = "Backup exportado com sucesso!" }
                 .onFailure { _message.value = "Erro ao exportar: ${it.message}" }
-            temp.delete()
         }
     }
 

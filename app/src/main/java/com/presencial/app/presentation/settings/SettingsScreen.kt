@@ -46,9 +46,8 @@ fun SettingsScreen(viewModel: SettingsViewModel = hiltViewModel()) {
         ActivityResultContracts.CreateDocument("application/json")
     ) { uri ->
         uri?.let {
-            context.contentResolver.openOutputStream(it)?.use { stream ->
-                viewModel.exportBackup(stream)
-            }
+            val stream = context.contentResolver.openOutputStream(it)
+            viewModel.exportBackup(stream)
         }
     }
 
