@@ -10,6 +10,7 @@ import androidx.glance.GlanceModifier
 import androidx.glance.GlanceTheme
 import androidx.glance.appwidget.GlanceAppWidget
 import androidx.glance.appwidget.GlanceAppWidgetReceiver
+import androidx.glance.appwidget.cornerRadius
 import androidx.glance.appwidget.provideContent
 import androidx.glance.background
 import androidx.glance.layout.Alignment
@@ -18,6 +19,7 @@ import androidx.glance.layout.fillMaxSize
 import androidx.glance.layout.padding
 import androidx.glance.text.FontWeight
 import androidx.glance.text.Text
+import androidx.glance.text.TextAlign
 import androidx.glance.text.TextStyle
 import androidx.glance.unit.ColorProvider
 import com.presencial.app.data.local.PresencialDatabase
@@ -61,26 +63,36 @@ private fun WidgetContent(context: Context) {
     Column(
         modifier = GlanceModifier
             .fillMaxSize()
-            .background(ColorProvider(Color(0xFF1B873B)))
+            .background(ColorProvider(Color(0xFF1E1E1E)))
+            .cornerRadius(24.dp)
             .padding(16.dp),
         verticalAlignment = Alignment.Vertical.CenterVertically,
         horizontalAlignment = Alignment.Horizontal.CenterHorizontally
     ) {
         Text(
-            text = "Presencial",
-            style = TextStyle(color = ColorProvider(Color.White), fontSize = 14.sp)
+            text = "Faltam",
+            style = TextStyle(
+                color = ColorProvider(Color.White.copy(alpha = 0.7f)),
+                fontSize = 14.sp,
+                textAlign = TextAlign.Center
+            )
         )
         Text(
             text = "$remaining",
             style = TextStyle(
-                color = ColorProvider(Color.White),
-                fontSize = 36.sp,
-                fontWeight = FontWeight.Bold
+                color = ColorProvider(Color(0xFF81C995)),
+                fontSize = 42.sp,
+                fontWeight = FontWeight.Bold,
+                textAlign = TextAlign.Center
             )
         )
         Text(
-            text = if (remaining == 1) "dia restante" else "dias restantes",
-            style = TextStyle(color = ColorProvider(Color.White.copy(alpha = 0.9f)), fontSize = 12.sp)
+            text = if (remaining == 1) "dia presencial" else "dias presenciais",
+            style = TextStyle(
+                color = ColorProvider(Color.White.copy(alpha = 0.7f)),
+                fontSize = 14.sp,
+                textAlign = TextAlign.Center
+            )
         )
     }
 }
