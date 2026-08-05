@@ -9,9 +9,6 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.lazy.grid.GridCells
-import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
-import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
@@ -39,30 +36,53 @@ fun MonthCalendarGrid(
     val today = LocalDate.now()
     Column(modifier = modifier) {
         val weekDays = listOf("Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb")
-        LazyVerticalGrid(
-            columns = GridCells.Fixed(7),
+        
+        // Header com dias da semana
+        androidx.compose.foundation.layout.Row(
             modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(4.dp),
-            verticalArrangement = Arrangement.spacedBy(4.dp),
-            userScrollEnabled = false
+            horizontalArrangement = Arrangement.spacedBy(4.dp)
         ) {
-            items(weekDays) { day ->
+            weekDays.forEach { day ->
                 Text(
                     text = day,
                     style = MaterialTheme.typography.labelSmall,
                     textAlign = TextAlign.Center,
-                    modifier = Modifier.padding(4.dp),
+                    modifier = Modifier.weight(1f).padding(4.dp),
                     color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
                 )
             }
-            val firstDayOfWeek = days.firstOrNull()?.date?.dayOfWeek?.value?.rem(7) ?: 0
-            items(firstDayOfWeek) {
-                Box(modifier = Modifier.aspectRatio(1f))
-            }
-            items(days, key = { it.date.toEpochDay() }) { dayInfo ->
-                CalendarDayCell(dayInfo, dayInfo.date == today, onDayClick)
+        }
+
+        val firstDayOfWeek = days.firstOrNull()?.date?.dayOfWeek?.value?.rem(7) ?: 0
+        val gridItems = List(firstDayOfWeek) { null } + days
+        val rows = gridItems.chunked(7)
+
+        Column(
+            modifier = Modifier.fillMaxWidth(),
+            verticalArrangement = Arrangement.spacedBy(4.dp)
+        ) {
+            rows.forEach { rowItems ->
+                androidx.compose.foundation.layout.Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(4.dp)
+                ) {
+                    rowItems.forEach { dayInfo ->
+                        Box(modifier = Modifier.weight(1f).aspectRatio(1f)) {
+                            if (dayInfo != null) {
+                                CalendarDayCell(dayInfo, dayInfo.date == today, onDayClick)
+                            }
+                        }
+                    }
+                    // Preencher o final da última linha se necessário
+                    if (rowItems.size < 7) {
+                        repeat(7 - rowItems.size) {
+                            Box(modifier = Modifier.weight(1f).aspectRatio(1f))
+                        }
+                    }
+                }
             }
         }
+        
         CalendarLegend(modifier = Modifier.padding(top = 16.dp))
     }
 }
@@ -118,26 +138,38 @@ fun CalendarLegend(modifier: Modifier = Modifier) {
         "Feriado" to Color(0xFFF9AB00),
         "Futuro" to Color.White
     )
-    LazyVerticalGrid(
-        columns = GridCells.Fixed(3),
+    
+    Column(
         modifier = modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.spacedBy(8.dp),
-        verticalArrangement = Arrangement.spacedBy(8.dp),
-        userScrollEnabled = false
+        verticalArrangement = Arrangement.spacedBy(8.dp)
     ) {
-        items(items.size) { index ->
-            val (label, color) = items[index]
-            Box(
-                modifier = Modifier
-                    .clip(RoundedCornerShape(8.dp))
-                    .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f))
-                    .padding(horizontal = 8.dp, vertical = 4.dp)
+        items.chunked(3).forEach { rowItems ->
+            androidx.compose.foundation.layout.Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
-                Text(
-                    text = "● $label",
-                    style = MaterialTheme.typography.labelSmall,
-                    color = color
-                )
+                rowItems.forEach { (label, color) ->
+                    Box(
+                        modifier = Modifier
+                            .weight(1f)
+                            .clip(RoundedCornerShape(8.dp))
+                            .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f))
+                            .padding(horizontal = 8.dp, vertical = 4.dp)
+                    ) {
+                        Text(
+                            text = "● $label",
+                            style = MaterialTheme.typography.labelSmall,
+                            color = color,
+                            maxLines = 1
+                        )
+                    }
+                }
+                // Preencher o final da linha se necessário
+                if (rowItems.size < 3) {
+                    repeat(3 - rowItems.size) {
+                        Box(modifier = Modifier.weight(1f))
+                    }
+                }
             }
         }
     }
