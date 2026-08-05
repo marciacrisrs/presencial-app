@@ -3,11 +3,14 @@ package com.presencial.app.di
 import android.content.Context
 import androidx.room.Room
 import com.presencial.app.data.local.PresencialDatabase
+import com.presencial.app.data.local.dao.AbsenceDao
 import com.presencial.app.data.local.dao.CheckInDao
 import com.presencial.app.data.local.dao.MonthlySummaryDao
 import com.presencial.app.data.preferences.SettingsDataStore
+import com.presencial.app.data.repository.AbsenceRepositoryImpl
 import com.presencial.app.data.repository.CheckInRepositoryImpl
 import com.presencial.app.data.repository.MonthlySummaryRepositoryImpl
+import com.presencial.app.domain.repository.AbsenceRepository
 import com.presencial.app.domain.repository.CheckInRepository
 import com.presencial.app.domain.repository.MonthlySummaryRepository
 import com.presencial.app.domain.repository.SettingsRepository
@@ -35,6 +38,9 @@ object DatabaseModule {
 
     @Provides
     fun provideMonthlySummaryDao(db: PresencialDatabase): MonthlySummaryDao = db.monthlySummaryDao()
+
+    @Provides
+    fun provideAbsenceDao(db: PresencialDatabase): AbsenceDao = db.absenceDao()
 }
 
 @Module
@@ -52,4 +58,8 @@ abstract class RepositoryModule {
     @Binds
     @Singleton
     abstract fun bindMonthlySummaryRepository(impl: MonthlySummaryRepositoryImpl): MonthlySummaryRepository
+
+    @Binds
+    @Singleton
+    abstract fun bindAbsenceRepository(impl: AbsenceRepositoryImpl): AbsenceRepository
 }

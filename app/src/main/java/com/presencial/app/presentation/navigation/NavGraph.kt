@@ -14,6 +14,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.presencial.app.presentation.about.AboutScreen
+import com.presencial.app.presentation.absence.AbsenceScreen
 import com.presencial.app.presentation.calendar.CalendarScreen
 import com.presencial.app.presentation.dashboard.DashboardScreen
 import com.presencial.app.presentation.history.HistoryScreen
@@ -67,14 +68,22 @@ fun PresencialNavHost(
             composable(Screen.Dashboard.route) {
                 DashboardScreen(openCheckIn = openCheckIn, onCheckInHandled = onCheckInHandled)
             }
-            composable(Screen.Calendar.route) { CalendarScreen() }
+            composable(Screen.Calendar.route) {
+                CalendarScreen(onNavigateToAbsences = { navController.navigate(Screen.Absences.route) })
+            }
             composable(Screen.History.route) { HistoryScreen() }
             composable(Screen.Statistics.route) { StatisticsScreen() }
             composable(Screen.Settings.route) {
-                SettingsScreen(onNavigateToAbout = { navController.navigate(Screen.About.route) })
+                SettingsScreen(
+                    onNavigateToAbout = { navController.navigate(Screen.About.route) },
+                    onNavigateToAbsences = { navController.navigate(Screen.Absences.route) }
+                )
             }
             composable(Screen.About.route) {
                 AboutScreen(onBack = { navController.popBackStack() })
+            }
+            composable(Screen.Absences.route) {
+                AbsenceScreen(onBack = { navController.popBackStack() })
             }
         }
     }

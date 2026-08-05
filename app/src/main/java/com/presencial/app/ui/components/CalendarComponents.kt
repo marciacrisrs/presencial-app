@@ -131,12 +131,12 @@ private fun CalendarDayCell(
 @Composable
 fun CalendarLegend(modifier: Modifier = Modifier) {
     val items = listOf(
-        "Presencial" to Color(0xFF1B873B),
-        "Home Office" to Color(0xFF9AA0A6),
-        "Faltou" to Color(0xFFD93025),
-        "Hoje" to MaterialTheme.colorScheme.secondary,
-        "Feriado" to Color(0xFFF9AB00),
-        "Futuro" to Color.White
+        "🏢 Presencial" to Color(0xFF1B873B),
+        "🏠 Home Office" to Color(0xFF9AA0A6),
+        "❌ Faltou" to Color(0xFFD93025),
+        "🧡 Ausência" to Color(0xFFFF8C00),
+        "🔵 Hoje" to MaterialTheme.colorScheme.secondary,
+        "🎉 Feriado" to Color(0xFFF9AB00)
     )
     
     Column(
@@ -176,7 +176,7 @@ fun CalendarLegend(modifier: Modifier = Modifier) {
 }
 
 fun dayColor(status: DayStatus, isToday: Boolean): Color {
-    if (isToday && status != DayStatus.PRESENCIAL) return Color(0xFF1A73E8).copy(alpha = 0.3f)
+    if (isToday && status != DayStatus.PRESENCIAL && status != DayStatus.ABSENCE) return Color(0xFF1A73E8).copy(alpha = 0.3f)
     return when (status) {
         DayStatus.PRESENCIAL -> Color(0xFF1B873B)
         DayStatus.HOME_OFFICE -> Color(0xFF9AA0A6)
@@ -184,6 +184,7 @@ fun dayColor(status: DayStatus, isToday: Boolean): Color {
         DayStatus.FIM_DE_SEMANA -> Color.Transparent
         DayStatus.FUTURO -> Color.Transparent
         DayStatus.FALTOU -> Color(0xFFD93025).copy(alpha = 0.7f)
+        DayStatus.ABSENCE -> Color(0xFFFF8C00)
     }
 }
 

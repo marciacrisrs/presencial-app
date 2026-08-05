@@ -1,5 +1,6 @@
 package com.presencial.app.domain.util
 
+import com.presencial.app.domain.model.Absence
 import java.time.DayOfWeek
 import java.time.LocalDate
 import java.time.YearMonth
@@ -35,6 +36,29 @@ object WorkdayCalculator {
             current = current.plusDays(1)
         }
         return count
+    }
+
+    fun countLiquidWorkdaysInMonth(
+        yearMonth: YearMonth,
+        countSaturdaysAsWorkdays: Boolean,
+        absences: List<Absence>
+    ): Int {
+        val start = yearMonth.atDay(1)
+        val end = yearMonth.atEndOfMonth()
+        val liquidWorkdays = mutableListOf<LocalDate>()
+        var current = start
+        while (!current.isAfter(end)) {
+            if (isWorkday(current, countSaturdaysAsWorkdays)) {
+                val isAbsent = absences.any { absence ->
+                    !absence.isCounted && !current.isBefore(absence.startDate) && !current.isAfter(absence.endDate) && absence.isFullDay
+                }
+                if (!isAbsent) {
+                    liquidWorkdays.add(current)
+                }
+            }
+            current = current.plusDays(1)
+        }
+        return liquidWorkdays.size
     }
 
     fun getWorkdaysInMonth(

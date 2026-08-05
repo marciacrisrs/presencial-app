@@ -1,8 +1,10 @@
 package com.presencial.app.domain.usecase
 
+import com.presencial.app.domain.model.Absence
 import com.presencial.app.domain.model.CheckIn
 import com.presencial.app.domain.model.DayStatus
 import com.presencial.app.domain.model.MonthlySummary
+import com.presencial.app.domain.repository.AbsenceRepository
 import com.presencial.app.domain.repository.CheckInRepository
 import com.presencial.app.domain.repository.SettingsRepository
 import com.presencial.app.domain.util.GoalCalculator
@@ -23,25 +25,28 @@ data class StatisticsData(
 
 class GetStatisticsUseCase @Inject constructor(
     private val checkInRepository: CheckInRepository,
+    private val absenceRepository: AbsenceRepository,
     private val settingsRepository: SettingsRepository
 ) {
     operator fun invoke(): Flow<StatisticsData> {
         return combine(
             checkInRepository.observeAllCheckIns(),
+            absenceRepository.getAllAbsences(),
             settingsRepository.settings
-        ) { checkIns, settings ->
-            buildStatistics(checkIns, settings.requiredPercentage, settings.countSaturdaysAsWorkdays)
+        ) { checkIns, absences, settings ->
+            buildStatistics(checkIns, absences, settings.requiredPercentage, settings.countSaturdaysAsWorkdays)
         }
     }
 
     private fun buildStatistics(
         checkIns: List<CheckIn>,
+        absences: List<Absence>,
         requiredPercentage: Int,
         countSaturdays: Boolean
     ): StatisticsData {
         val grouped = checkIns.groupBy { YearMonth.from(it.date) }
         val summaries = grouped.map { (yearMonth, monthCheckIns) ->
-            val workdays = WorkdayCalculator.countWorkdaysInMonth(yearMonth, countSaturdays)
+            val workdays = WorkdayCalculator.countLiquidWorkdaysInMonth(yearMonth, countSaturdays, absences)
             val required = GoalCalculator.calculateRequiredDays(workdays, requiredPercentage)
             val completed = monthCheckIns.count { it.status == DayStatus.PRESENCIAL }
             val homeOffice = monthCheckIns.count { it.status == DayStatus.HOME_OFFICE }

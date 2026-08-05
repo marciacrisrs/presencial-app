@@ -9,5 +9,6 @@ enum class DayStatus {
     FERIADO,
     FIM_DE_SEMANA,
     FUTURO,
-    FALTOU
+    FALTOU,
+    ABSENCE
 }

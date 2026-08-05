@@ -31,7 +31,10 @@ import java.time.format.TextStyle
 import java.util.Locale
 
 @Composable
-fun CalendarScreen(viewModel: CalendarViewModel = hiltViewModel()) {
+fun CalendarScreen(
+    viewModel: CalendarViewModel = hiltViewModel(),
+    onNavigateToAbsences: () -> Unit = {}
+) {
     val selectedMonth by viewModel.selectedMonth.collectAsStateWithLifecycle()
     val days by viewModel.calendarDays.collectAsStateWithLifecycle()
     val selectedDay by viewModel.selectedDay.collectAsStateWithLifecycle()
@@ -43,7 +46,16 @@ fun CalendarScreen(viewModel: CalendarViewModel = hiltViewModel()) {
             .padding(20.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
-        Text("Calendário", style = MaterialTheme.typography.headlineLarge)
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text("Calendário", style = MaterialTheme.typography.headlineLarge)
+            TextButton(onClick = onNavigateToAbsences) {
+                Text("Ausências")
+            }
+        }
 
         Row(
             modifier = Modifier.fillMaxWidth(),
@@ -76,22 +88,25 @@ fun CalendarScreen(viewModel: CalendarViewModel = hiltViewModel()) {
             title = { Text("Editar — $dateLabel") },
             text = {
                 Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                    day.holidayName?.let { Text("Feriado: $it", style = MaterialTheme.typography.bodyMedium) }
+                    day.holidayName?.let { Text("🎉 Feriado: $it", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.primary) }
                     Text("Selecione o status do dia:")
                 }
             },
             confirmButton = {
                 TextButton(onClick = { viewModel.updateDayStatus(DayStatus.PRESENCIAL) }) {
-                    Text("Presencial")
+                    Text("🏢 Presencial")
                 }
             },
             dismissButton = {
                 Row {
                     TextButton(onClick = { viewModel.updateDayStatus(DayStatus.HOME_OFFICE) }) {
-                        Text("Home Office")
+                        Text("🏠 Home Office")
                     }
-                    TextButton(onClick = { viewModel.updateDayStatus(DayStatus.FUTURO) }) { // Using FUTURO as a dummy for 'clear'
-                        Text("Limpar")
+                    TextButton(onClick = { viewModel.updateDayStatus(DayStatus.ABSENCE) }) {
+                        Text("❌ Ausência")
+                    }
+                    TextButton(onClick = { viewModel.updateDayStatus(DayStatus.FUTURO) }) {
+                        Text("🧹 Limpar")
                     }
                     TextButton(onClick = viewModel::dismissDayEditor) {
                         Text("Cancelar")
