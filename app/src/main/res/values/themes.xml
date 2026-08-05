@@ -5,8 +5,8 @@
         <item name="android:navigationBarColor">@android:color/transparent</item>
     </style>
     <style name="Theme.Presencial.Splash" parent="Theme.SplashScreen">
-        <item name="windowSplashScreenBackground">#1B873B</item>
-        <item name="windowSplashScreenAnimatedIcon">@drawable/ic_logo</item>
+        <item name="windowSplashScreenBackground">#0C0F0D</item>
+        <item name="windowSplashScreenAnimatedIcon">@drawable/logo_splash</item>
         <item name="postSplashScreenTheme">@style/Theme.Presencial</item>
     </style>
 </resources>

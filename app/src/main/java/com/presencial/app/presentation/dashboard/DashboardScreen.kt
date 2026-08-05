@@ -3,6 +3,7 @@ package com.presencial.app.presentation.dashboard
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.slideInVertically
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -75,11 +76,10 @@ fun DashboardScreen(
             verticalAlignment = androidx.compose.ui.Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(8.dp)
         ) {
-            Icon(
-                painter = androidx.compose.ui.res.painterResource(id = com.presencial.app.R.drawable.ic_logo),
+            Image(
+                painter = androidx.compose.ui.res.painterResource(id = com.presencial.app.R.drawable.logo_splash),
                 contentDescription = null,
-                modifier = Modifier.size(32.dp),
-                tint = MaterialTheme.colorScheme.primary
+                modifier = Modifier.size(32.dp)
             )
             Text(
                 text = "${monthName.replaceFirstChar { it.uppercase() }} ${dashboard.yearMonth.year}",
