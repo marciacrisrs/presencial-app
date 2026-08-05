@@ -9,7 +9,6 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.stateIn
-import java.io.File
 import javax.inject.Inject
 
 @HiltViewModel
@@ -21,10 +20,10 @@ class StatisticsViewModel @Inject constructor(
     val statistics: StateFlow<StatisticsData?> = getStatisticsUseCase()
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), null)
 
-    fun exportPdf(file: File): Result<Unit> {
+    fun exportPdf(outputStream: java.io.OutputStream): Result<Unit> {
         val data = statistics.value ?: return Result.failure(IllegalStateException("Sem dados"))
         return pdfExporter.exportStatistics(
-            file = file,
+            outputStream = outputStream,
             summaries = data.monthlySummaries,
             averageAchieved = data.averageAchieved,
             totalPresencial = data.totalPresencial,

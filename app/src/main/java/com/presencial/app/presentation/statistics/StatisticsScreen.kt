@@ -1,6 +1,5 @@
 package com.presencial.app.presentation.statistics
 
-import android.os.Environment
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -25,81 +24,117 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.presencial.app.ui.components.MonthlyBarChart
 import com.presencial.app.ui.components.StatSummaryRow
-import java.io.File
 import java.time.YearMonth
+
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
+import androidx.compose.runtime.remember
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.runtime.LaunchedEffect
+import kotlinx.coroutines.flow.MutableStateFlow
+import java.time.format.TextStyle
+import java.util.Locale
 
 @Composable
 fun StatisticsScreen(viewModel: StatisticsViewModel = hiltViewModel()) {
     val stats by viewModel.statistics.collectAsStateWithLifecycle()
     val context = LocalContext.current
+    val snackbarHostState = remember { SnackbarHostState() }
+    val message = remember { MutableStateFlow<String?>(null) }
 
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .verticalScroll(rememberScrollState())
-            .padding(20.dp),
-        verticalArrangement = Arrangement.spacedBy(16.dp)
-    ) {
-        Text("Estatísticas", style = MaterialTheme.typography.headlineLarge)
-
-        if (stats == null) {
-            CircularProgressIndicator()
-            return@Column
+    val pdfLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.CreateDocument("application/pdf")
+    ) { uri ->
+        uri?.let {
+            context.contentResolver.openOutputStream(it)?.use { stream ->
+                viewModel.exportPdf(stream)
+                    .onSuccess { message.value = "PDF exportado com sucesso!" }
+                    .onFailure { message.value = "Erro ao exportar PDF: ${it.message}" }
+            }
         }
+    }
 
-        val data = stats!!
+    LaunchedEffect(message) {
+        message.collect { msg ->
+            msg?.let {
+                snackbarHostState.showSnackbar(it)
+                message.value = null
+            }
+        }
+    }
 
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(12.dp)
+    androidx.compose.foundation.layout.Box(modifier = Modifier.fillMaxSize()) {
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .verticalScroll(rememberScrollState())
+                .padding(20.dp),
+            verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            StatSummaryRow(
-                label = "Média anual",
-                value = "${"%.1f".format(data.averageAchieved)}%",
-                modifier = Modifier.weight(1f)
-            )
-            StatSummaryRow(
-                label = "Sequência atual",
-                value = "${data.currentStreak} dias",
-                modifier = Modifier.weight(1f)
-            )
-        }
+            Text("Estatísticas", style = MaterialTheme.typography.headlineLarge)
 
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(12.dp)
-        ) {
-            StatSummaryRow(
-                label = "Maior sequência",
-                value = "${data.longestStreak} dias",
-                modifier = Modifier.weight(1f)
-            )
-            StatSummaryRow(
-                label = "Home office",
-                value = "${data.totalHomeOffice}",
-                modifier = Modifier.weight(1f)
-            )
-        }
+            if (stats == null) {
+                CircularProgressIndicator()
+                return@Column
+            }
 
-        MonthlyBarChart(summaries = data.monthlySummaries.sortedBy { it.yearMonth })
+            val data = stats!!
 
-        Text(
-            "Total presencial: ${data.totalPresencial} dias",
-            style = MaterialTheme.typography.bodyLarge
-        )
-
-        Button(
-            onClick = {
-                val file = File(
-                    context.getExternalFilesDir(Environment.DIRECTORY_DOCUMENTS),
-                    "presencial_stats_${YearMonth.now()}.pdf"
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                StatSummaryRow(
+                    label = "Média anual",
+                    value = "${"%.1f".format(data.averageAchieved)}%",
+                    modifier = Modifier.weight(1f)
                 )
-                viewModel.exportPdf(file)
-            },
-            modifier = Modifier.fillMaxWidth()
-        ) {
-            Icon(Icons.Default.PictureAsPdf, contentDescription = null)
-            Text("  Exportar PDF")
+                StatSummaryRow(
+                    label = "Sequência atual",
+                    value = "${data.currentStreak} dias",
+                    modifier = Modifier.weight(1f)
+                )
+            }
+
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                StatSummaryRow(
+                    label = "Maior sequência",
+                    value = "${data.longestStreak} dias",
+                    modifier = Modifier.weight(1f)
+                )
+                StatSummaryRow(
+                    label = "Home office",
+                    value = "${data.totalHomeOffice}",
+                    modifier = Modifier.weight(1f)
+                )
+            }
+
+            MonthlyBarChart(summaries = data.monthlySummaries.sortedBy { it.yearMonth })
+
+            Text(
+                "Total presencial: ${data.totalPresencial} dias",
+                style = MaterialTheme.typography.bodyLarge
+            )
+
+            Button(
+                onClick = {
+                    val fileName = "presencial_stats_${YearMonth.now()}.pdf"
+                    pdfLauncher.launch(fileName)
+                },
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Icon(Icons.Default.PictureAsPdf, contentDescription = null)
+                Text("  Exportar PDF")
+            }
         }
+        
+        SnackbarHost(
+            hostState = snackbarHostState,
+            modifier = Modifier.align(androidx.compose.ui.Alignment.BottomCenter)
+        )
     }
 }

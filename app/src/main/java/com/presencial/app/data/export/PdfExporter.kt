@@ -5,8 +5,7 @@ import android.graphics.Paint
 import android.graphics.pdf.PdfDocument
 import com.presencial.app.domain.model.MonthlySummary
 import dagger.hilt.android.qualifiers.ApplicationContext
-import java.io.File
-import java.io.FileOutputStream
+import java.io.OutputStream
 import java.time.format.TextStyle
 import java.util.Locale
 import javax.inject.Inject
@@ -18,7 +17,7 @@ class PdfExporter @Inject constructor(
 ) {
 
     fun exportStatistics(
-        file: File,
+        outputStream: OutputStream,
         summaries: List<MonthlySummary>,
         averageAchieved: Float,
         totalPresencial: Int,
@@ -55,11 +54,14 @@ class PdfExporter @Inject constructor(
         }
 
         document.finishPage(page)
-        FileOutputStream(file).use { document.writeTo(it) }
+        document.writeTo(outputStream)
         document.close()
     }
 
-    fun exportMonthlySummary(file: File, summary: MonthlySummary): Result<Unit> = runCatching {
+    fun exportMonthlySummary(
+        outputStream: OutputStream,
+        summary: MonthlySummary
+    ): Result<Unit> = runCatching {
         val document = PdfDocument()
         val pageInfo = PdfDocument.PageInfo.Builder(595, 842, 1).create()
         val page = document.startPage(pageInfo)
@@ -82,7 +84,7 @@ class PdfExporter @Inject constructor(
         canvas.drawText("Percentual atingido: ${"%.1f".format(summary.achievedPercentage)}%", 40f, y, bodyPaint)
 
         document.finishPage(page)
-        FileOutputStream(file).use { document.writeTo(it) }
+        document.writeTo(outputStream)
         document.close()
     }
 }
