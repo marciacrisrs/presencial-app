@@ -4,5 +4,6 @@
     <string name="widget_name">Dias restantes</string>
     <string name="notification_channel_name">Lembretes de presença</string>
     <string name="notification_channel_desc">Lembretes diários para registrar presença presencial</string>
+    <string name="notification_title">18h</string>
     <string name="notification_checkin_message">Você trabalhou presencialmente hoje?</string>
 </resources>
