@@ -90,6 +90,9 @@ fun CalendarScreen(viewModel: CalendarViewModel = hiltViewModel()) {
                     TextButton(onClick = { viewModel.updateDayStatus(DayStatus.HOME_OFFICE) }) {
                         Text("Home Office")
                     }
+                    TextButton(onClick = { viewModel.updateDayStatus(DayStatus.FUTURO) }) { // Using FUTURO as a dummy for 'clear'
+                        Text("Limpar")
+                    }
                     TextButton(onClick = viewModel::dismissDayEditor) {
                         Text("Cancelar")
                     }

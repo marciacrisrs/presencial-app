@@ -26,4 +26,13 @@ class DashboardViewModel @Inject constructor(
             toggleTodayCheckInUseCase(markPresencial = markPresencial)
         }
     }
+
+    fun markYesterdayPresencial() {
+        viewModelScope.launch {
+            toggleTodayCheckInUseCase(
+                date = java.time.LocalDate.now().minusDays(1),
+                markPresencial = true
+            )
+        }
+    }
 }

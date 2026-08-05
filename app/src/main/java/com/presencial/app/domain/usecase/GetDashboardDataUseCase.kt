@@ -46,6 +46,11 @@ class GetDashboardDataUseCase @Inject constructor(
         val achievedPercentage = GoalCalculator.calculateAchievedPercentage(completedDays, requiredDays)
         val progressFraction = GoalCalculator.calculateProgressFraction(completedDays, requiredDays)
         val todayCheckIn = checkIns.find { it.date == today }
+        val yesterday = today.minusDays(1)
+        val yesterdayCheckIn = checkIns.find { it.date == yesterday }
+        val yesterdayIsPending = WorkdayCalculator.isWorkday(yesterday, countSaturdays) && 
+                yesterdayCheckIn == null
+        
         val streak = calculateStreak(checkIns, today)
 
         return DashboardData(
@@ -65,6 +70,7 @@ class GetDashboardDataUseCase @Inject constructor(
             ),
             todayIsPresencial = todayCheckIn?.status == DayStatus.PRESENCIAL,
             todayIsWorkday = WorkdayCalculator.isWorkday(today, countSaturdays),
+            yesterdayIsPending = yesterdayIsPending,
             streak = streak
         )
     }

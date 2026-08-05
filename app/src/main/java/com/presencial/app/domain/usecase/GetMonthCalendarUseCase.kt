@@ -61,7 +61,7 @@ class GetMonthCalendarUseCase @Inject constructor(
                     isWorkday = isWorkday,
                     isHoliday = isHoliday,
                     holidayName = holiday?.name,
-                    isEditable = !current.isAfter(today) && isWorkday
+                    isEditable = !current.isAfter(today)
                 )
             )
             current = current.plusDays(1)

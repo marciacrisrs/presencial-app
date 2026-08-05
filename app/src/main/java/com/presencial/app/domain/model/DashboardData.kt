@@ -19,5 +19,6 @@ data class DashboardData(
     val smartMessage: String,
     val todayIsPresencial: Boolean,
     val todayIsWorkday: Boolean,
+    val yesterdayIsPending: Boolean,
     val streak: Int
 )

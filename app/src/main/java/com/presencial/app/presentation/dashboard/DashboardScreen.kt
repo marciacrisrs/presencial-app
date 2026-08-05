@@ -127,6 +127,12 @@ fun DashboardScreen(
             )
         }
 
+        if (dashboard.yesterdayIsPending) {
+            YesterdayCheckInCard(
+                onConfirm = viewModel::markYesterdayPresencial
+            )
+        }
+
         if (dashboard.completedDays >= dashboard.requiredDays && dashboard.requiredDays > 0) {
             val composition by rememberLottieComposition(LottieCompositionSpec.RawRes(com.presencial.app.R.raw.success))
             LottieAnimation(
@@ -136,6 +142,34 @@ fun DashboardScreen(
         }
 
         Spacer(modifier = Modifier.height(8.dp))
+    }
+}
+
+@Composable
+private fun YesterdayCheckInCard(onConfirm: () -> Unit) {
+    androidx.compose.material3.Card(
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(20.dp),
+        colors = androidx.compose.material3.CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.5f)
+        )
+    ) {
+        Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            Text(
+                "Esqueceu de ontem?",
+                style = MaterialTheme.typography.titleMedium
+            )
+            Text(
+                "Você não registrou sua presença no dia anterior.",
+                style = MaterialTheme.typography.bodyMedium
+            )
+            androidx.compose.material3.TextButton(
+                onClick = onConfirm,
+                modifier = Modifier.align(androidx.compose.ui.Alignment.End)
+            ) {
+                Text("Registrar presencial")
+            }
+        }
     }
 }
 
