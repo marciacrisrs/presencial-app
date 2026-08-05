@@ -19,14 +19,12 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.CheckCircle
-import androidx.compose.material.icons.filled.Undo
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ElevatedButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -115,8 +113,7 @@ fun DashboardScreen(
         if (dashboard.todayIsWorkday) {
             CheckInButton(
                 isPresencial = dashboard.todayIsPresencial,
-                onConfirm = { viewModel.toggleTodayCheckIn(true) },
-                onUndo = { viewModel.toggleTodayCheckIn(false) }
+                onConfirm = { viewModel.toggleTodayCheckIn(true) }
             )
         }
 
@@ -166,8 +163,7 @@ private fun YesterdayCheckInCard(onConfirm: () -> Unit) {
 @Composable
 private fun CheckInButton(
     isPresencial: Boolean,
-    onConfirm: () -> Unit,
-    onUndo: () -> Unit
+    onConfirm: () -> Unit
 ) {
     Column(
         modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp),
@@ -199,22 +195,19 @@ private fun CheckInButton(
             Button(
                 onClick = { },
                 enabled = false,
-                modifier = Modifier.fillMaxWidth().height(56.dp),
-                shape = RoundedCornerShape(16.dp)
+                modifier = Modifier.fillMaxWidth().height(60.dp),
+                shape = RoundedCornerShape(16.dp),
+                colors = ButtonDefaults.buttonColors(
+                    disabledContainerColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.5f),
+                    disabledContentColor = MaterialTheme.colorScheme.onPrimary
+                )
             ) {
                 Icon(Icons.Default.CheckCircle, contentDescription = null)
+                Spacer(Modifier.width(12.dp))
                 Text(
-                    text = "  Presença confirmada!",
+                    text = "Presença Registrada",
                     style = MaterialTheme.typography.titleMedium
                 )
-            }
-            OutlinedButton(
-                onClick = onUndo,
-                modifier = Modifier.fillMaxWidth().height(40.dp),
-                shape = RoundedCornerShape(12.dp)
-            ) {
-                Icon(Icons.Default.Undo, contentDescription = null, modifier = Modifier.size(18.dp))
-                Text("  Desfazer", style = MaterialTheme.typography.labelLarge)
             }
         }
     }
