@@ -2,6 +2,10 @@
 
 Aplicativo Android para controle de comparecimento presencial no trabalho. Calcula automaticamente dias úteis, feriados nacionais brasileiros e a meta mensal de presença com base no percentual configurado.
 
+## Política de Privacidade
+
+Todos os dados permanecem exclusivamente no dispositivo do usuário.
+
 ## Funcionalidades
 
 - **Dashboard** — progresso em tempo real, barras circular/linear, mensagens inteligentes e check-in diário
