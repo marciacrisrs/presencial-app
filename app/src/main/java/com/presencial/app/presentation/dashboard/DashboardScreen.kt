@@ -70,10 +70,22 @@ fun DashboardScreen(
         val dashboard = data!!
         val monthName = dashboard.yearMonth.month.getDisplayName(TextStyle.FULL, Locale("pt", "BR"))
 
-        Text(
-            text = "${monthName.replaceFirstChar { it.uppercase() }} ${dashboard.yearMonth.year}",
-            style = MaterialTheme.typography.headlineSmall
-        )
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            verticalAlignment = androidx.compose.ui.Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            Icon(
+                painter = androidx.compose.ui.res.painterResource(id = com.presencial.app.R.drawable.ic_logo),
+                contentDescription = null,
+                modifier = Modifier.size(32.dp),
+                tint = MaterialTheme.colorScheme.primary
+            )
+            Text(
+                text = "${monthName.replaceFirstChar { it.uppercase() }} ${dashboard.yearMonth.year}",
+                style = MaterialTheme.typography.headlineSmall
+            )
+        }
 
         AnimatedVisibility(visible = true, enter = fadeIn() + slideInVertically()) {
             SmartMessageCard(message = dashboard.smartMessage)
