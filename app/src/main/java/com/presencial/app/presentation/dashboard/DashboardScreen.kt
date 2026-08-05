@@ -11,15 +11,19 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.foundation.layout.width
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Undo
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.ElevatedButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
@@ -28,7 +32,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -58,8 +61,8 @@ fun DashboardScreen(
         modifier = Modifier
             .fillMaxSize()
             .verticalScroll(rememberScrollState())
-            .padding(20.dp),
-        verticalArrangement = Arrangement.spacedBy(16.dp)
+            .padding(16.dp),
+        verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
         if (data == null) {
             CircularProgressIndicator(modifier = Modifier.padding(32.dp))
@@ -71,7 +74,7 @@ fun DashboardScreen(
 
         Text(
             text = "${monthName.replaceFirstChar { it.uppercase() }} ${dashboard.yearMonth.year}",
-            style = MaterialTheme.typography.headlineLarge
+            style = MaterialTheme.typography.headlineSmall
         )
 
         AnimatedVisibility(visible = true, enter = fadeIn() + slideInVertically()) {
@@ -84,40 +87,30 @@ fun DashboardScreen(
             modifier = Modifier.fillMaxWidth()
         )
 
-        DashboardProgressBar(data = dashboard)
-
         Row(
             modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(12.dp)
+            horizontalArrangement = Arrangement.spacedBy(8.dp)
         ) {
             StatCard(
-                title = "Dias úteis",
+                title = "Úteis",
                 value = "${dashboard.workdays}",
                 modifier = Modifier.weight(1f)
             )
             StatCard(
-                title = "Obrigatórios",
+                title = "Meta",
                 value = "${dashboard.requiredDays}",
+                modifier = Modifier.weight(1f)
+            )
+            StatCard(
+                title = "Feito",
+                value = "${dashboard.completedDays}",
                 modifier = Modifier.weight(1f)
             )
         }
 
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(12.dp)
-        ) {
-            StatCard(
-                title = "Realizados",
-                value = "${dashboard.completedDays}",
-                modifier = Modifier.weight(1f)
-            )
-            StatCard(
-                title = "Restantes",
-                value = "${dashboard.remainingDays}",
-                modifier = Modifier.weight(1f),
-                subtitle = "${dashboard.achievedPercentage.toInt()}% atingido"
-            )
-        }
+        DashboardProgressBar(data = dashboard)
+
+
 
         if (dashboard.todayIsWorkday) {
             CheckInButton(
@@ -149,25 +142,22 @@ fun DashboardScreen(
 private fun YesterdayCheckInCard(onConfirm: () -> Unit) {
     androidx.compose.material3.Card(
         modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(20.dp),
+        shape = RoundedCornerShape(16.dp),
         colors = androidx.compose.material3.CardDefaults.cardColors(
             containerColor = MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.5f)
         )
     ) {
-        Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-            Text(
-                "Esqueceu de ontem?",
-                style = MaterialTheme.typography.titleMedium
-            )
-            Text(
-                "Você não registrou sua presença no dia anterior.",
-                style = MaterialTheme.typography.bodyMedium
-            )
-            androidx.compose.material3.TextButton(
-                onClick = onConfirm,
-                modifier = Modifier.align(androidx.compose.ui.Alignment.End)
-            ) {
-                Text("Registrar presencial")
+        Row(
+            modifier = Modifier.padding(12.dp),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = androidx.compose.ui.Alignment.CenterVertically
+        ) {
+            Column(modifier = Modifier.weight(1f)) {
+                Text("Esqueceu de ontem?", style = MaterialTheme.typography.titleSmall)
+                Text("Registre sua presença anterior", style = MaterialTheme.typography.bodySmall)
+            }
+            androidx.compose.material3.TextButton(onClick = onConfirm) {
+                Text("Registrar")
             }
         }
     }
@@ -184,38 +174,47 @@ private fun CheckInButton(
         verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
         if (!isPresencial) {
-            Button(
+            ElevatedButton(
                 onClick = onConfirm,
-                modifier = Modifier.fillMaxWidth().height(64.dp),
-                shape = RoundedCornerShape(20.dp),
-                colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary)
+                modifier = Modifier.fillMaxWidth().height(60.dp),
+                shape = RoundedCornerShape(16.dp),
+                colors = ButtonDefaults.elevatedButtonColors(
+                    containerColor = MaterialTheme.colorScheme.primary,
+                    contentColor = MaterialTheme.colorScheme.onPrimary
+                ),
+                elevation = ButtonDefaults.elevatedButtonElevation(defaultElevation = 4.dp)
             ) {
+                Icon(
+                    Icons.Default.Check,
+                    contentDescription = null,
+                    modifier = Modifier.size(24.dp)
+                )
+                Spacer(Modifier.width(12.dp))
                 Text(
-                    text = "✅ Trabalhei presencialmente hoje",
-                    style = MaterialTheme.typography.titleLarge,
-                    textAlign = TextAlign.Center
+                    text = "Registrar Presença Hoje",
+                    style = MaterialTheme.typography.titleMedium
                 )
             }
         } else {
             Button(
                 onClick = { },
                 enabled = false,
-                modifier = Modifier.fillMaxWidth().height(64.dp),
-                shape = RoundedCornerShape(20.dp)
+                modifier = Modifier.fillMaxWidth().height(56.dp),
+                shape = RoundedCornerShape(16.dp)
             ) {
                 Icon(Icons.Default.CheckCircle, contentDescription = null)
                 Text(
                     text = "  Presença confirmada!",
-                    style = MaterialTheme.typography.titleLarge
+                    style = MaterialTheme.typography.titleMedium
                 )
             }
             OutlinedButton(
                 onClick = onUndo,
-                modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(16.dp)
+                modifier = Modifier.fillMaxWidth().height(40.dp),
+                shape = RoundedCornerShape(12.dp)
             ) {
-                Icon(Icons.Default.Undo, contentDescription = null)
-                Text("  Desfazer")
+                Icon(Icons.Default.Undo, contentDescription = null, modifier = Modifier.size(18.dp))
+                Text("  Desfazer", style = MaterialTheme.typography.labelLarge)
             }
         }
     }

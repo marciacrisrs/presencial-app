@@ -33,16 +33,16 @@ fun StatCard(
 ) {
     Card(
         modifier = modifier,
-        shape = RoundedCornerShape(20.dp),
+        shape = RoundedCornerShape(16.dp),
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)),
         elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
     ) {
         Column(
-            modifier = Modifier.padding(20.dp),
-            verticalArrangement = Arrangement.spacedBy(4.dp)
+            modifier = Modifier.padding(12.dp),
+            verticalArrangement = Arrangement.spacedBy(2.dp)
         ) {
-            Text(text = title, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f))
-            Text(text = value, style = MaterialTheme.typography.headlineMedium)
+            Text(text = title, style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f))
+            Text(text = value, style = MaterialTheme.typography.titleLarge)
             subtitle?.let {
                 Text(text = it, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f))
             }
@@ -64,29 +64,29 @@ fun CircularProgressCard(
 
     Card(
         modifier = modifier,
-        shape = RoundedCornerShape(24.dp),
+        shape = RoundedCornerShape(20.dp),
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.3f))
     ) {
         Column(
-            modifier = Modifier.padding(24.dp).fillMaxWidth(),
+            modifier = Modifier.padding(12.dp).fillMaxWidth(),
             horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(12.dp)
+            verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
-            Box(contentAlignment = Alignment.Center, modifier = Modifier.size(120.dp)) {
+            Box(contentAlignment = Alignment.Center, modifier = Modifier.size(90.dp)) {
                 androidx.compose.material3.CircularProgressIndicator(
                     progress = { animatedProgress },
-                    modifier = Modifier.size(120.dp),
-                    strokeWidth = 10.dp,
+                    modifier = Modifier.size(90.dp),
+                    strokeWidth = 8.dp,
                     strokeCap = StrokeCap.Round,
                     color = MaterialTheme.colorScheme.primary,
                     trackColor = MaterialTheme.colorScheme.surfaceVariant
                 )
                 Text(
                     text = "${(animatedProgress * 100).toInt()}%",
-                    style = MaterialTheme.typography.headlineMedium
+                    style = MaterialTheme.typography.titleLarge
                 )
             }
-            Text(text = label, style = MaterialTheme.typography.bodyMedium, textAlign = TextAlign.Center)
+            Text(text = label, style = MaterialTheme.typography.labelMedium, textAlign = TextAlign.Center)
         }
     }
 }
@@ -95,13 +95,13 @@ fun CircularProgressCard(
 fun SmartMessageCard(message: String, modifier: Modifier = Modifier) {
     Card(
         modifier = modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(16.dp),
+        shape = RoundedCornerShape(12.dp),
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.5f))
     ) {
         Text(
             text = message,
-            modifier = Modifier.padding(20.dp).fillMaxWidth(),
-            style = MaterialTheme.typography.titleLarge,
+            modifier = Modifier.padding(12.dp).fillMaxWidth(),
+            style = MaterialTheme.typography.bodyLarge,
             textAlign = TextAlign.Center
         )
     }
