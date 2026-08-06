@@ -27,75 +27,49 @@ class BackupManager @Inject constructor(
 
     suspend fun exportToStream(outputStream: OutputStream): Result<Unit> = withContext(Dispatchers.IO) {
         runCatching {
-            val settings = settingsRepository.settings.first()
-            val checkIns = checkInDao.observeAll().first()
-            val summaries = monthlySummaryDao.observeAll().first()
-
-            val json = JSONObject().apply {
-                put("version", 1)
-                put("requiredPercentage", settings.requiredPercentage)
-                put("countSaturdaysAsWorkdays", settings.countSaturdaysAsWorkdays)
-                put("checkIns", JSONArray().apply {
-                    checkIns.forEach { ci ->
-                        put(JSONObject().apply {
-                            put("dateEpochDay", ci.dateEpochDay)
-                            put("status", ci.status)
-                            put("updatedAt", ci.updatedAt)
-                        })
-                    }
-                })
-                put("summaries", JSONArray().apply {
-                    summaries.forEach { s ->
-                        put(JSONObject().apply {
-                            put("yearMonthKey", s.yearMonthKey)
-                            put("workdays", s.workdays)
-                            put("requiredDays", s.requiredDays)
-                            put("completedDays", s.completedDays)
-                            put("homeOfficeDays", s.homeOfficeDays)
-                            put("requiredPercentage", s.requiredPercentage)
-                            put("achievedPercentage", s.achievedPercentage.toDouble())
-                        })
-                    }
-                })
-            }
+            val json = createBackupJson()
             outputStream.use { it.write(json.toString(2).toByteArray()) }
         }
     }
 
     suspend fun exportToFile(file: File): Result<Unit> = withContext(Dispatchers.IO) {
         runCatching {
-            val settings = settingsRepository.settings.first()
-            val checkIns = checkInDao.observeAll().first()
-            val summaries = monthlySummaryDao.observeAll().first()
-
-            val json = JSONObject().apply {
-                put("version", 1)
-                put("requiredPercentage", settings.requiredPercentage)
-                put("countSaturdaysAsWorkdays", settings.countSaturdaysAsWorkdays)
-                put("checkIns", JSONArray().apply {
-                    checkIns.forEach { ci ->
-                        put(JSONObject().apply {
-                            put("dateEpochDay", ci.dateEpochDay)
-                            put("status", ci.status)
-                            put("updatedAt", ci.updatedAt)
-                        })
-                    }
-                })
-                put("summaries", JSONArray().apply {
-                    summaries.forEach { s ->
-                        put(JSONObject().apply {
-                            put("yearMonthKey", s.yearMonthKey)
-                            put("workdays", s.workdays)
-                            put("requiredDays", s.requiredDays)
-                            put("completedDays", s.completedDays)
-                            put("homeOfficeDays", s.homeOfficeDays)
-                            put("requiredPercentage", s.requiredPercentage)
-                            put("achievedPercentage", s.achievedPercentage.toDouble())
-                        })
-                    }
-                })
-            }
+            val json = createBackupJson()
             file.writeText(json.toString(2))
+        }
+    }
+
+    private suspend fun createBackupJson(): JSONObject {
+        val settings = settingsRepository.settings.first()
+        val checkIns = checkInDao.observeAll().first()
+        val summaries = monthlySummaryDao.observeAll().first()
+
+        return JSONObject().apply {
+            put("version", 1)
+            put("requiredPercentage", settings.requiredPercentage)
+            put("countSaturdaysAsWorkdays", settings.countSaturdaysAsWorkdays)
+            put("checkIns", JSONArray().apply {
+                checkIns.forEach { ci ->
+                    put(JSONObject().apply {
+                        put("dateEpochDay", ci.dateEpochDay)
+                        put("status", ci.status)
+                        put("updatedAt", ci.updatedAt)
+                    })
+                }
+            })
+            put("summaries", JSONArray().apply {
+                summaries.forEach { s ->
+                    put(JSONObject().apply {
+                        put("yearMonthKey", s.yearMonthKey)
+                        put("workdays", s.workdays)
+                        put("requiredDays", s.requiredDays)
+                        put("completedDays", s.completedDays)
+                        put("homeOfficeDays", s.homeOfficeDays)
+                        put("requiredPercentage", s.requiredPercentage)
+                        put("achievedPercentage", s.achievedPercentage.toDouble())
+                    })
+                }
+            })
         }
     }
 
