@@ -1,9 +1,12 @@
 package com.presencial.app.presentation.location
 
 import android.Manifest
+import androidx.compose.animation.*
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
@@ -69,14 +72,22 @@ fun WorkAddressScreen(
         snackbarHost = { SnackbarHost(hostState = snackbarHostState) }
     ) { padding ->
         Column(modifier = Modifier.padding(padding).fillMaxSize()) {
-            if (!foregroundPermissionsState.allPermissionsGranted) {
+            AnimatedVisibility(
+                visible = !foregroundPermissionsState.allPermissionsGranted,
+                enter = expandVertically() + fadeIn()
+            ) {
                 PermissionCard(
                     title = "Localização Necessária",
                     description = "Para o check-in automático funcionar, precisamos de acesso à sua localização.",
                     buttonText = "Conceder Permissão",
                     onClick = { foregroundPermissionsState.launchMultiplePermissionRequest() }
                 )
-            } else if (!backgroundPermissionState.allPermissionsGranted) {
+            }
+
+            AnimatedVisibility(
+                visible = foregroundPermissionsState.allPermissionsGranted && !backgroundPermissionState.allPermissionsGranted,
+                enter = expandVertically() + fadeIn()
+            ) {
                 PermissionCard(
                     title = "Localização em Background",
                     description = "O check-in automático só funciona se o app puder acessar a localização \"O tempo todo\". Isso permite registrar sua presença mesmo com o celular no bolso.",
@@ -94,13 +105,19 @@ fun WorkAddressScreen(
                     contentPadding = PaddingValues(16.dp),
                     verticalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
-                    items(addresses) { address ->
-                        WorkAddressItem(
-                            address = address,
-                            onDelete = { viewModel.deleteAddress(address) },
-                            onToggle = { viewModel.toggleActive(address) },
-                            onEdit = { viewModel.startEditing(address) }
-                        )
+                    itemsIndexed(addresses, key = { _, it -> it.id }) { index, address ->
+                        AnimatedVisibility(
+                            visible = true,
+                            enter = fadeIn(animationSpec = tween(400, delayMillis = index * 50)) +
+                                    slideInHorizontally(animationSpec = tween(400, delayMillis = index * 50)) { -it / 4 }
+                        ) {
+                            WorkAddressItem(
+                                address = address,
+                                onDelete = { viewModel.deleteAddress(address) },
+                                onToggle = { viewModel.toggleActive(address) },
+                                onEdit = { viewModel.startEditing(address) }
+                            )
+                        }
                     }
                 }
             }
@@ -130,10 +147,8 @@ fun WorkAddressScreen(
             onConfirm = { name, addressText, radius, useCurrent ->
                 if (useCurrent) {
                     viewModel.saveCurrentLocationAsWorkAddress(name, addressText, radius)
-                } else if (address.id != 0L) {
-                    viewModel.saveAddress(address.copy(name = name, addressText = addressText, radius = radius))
                 } else {
-                    viewModel.saveAddress(WorkAddress(name = name, addressText = addressText, latitude = 0.0, longitude = 0.0, radius = radius))
+                    viewModel.saveAddress(address.copy(name = name, addressText = addressText, radius = radius))
                 }
             },
             permissionsGranted = foregroundPermissionsState.allPermissionsGranted

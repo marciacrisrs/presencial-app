@@ -52,6 +52,7 @@ class WorkAddressViewModel @Inject constructor(
                         radius = radius
                     )
                     saveAddress(addressToSave)
+                    _editingAddress.value = null
                 } else {
                     _message.value = "Não foi possível obter a localização atual"
                 }
@@ -75,7 +76,13 @@ class WorkAddressViewModel @Inject constructor(
     }
 
     fun startEditing(address: WorkAddress?) {
-        _editingAddress.value = address
+        _editingAddress.value = address ?: WorkAddress(
+            name = "",
+            addressText = "",
+            latitude = 0.0,
+            longitude = 0.0,
+            radius = 50f
+        )
     }
 
     fun stopEditing() {

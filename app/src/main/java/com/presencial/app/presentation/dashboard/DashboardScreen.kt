@@ -4,43 +4,28 @@ import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.slideInVertically
 import androidx.compose.foundation.Image
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.foundation.layout.width
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.CheckCircle
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.ElevatedButton
-import androidx.compose.material3.Icon
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
+import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.airbnb.lottie.compose.LottieAnimation
 import com.airbnb.lottie.compose.LottieCompositionSpec
 import com.airbnb.lottie.compose.rememberLottieComposition
-import com.presencial.app.ui.components.CircularProgressCard
-import com.presencial.app.ui.components.DashboardProgressBar
-import com.presencial.app.ui.components.SmartMessageCard
-import com.presencial.app.ui.components.StatCard
+import com.presencial.app.ui.components.*
 import java.time.format.TextStyle
 import java.util.Locale
 
@@ -51,6 +36,7 @@ fun DashboardScreen(
     onCheckInHandled: () -> Unit = {}
 ) {
     val data by viewModel.dashboardData.collectAsStateWithLifecycle()
+    val haptic = LocalHapticFeedback.current
 
     LaunchedEffect(openCheckIn) {
         if (openCheckIn) onCheckInHandled()
@@ -64,68 +50,92 @@ fun DashboardScreen(
         verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
         if (data == null) {
-            CircularProgressIndicator(modifier = Modifier.padding(32.dp))
+            DashboardSkeleton()
             return@Column
         }
 
         val dashboard = data!!
         val monthName = dashboard.yearMonth.month.getDisplayName(TextStyle.FULL, Locale("pt", "BR"))
 
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            verticalAlignment = androidx.compose.ui.Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(8.dp)
+        AnimatedVisibility(
+            visible = true,
+            enter = fadeIn() + slideInVertically(initialOffsetY = { 40 })
         ) {
-            Image(
-                painter = androidx.compose.ui.res.painterResource(id = com.presencial.app.R.drawable.logo_splash),
-                contentDescription = null,
-                modifier = Modifier.size(32.dp)
-            )
-            Text(
-                text = "${monthName.replaceFirstChar { it.uppercase() }} ${dashboard.yearMonth.year}",
-                style = MaterialTheme.typography.headlineSmall
-            )
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                Image(
+                    painter = androidx.compose.ui.res.painterResource(id = com.presencial.app.R.drawable.logo_splash),
+                    contentDescription = null,
+                    modifier = Modifier.size(32.dp)
+                )
+                Text(
+                    text = "${monthName.replaceFirstChar { it.uppercase() }} ${dashboard.yearMonth.year}",
+                    style = MaterialTheme.typography.headlineSmall
+                )
+            }
         }
 
-        AnimatedVisibility(visible = true, enter = fadeIn() + slideInVertically()) {
+        AnimatedVisibility(
+            visible = true,
+            enter = fadeIn() + slideInVertically(initialOffsetY = { 60 })
+        ) {
             SmartMessageCard(message = dashboard.smartMessage)
         }
 
-        CircularProgressCard(
-            progress = dashboard.progressFraction,
-            label = "Meta: ${dashboard.requiredPercentage}%",
-            modifier = Modifier.fillMaxWidth()
-        )
-
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(8.dp)
+        AnimatedVisibility(
+            visible = true,
+            enter = fadeIn() + slideInVertically(initialOffsetY = { 80 })
         ) {
-            StatCard(
-                title = "Úteis",
-                value = "${dashboard.workdays}",
-                modifier = Modifier.weight(1f)
-            )
-            StatCard(
-                title = "Meta",
-                value = "${dashboard.requiredDays}",
-                modifier = Modifier.weight(1f)
-            )
-            StatCard(
-                title = "Feito",
-                value = "${dashboard.completedDays}",
-                modifier = Modifier.weight(1f)
+            CircularProgressCard(
+                progress = dashboard.progressFraction,
+                label = "Meta: ${dashboard.requiredPercentage}%",
+                modifier = Modifier.fillMaxWidth()
             )
         }
 
-        DashboardProgressBar(data = dashboard)
+        AnimatedVisibility(
+            visible = true,
+            enter = fadeIn() + slideInVertically(initialOffsetY = { 100 })
+        ) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                StatCard(
+                    title = "Úteis",
+                    value = "${dashboard.workdays}",
+                    modifier = Modifier.weight(1f)
+                )
+                StatCard(
+                    title = "Meta",
+                    value = "${dashboard.requiredDays}",
+                    modifier = Modifier.weight(1f)
+                )
+                StatCard(
+                    title = "Feito",
+                    value = "${dashboard.completedDays}",
+                    modifier = Modifier.weight(1f)
+                )
+            }
+        }
 
-
+        AnimatedVisibility(
+            visible = true,
+            enter = fadeIn() + slideInVertically(initialOffsetY = { 120 })
+        ) {
+            DashboardProgressBar(data = dashboard)
+        }
 
         if (dashboard.todayIsWorkday) {
             CheckInButton(
                 isPresencial = dashboard.todayIsPresencial,
-                onConfirm = { viewModel.toggleTodayCheckIn(true) }
+                onConfirm = {
+                    haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                    viewModel.toggleTodayCheckIn(true)
+                }
             )
         }
 
@@ -148,24 +158,42 @@ fun DashboardScreen(
 }
 
 @Composable
+fun DashboardSkeleton() {
+    Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
+        Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
+            ShimmerBox(height = 32.dp, widthFraction = 0.1f, shape = RoundedCornerShape(8.dp))
+            ShimmerBox(height = 24.dp, widthFraction = 0.4f)
+        }
+        ShimmerBox(height = 60.dp)
+        ShimmerBox(height = 200.dp, shape = RoundedCornerShape(24.dp))
+        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            ShimmerBox(height = 80.dp, modifier = Modifier.weight(1f), shape = RoundedCornerShape(16.dp))
+            ShimmerBox(height = 80.dp, modifier = Modifier.weight(1f), shape = RoundedCornerShape(16.dp))
+            ShimmerBox(height = 80.dp, modifier = Modifier.weight(1f), shape = RoundedCornerShape(16.dp))
+        }
+        ShimmerBox(height = 20.dp)
+    }
+}
+
+@Composable
 private fun YesterdayCheckInCard(onConfirm: () -> Unit) {
-    androidx.compose.material3.Card(
+    Card(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(16.dp),
-        colors = androidx.compose.material3.CardDefaults.cardColors(
+        colors = CardDefaults.cardColors(
             containerColor = MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.5f)
         )
     ) {
         Row(
             modifier = Modifier.padding(12.dp),
             horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = androidx.compose.ui.Alignment.CenterVertically
+            verticalAlignment = Alignment.CenterVertically
         ) {
             Column(modifier = Modifier.weight(1f)) {
                 Text("Esqueceu de ontem?", style = MaterialTheme.typography.titleSmall)
                 Text("Registre sua presença anterior", style = MaterialTheme.typography.bodySmall)
             }
-            androidx.compose.material3.TextButton(onClick = onConfirm) {
+            TextButton(onClick = onConfirm) {
                 Text("Registrar")
             }
         }

@@ -1,23 +1,21 @@
 package com.presencial.app.presentation.history
 
 import android.content.Intent
+import androidx.compose.animation.*
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Share
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.LinearProgressIndicator
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
+import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
@@ -28,6 +26,7 @@ import androidx.core.content.ContextCompat
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.presencial.app.domain.model.MonthlySummary
+import com.presencial.app.ui.components.ShimmerBox
 import java.time.format.TextStyle
 import java.util.Locale
 
@@ -43,38 +42,49 @@ fun HistoryScreen(viewModel: HistoryViewModel = hiltViewModel()) {
         Text("Histórico", style = MaterialTheme.typography.headlineLarge)
 
         if (summaries.isEmpty()) {
-            Text(
-                "Nenhum mês registrado ainda.",
-                style = MaterialTheme.typography.bodyLarge,
-                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
-            )
+            HistorySkeleton()
         } else {
             LazyColumn(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                items(summaries.sortedByDescending { it.yearMonth }, key = { it.yearMonth }) { summary ->
-                    HistoryMonthCard(
-                        summary = summary,
-                        onShare = {
-                            val monthName = summary.yearMonth.month.getDisplayName(TextStyle.FULL, Locale("pt", "BR"))
-                            val text = buildString {
-                                append("📊 Presencial — $monthName ${summary.yearMonth.year}\n")
-                                append("Dias úteis: ${summary.workdays}\n")
-                                append("Meta: ${summary.requiredDays} dias (${summary.requiredPercentage}%)\n")
-                                append("Cumpridos: ${summary.completedDays}\n")
-                                append("Percentual: ${"%.1f".format(summary.achievedPercentage)}%")
+                itemsIndexed(summaries.sortedByDescending { it.yearMonth }, key = { _, it -> it.yearMonth }) { index, summary ->
+                    AnimatedVisibility(
+                        visible = true,
+                        enter = fadeIn(animationSpec = tween(500, delayMillis = index * 100)) +
+                                slideInVertically(animationSpec = tween(500, delayMillis = index * 100)) { it / 2 }
+                    ) {
+                        HistoryMonthCard(
+                            summary = summary,
+                            onShare = {
+                                val monthName = summary.yearMonth.month.getDisplayName(TextStyle.FULL, Locale("pt", "BR"))
+                                val text = buildString {
+                                    append("📊 Presencial — $monthName ${summary.yearMonth.year}\n")
+                                    append("Dias úteis: ${summary.workdays}\n")
+                                    append("Meta: ${summary.requiredDays} dias (${summary.requiredPercentage}%)\n")
+                                    append("Cumpridos: ${summary.completedDays}\n")
+                                    append("Percentual: ${"%.1f".format(summary.achievedPercentage)}%")
+                                }
+                                val intent = Intent(Intent.ACTION_SEND).apply {
+                                    type = "text/plain"
+                                    putExtra(Intent.EXTRA_TEXT, text)
+                                }
+                                ContextCompat.startActivity(
+                                    context,
+                                    Intent.createChooser(intent, "Compartilhar resumo"),
+                                    null
+                                )
                             }
-                            val intent = Intent(Intent.ACTION_SEND).apply {
-                                type = "text/plain"
-                                putExtra(Intent.EXTRA_TEXT, text)
-                            }
-                            ContextCompat.startActivity(
-                                context,
-                                Intent.createChooser(intent, "Compartilhar resumo"),
-                                null
-                            )
-                        }
-                    )
+                        )
+                    }
                 }
             }
+        }
+    }
+}
+
+@Composable
+fun HistorySkeleton() {
+    Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+        repeat(3) {
+            ShimmerBox(height = 140.dp, shape = RoundedCornerShape(20.dp))
         }
     }
 }
