@@ -30,15 +30,15 @@ class AiIntelligenceService @Inject constructor() {
 
         return when {
             completed >= required -> "🎉 Meta batida! Aproveite o home office sem culpa."
-            
+
             remaining > remainingWorkdays -> "⚠️ Alerta: Você precisa ir todos os dias restantes para atingir a meta."
-            
+
             remainingWorkdays > remaining * 2 -> "📅 Você pode fazer home office até sexta sem comprometer sua meta."
-            
+
             remaining <= 3 && remaining > 0 -> "🎯 Quase lá! Apenas mais $remaining presenciais e a meta é sua."
-            
+
             percentage < 30 -> "🚀 Início de mês! Que tal planejar 2 presenciais para esta semana?"
-            
+
             else -> "🎯 Se mantiver o ritmo atual, terminará o mês com ${percentage + 5}% da meta."
         }
     }
