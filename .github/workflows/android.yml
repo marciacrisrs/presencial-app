@@ -14,7 +14,7 @@ permissions:
   pull-requests: read
 
 jobs:
-  build:
+  quality:
 
     runs-on: ubuntu-latest
 
@@ -33,25 +33,19 @@ jobs:
       - name: Grant execute permission
         run: chmod +x gradlew
 
-      - name: Build Debug
-        run: ./gradlew assembleDebug
-
-      - name: Run Unit Tests
-        run: ./gradlew test
-
       - name: Android Lint
         run: ./gradlew lintDebug
+
+      - name: Unit Tests
+        run: ./gradlew testDebugUnitTest
+
+      - name: Detekt
+        run: ./gradlew detekt
+
+      - name: JaCoCo
+        run: ./gradlew jacocoTestReport
 
       - name: SonarCloud Scan
         uses: SonarSource/sonarqube-scan-action@v6
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-        with:
-          args: >
-            -Dsonar.verbose=true
-
-      - name: Upload Debug APK
-        uses: actions/upload-artifact@v4
-        with:
-          name: presencial-debug-apk
-          path: app/build/outputs/apk/debug/app-debug.apk
