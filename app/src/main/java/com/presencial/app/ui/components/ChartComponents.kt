@@ -55,7 +55,7 @@ fun MonthlyBarChart(
                 }
             }
             summaries.takeLast(6).forEach { summary ->
-                val month = summary.yearMonth.month.getDisplayName(TextStyle.SHORT, Locale("pt", "BR"))
+                val month = summary.yearMonth.month.getDisplayName(TextStyle.SHORT,Locale.forLanguageTag("pt-BR"))
                 Text(
                     text = "$month: ${"%.0f".format(summary.achievedPercentage)}% (${summary.completedDays}/${summary.requiredDays})",
                     style = MaterialTheme.typography.bodySmall

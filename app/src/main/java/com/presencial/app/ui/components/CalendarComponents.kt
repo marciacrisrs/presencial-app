@@ -189,6 +189,6 @@ fun dayColor(status: DayStatus, isToday: Boolean): Color {
 }
 
 fun formatMonthYear(year: Int, month: Int): String {
-    val monthName = java.time.Month.of(month).getDisplayName(TextStyle.FULL, Locale("pt", "BR"))
+    val monthName = java.time.Month.of(month).getDisplayName(TextStyle.FULL, Locale.forLanguageTag("pt-BR"))
     return "${monthName.replaceFirstChar { it.uppercase() }} $year"
 }

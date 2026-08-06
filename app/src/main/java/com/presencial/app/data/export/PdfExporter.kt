@@ -44,7 +44,7 @@ class PdfExporter @Inject constructor(
         y += 40f
 
         summaries.forEach { summary ->
-            val monthName = summary.yearMonth.month.getDisplayName(TextStyle.FULL, Locale("pt", "BR"))
+            val monthName = summary.yearMonth.month.getDisplayName(TextStyle.FULL, Locale.forLanguageTag("pt-BR"))
             canvas.drawText(
                 "$monthName/${summary.yearMonth.year}: ${summary.completedDays}/${summary.requiredDays} dias (${"%.0f".format(summary.achievedPercentage)}%)",
                 40f, y, bodyPaint
@@ -69,7 +69,7 @@ class PdfExporter @Inject constructor(
         val titlePaint = Paint().apply { textSize = 22f; isFakeBoldText = true }
         val bodyPaint = Paint().apply { textSize = 14f }
 
-        val monthName = summary.yearMonth.month.getDisplayName(TextStyle.FULL, Locale("pt", "BR"))
+        val monthName = summary.yearMonth.month.getDisplayName(TextStyle.FULL, Locale.forLanguageTag("pt-BR"))
         var y = 60f
         canvas.drawText("Resumo — $monthName ${summary.yearMonth.year}", 40f, y, titlePaint)
         y += 36f

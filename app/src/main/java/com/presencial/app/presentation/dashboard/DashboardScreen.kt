@@ -25,7 +25,12 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.airbnb.lottie.compose.LottieAnimation
 import com.airbnb.lottie.compose.LottieCompositionSpec
 import com.airbnb.lottie.compose.rememberLottieComposition
-import com.presencial.app.ui.components.*
+import com.presencial.app.ui.components.CircularProgressCard
+import com.presencial.app.ui.components.DashboardProgressBar
+import com.presencial.app.ui.components.ShimmerBox
+import com.presencial.app.ui.components.SmartMessageCard
+import com.presencial.app.ui.components.StatCard
+
 import java.time.format.TextStyle
 import java.util.Locale
 
@@ -55,7 +60,7 @@ fun DashboardScreen(
         }
 
         val dashboard = data!!
-        val monthName = dashboard.yearMonth.month.getDisplayName(TextStyle.FULL, Locale("pt", "BR"))
+        val monthName = dashboard.yearMonth.month.getDisplayName(TextStyle.FULL, Locale.forLanguageTag("pt-BR"))
 
         AnimatedVisibility(
             visible = true,

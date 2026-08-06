@@ -82,7 +82,7 @@ fun CalendarScreen(
     }
 
     selectedDay?.let { day ->
-        val dateLabel = "${day.date.dayOfMonth} de ${day.date.month.getDisplayName(TextStyle.FULL, Locale("pt", "BR"))}"
+        val dateLabel = "${day.date.dayOfMonth} de ${day.date.month.getDisplayName(TextStyle.FULL, Locale.forLanguageTag("pt-BR"))}"
         AlertDialog(
             onDismissRequest = viewModel::dismissDayEditor,
             title = { Text("Editar — $dateLabel") },

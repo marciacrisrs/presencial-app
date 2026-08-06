@@ -54,7 +54,7 @@ fun HistoryScreen(viewModel: HistoryViewModel = hiltViewModel()) {
                         HistoryMonthCard(
                             summary = summary,
                             onShare = {
-                                val monthName = summary.yearMonth.month.getDisplayName(TextStyle.FULL, Locale("pt", "BR"))
+                                val monthName = summary.yearMonth.month.getDisplayName(TextStyle.FULL, Locale.forLanguageTag("pt-BR"))
                                 val text = buildString {
                                     append("📊 Presencial — $monthName ${summary.yearMonth.year}\n")
                                     append("Dias úteis: ${summary.workdays}\n")
@@ -91,7 +91,7 @@ fun HistorySkeleton() {
 
 @Composable
 private fun HistoryMonthCard(summary: MonthlySummary, onShare: () -> Unit) {
-    val monthName = summary.yearMonth.month.getDisplayName(TextStyle.FULL, Locale("pt", "BR"))
+    val monthName = summary.yearMonth.month.getDisplayName(TextStyle.FULL, Locale.forLanguageTag("pt-BR"))
     val progress = if (summary.requiredDays > 0) {
         summary.completedDays.toFloat() / summary.requiredDays
     } else 0f

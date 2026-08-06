@@ -215,53 +215,49 @@ fun WorkAddressDialog(
     onConfirm: (String, String, Float, Boolean) -> Unit,
     permissionsGranted: Boolean
 ) {
-    var name by remember { mutableStateOf(address?.name ?: "") }
-    var addressText by remember { mutableStateOf(address?.addressText ?: "") }
+    val isNewAddress = address == null || address.id == 0L
+
+    var name by remember { mutableStateOf(address?.name.orEmpty()) }
+    var addressText by remember { mutableStateOf(address?.addressText.orEmpty()) }
     var radius by remember { mutableStateOf(address?.radius ?: 50f) }
+
+    val dialogTitle = if (isNewAddress) "Novo Local" else "Editar Local"
+    val confirmButtonText =
+        if (isNewAddress) "Salvar Local Atual" else "Atualizar Local"
+
+    val canSave =
+        name.isNotBlank() && (permissionsGranted || !isNewAddress)
 
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text(if (address?.id == 0L || address == null) "Novo Local" else "Editar Local") },
+        title = {
+            Text(dialogTitle)
+        },
         text = {
-            Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                OutlinedTextField(
-                    value = name,
-                    onValueChange = { name = it },
-                    label = { Text("Nome (ex: Escritório)") },
-                    modifier = Modifier.fillMaxWidth()
-                )
-                OutlinedTextField(
-                    value = addressText,
-                    onValueChange = { addressText = it },
-                    label = { Text("Endereço (opcional)") },
-                    modifier = Modifier.fillMaxWidth()
-                )
-                
-                Text("Raio de Ativação: ${radius.toInt()} metros", style = MaterialTheme.typography.labelMedium)
-                Slider(
-                    value = radius,
-                    onValueChange = { radius = it },
-                    valueRange = 50f..500f,
-                    steps = 9 // 50, 100, 150, ..., 500
-                )
-
-                if (address?.id == 0L || address == null) {
-                    if (permissionsGranted) {
-                        Text("O local será definido com base na sua posição atual.", style = MaterialTheme.typography.bodySmall)
-                    } else {
-                        Text("Conceda permissão de localização para salvar este local.", color = MaterialTheme.colorScheme.error)
-                    }
-                } else {
-                    Text("Localização atualizada automaticamente se salvar agora.", style = MaterialTheme.typography.bodySmall)
-                }
-            }
+            WorkAddressDialogContent(
+                name = name,
+                onNameChange = { name = it },
+                addressText = addressText,
+                onAddressChange = { addressText = it },
+                radius = radius,
+                onRadiusChange = { radius = it },
+                isNewAddress = isNewAddress,
+                permissionsGranted = permissionsGranted
+            )
         },
         confirmButton = {
             Button(
-                onClick = { onConfirm(name, addressText, radius, address?.id == 0L || address == null) },
-                enabled = name.isNotBlank() && (permissionsGranted || address?.id != 0L)
+                onClick = {
+                    onConfirm(
+                        name,
+                        addressText,
+                        radius,
+                        isNewAddress
+                    )
+                },
+                enabled = canSave
             ) {
-                Text(if (address?.id == 0L || address == null) "Salvar Local Atual" else "Atualizar Local")
+                Text(confirmButtonText)
             }
         },
         dismissButton = {
@@ -270,4 +266,81 @@ fun WorkAddressDialog(
             }
         }
     )
+}
+
+@Composable
+private fun WorkAddressDialogContent(
+    name: String,
+    onNameChange: (String) -> Unit,
+    addressText: String,
+    onAddressChange: (String) -> Unit,
+    radius: Float,
+    onRadiusChange: (Float) -> Unit,
+    isNewAddress: Boolean,
+    permissionsGranted: Boolean
+) {
+    Column(
+        verticalArrangement = Arrangement.spacedBy(12.dp)
+    ) {
+
+        OutlinedTextField(
+            value = name,
+            onValueChange = onNameChange,
+            label = { Text("Nome (ex: Escritório)") },
+            modifier = Modifier.fillMaxWidth()
+        )
+
+        OutlinedTextField(
+            value = addressText,
+            onValueChange = onAddressChange,
+            label = { Text("Endereço (opcional)") },
+            modifier = Modifier.fillMaxWidth()
+        )
+
+        Text(
+            text = "Raio de Ativação: ${radius.toInt()} metros",
+            style = MaterialTheme.typography.labelMedium
+        )
+
+        Slider(
+            value = radius,
+            onValueChange = onRadiusChange,
+            valueRange = 50f..500f,
+            steps = 9
+        )
+
+        AddressMessage(
+            isNewAddress = isNewAddress,
+            permissionsGranted = permissionsGranted
+        )
+    }
+}
+
+@Composable
+private fun AddressMessage(
+    isNewAddress: Boolean,
+    permissionsGranted: Boolean
+) {
+    when {
+        isNewAddress && permissionsGranted -> {
+            Text(
+                text = "O local será definido com base na sua posição atual.",
+                style = MaterialTheme.typography.bodySmall
+            )
+        }
+
+        isNewAddress -> {
+            Text(
+                text = "Conceda permissão de localização para salvar este local.",
+                color = MaterialTheme.colorScheme.error
+            )
+        }
+
+        else -> {
+            Text(
+                text = "Localização atualizada automaticamente se salvar agora.",
+                style = MaterialTheme.typography.bodySmall
+            )
+        }
+    }
 }

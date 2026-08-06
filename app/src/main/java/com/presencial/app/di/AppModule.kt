@@ -58,7 +58,7 @@ object DatabaseModule {
 
 @Module
 @InstallIn(SingletonComponent::class)
-abstract class RepositoryModule {
+interface RepositoryModule {
 
     @Binds
     @Singleton
