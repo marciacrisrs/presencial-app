@@ -49,6 +49,7 @@ class GetMonthCalendarUseCase @Inject constructor(
             val isWeekend = WorkdayCalculator.isWeekend(current, countSaturdays)
             val isWorkday = WorkdayCalculator.isWorkday(current, countSaturdays)
             val savedStatus = checkInMap[current]?.status
+            val savedSource = checkInMap[current]?.source ?: "MANUAL"
             val isAbsent = absences.any { absence ->
                 !current.isBefore(absence.startDate) && !current.isAfter(absence.endDate) && absence.isFullDay
             }
@@ -70,7 +71,8 @@ class GetMonthCalendarUseCase @Inject constructor(
                     isWorkday = isWorkday,
                     isHoliday = isHoliday,
                     holidayName = holiday?.name,
-                    isEditable = !current.isAfter(today) || isAbsent
+                    isEditable = !current.isAfter(today) || isAbsent,
+                    source = savedSource
                 )
             )
             current = current.plusDays(1)

@@ -89,6 +89,9 @@ fun CalendarScreen(
             text = {
                 Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                     day.holidayName?.let { Text("🎉 Feriado: $it", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.primary) }
+                    if (day.source == "AUTOMATICO") {
+                        Text("📍 Registrado automaticamente via GPS", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.secondary)
+                    }
                     Text("Selecione o status do dia:")
                 }
             },

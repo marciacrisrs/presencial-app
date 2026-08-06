@@ -59,4 +59,18 @@ class NotificationHelper @Inject constructor(
         val manager = context.getSystemService(NotificationManager::class.java)
         manager.notify(NOTIFICATION_ID, notification)
     }
+
+    fun showAutoCheckInNotification() {
+        createChannel()
+        val notification = NotificationCompat.Builder(context, CHANNEL_ID)
+            .setSmallIcon(R.drawable.ic_notification)
+            .setContentTitle("Check-in Automático")
+            .setContentText("Sua presença foi registrada automaticamente ao chegar no trabalho.")
+            .setPriority(NotificationCompat.PRIORITY_DEFAULT)
+            .setAutoCancel(true)
+            .build()
+
+        val manager = context.getSystemService(NotificationManager::class.java)
+        manager.notify(2001, notification)
+    }
 }

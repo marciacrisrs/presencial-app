@@ -11,10 +11,10 @@ class UpdateDayStatusUseCase @Inject constructor(
     private val checkInRepository: CheckInRepository,
     private val monthlySummaryRepository: MonthlySummaryRepository
 ) {
-    suspend operator fun invoke(date: LocalDate, status: DayStatus) {
+    suspend operator fun invoke(date: LocalDate, status: DayStatus, source: String = "MANUAL") {
         when (status) {
             DayStatus.HOME_OFFICE, DayStatus.PRESENCIAL -> {
-                checkInRepository.saveCheckIn(date, status)
+                checkInRepository.saveCheckIn(date, status, source)
             }
             else -> checkInRepository.deleteCheckIn(date)
         }

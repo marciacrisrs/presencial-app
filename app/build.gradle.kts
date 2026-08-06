@@ -73,6 +73,9 @@ dependencies {
     implementation(libs.androidx.work.runtime.ktx)
     implementation(libs.androidx.glance.appwidget)
     implementation(libs.androidx.glance.material3)
+    implementation(libs.play.services.location)
+    implementation(libs.kotlinx.coroutines.play.services)
+    implementation(libs.accompanist.permissions)
 
     implementation(libs.hilt.android)
     ksp(libs.hilt.compiler)

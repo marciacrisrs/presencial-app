@@ -10,9 +10,9 @@ class ToggleTodayCheckInUseCase @Inject constructor(
     private val checkInRepository: CheckInRepository,
     private val monthlySummaryRepository: MonthlySummaryRepository
 ) {
-    suspend operator fun invoke(date: LocalDate = LocalDate.now(), markPresencial: Boolean) {
+    suspend operator fun invoke(date: LocalDate = LocalDate.now(), markPresencial: Boolean, source: String = "MANUAL") {
         if (markPresencial) {
-            checkInRepository.saveCheckIn(date, DayStatus.PRESENCIAL)
+            checkInRepository.saveCheckIn(date, DayStatus.PRESENCIAL, source)
         } else {
             checkInRepository.deleteCheckIn(date)
         }

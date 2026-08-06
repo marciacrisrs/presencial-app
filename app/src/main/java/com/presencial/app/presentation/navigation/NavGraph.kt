@@ -16,6 +16,7 @@ import androidx.navigation.compose.rememberNavController
 import com.presencial.app.presentation.about.AboutScreen
 import com.presencial.app.presentation.absence.AbsenceScreen
 import com.presencial.app.presentation.calendar.CalendarScreen
+import com.presencial.app.presentation.location.WorkAddressScreen
 import com.presencial.app.presentation.dashboard.DashboardScreen
 import com.presencial.app.presentation.history.HistoryScreen
 import com.presencial.app.presentation.settings.SettingsScreen
@@ -76,7 +77,8 @@ fun PresencialNavHost(
             composable(Screen.Settings.route) {
                 SettingsScreen(
                     onNavigateToAbout = { navController.navigate(Screen.About.route) },
-                    onNavigateToAbsences = { navController.navigate(Screen.Absences.route) }
+                    onNavigateToAbsences = { navController.navigate(Screen.Absences.route) },
+                    onNavigateToWorkAddresses = { navController.navigate(Screen.WorkAddresses.route) }
                 )
             }
             composable(Screen.About.route) {
@@ -84,6 +86,9 @@ fun PresencialNavHost(
             }
             composable(Screen.Absences.route) {
                 AbsenceScreen(onBack = { navController.popBackStack() })
+            }
+            composable(Screen.WorkAddresses.route) {
+                WorkAddressScreen(onBack = { navController.popBackStack() })
             }
         }
     }

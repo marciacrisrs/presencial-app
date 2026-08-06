@@ -8,5 +8,6 @@ import java.time.LocalDate
 data class CheckIn(
     val date: LocalDate,
     val status: DayStatus,
-    val updatedAt: Long = System.currentTimeMillis()
+    val updatedAt: Long = System.currentTimeMillis(),
+    val source: String = "MANUAL"
 )

@@ -7,5 +7,6 @@ import androidx.room.PrimaryKey
 data class CheckInEntity(
     @PrimaryKey val dateEpochDay: Long,
     val status: String,
-    val updatedAt: Long
+    val updatedAt: Long,
+    val source: String = "MANUAL"
 )

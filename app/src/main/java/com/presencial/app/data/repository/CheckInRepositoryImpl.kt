@@ -30,9 +30,9 @@ class CheckInRepositoryImpl @Inject constructor(
     override suspend fun getCheckIn(date: LocalDate): CheckIn? =
         checkInDao.getByDate(date.toEpochDay())?.toDomain()
 
-    override suspend fun saveCheckIn(date: LocalDate, status: DayStatus) {
+    override suspend fun saveCheckIn(date: LocalDate, status: DayStatus, source: String) {
         checkInDao.upsert(
-            CheckIn(date = date, status = status).toEntity()
+            CheckIn(date = date, status = status, source = source).toEntity()
         )
     }
 

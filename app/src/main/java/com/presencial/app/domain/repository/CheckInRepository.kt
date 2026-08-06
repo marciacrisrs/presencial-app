@@ -10,7 +10,7 @@ interface CheckInRepository {
     fun observeCheckInsForMonth(yearMonth: YearMonth): Flow<List<CheckIn>>
     fun observeAllCheckIns(): Flow<List<CheckIn>>
     suspend fun getCheckIn(date: LocalDate): CheckIn?
-    suspend fun saveCheckIn(date: LocalDate, status: DayStatus)
+    suspend fun saveCheckIn(date: LocalDate, status: DayStatus, source: String = "MANUAL")
     suspend fun deleteCheckIn(date: LocalDate)
     suspend fun getCheckInsBetween(start: LocalDate, end: LocalDate): List<CheckIn>
 }

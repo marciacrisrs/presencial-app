@@ -41,7 +41,8 @@ import androidx.activity.result.contract.ActivityResultContracts
 fun SettingsScreen(
     viewModel: SettingsViewModel = hiltViewModel(),
     onNavigateToAbout: () -> Unit = {},
-    onNavigateToAbsences: () -> Unit = {}
+    onNavigateToAbsences: () -> Unit = {},
+    onNavigateToWorkAddresses: () -> Unit = {}
 ) {
     val settings by viewModel.settings.collectAsStateWithLifecycle()
     val message by viewModel.message.collectAsStateWithLifecycle()
@@ -169,6 +170,16 @@ fun SettingsScreen(
                         )
                     ) {
                         Text("Gerenciar Ausências")
+                    }
+                    Button(
+                        onClick = onNavigateToWorkAddresses,
+                        modifier = Modifier.fillMaxWidth(),
+                        colors = androidx.compose.material3.ButtonDefaults.buttonColors(
+                            containerColor = MaterialTheme.colorScheme.secondaryContainer,
+                            contentColor = MaterialTheme.colorScheme.onSecondaryContainer
+                        )
+                    ) {
+                        Text("Locais de Trabalho (Check-in Automático)")
                     }
                     Button(
                         onClick = onNavigateToAbout,

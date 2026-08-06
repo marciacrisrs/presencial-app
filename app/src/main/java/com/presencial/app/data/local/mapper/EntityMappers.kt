@@ -11,13 +11,15 @@ import java.time.YearMonth
 fun CheckInEntity.toDomain(): CheckIn = CheckIn(
     date = LocalDate.ofEpochDay(dateEpochDay),
     status = DayStatus.valueOf(status),
-    updatedAt = updatedAt
+    updatedAt = updatedAt,
+    source = source
 )
 
 fun CheckIn.toEntity(): CheckInEntity = CheckInEntity(
     dateEpochDay = date.toEpochDay(),
     status = status.name,
-    updatedAt = updatedAt
+    updatedAt = updatedAt,
+    source = source
 )
 
 fun MonthlySummaryEntity.toDomain(): MonthlySummary = MonthlySummary(
