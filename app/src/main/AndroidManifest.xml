@@ -30,7 +30,7 @@
 
         <receiver
             android:name=".widget.PresencialWidgetReceiver"
-            android:exported="true"
+            android:exported="false"
             android:label="@string/widget_name">
             <intent-filter>
                 <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
@@ -42,7 +42,7 @@
 
         <receiver
             android:name=".worker.GeofenceBroadcastReceiver"
-            android:exported="true" />
+            android:exported="false" />
 
         <provider
             android:name="androidx.startup.InitializationProvider"
