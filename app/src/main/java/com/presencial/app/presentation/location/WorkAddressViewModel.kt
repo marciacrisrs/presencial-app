@@ -26,23 +26,32 @@ class WorkAddressViewModel @Inject constructor(
     val addresses: StateFlow<List<WorkAddress>> = repository.getAllAddresses()
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
+    private val _editingAddress = MutableStateFlow<WorkAddress?>(null)
+    val editingAddress: StateFlow<WorkAddress?> = _editingAddress
+
     private val _message = MutableStateFlow<String?>(null)
     val message: StateFlow<String?> = _message
 
     @SuppressLint("MissingPermission")
-    fun saveCurrentLocationAsWorkAddress(name: String, addressText: String) {
+    fun saveCurrentLocationAsWorkAddress(name: String, addressText: String, radius: Float) {
         viewModelScope.launch {
             try {
                 val location = fusedLocationProviderClient.lastLocation.await()
                 if (location != null) {
-                    saveAddress(
-                        WorkAddress(
-                            name = name,
-                            addressText = addressText,
-                            latitude = location.latitude,
-                            longitude = location.longitude
-                        )
+                    val addressToSave = _editingAddress.value?.copy(
+                        name = name,
+                        addressText = addressText,
+                        latitude = location.latitude,
+                        longitude = location.longitude,
+                        radius = radius
+                    ) ?: WorkAddress(
+                        name = name,
+                        addressText = addressText,
+                        latitude = location.latitude,
+                        longitude = location.longitude,
+                        radius = radius
                     )
+                    saveAddress(addressToSave)
                 } else {
                     _message.value = "Não foi possível obter a localização atual"
                 }
@@ -61,7 +70,16 @@ class WorkAddressViewModel @Inject constructor(
             }
             updateGeofences()
             _message.value = "Local salvo com sucesso"
+            _editingAddress.value = null
         }
+    }
+
+    fun startEditing(address: WorkAddress?) {
+        _editingAddress.value = address
+    }
+
+    fun stopEditing() {
+        _editingAddress.value = null
     }
 
     fun deleteAddress(address: WorkAddress) {

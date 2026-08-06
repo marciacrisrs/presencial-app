@@ -42,7 +42,8 @@ class GeofenceManager @Inject constructor(
                 .setRequestId(address.id.toString())
                 .setCircularRegion(address.latitude, address.longitude, address.radius)
                 .setExpirationDuration(Geofence.NEVER_EXPIRE)
-                .setTransitionTypes(Geofence.GEOFENCE_TRANSITION_ENTER)
+                .setTransitionTypes(Geofence.GEOFENCE_TRANSITION_DWELL)
+                .setLoiteringDelay(30000) // 30 seconds
                 .build()
         }
 
@@ -52,7 +53,7 @@ class GeofenceManager @Inject constructor(
         }
 
         val request = GeofencingRequest.Builder().apply {
-            setInitialTrigger(GeofencingRequest.INITIAL_TRIGGER_ENTER)
+            setInitialTrigger(GeofencingRequest.INITIAL_TRIGGER_DWELL)
             addGeofences(geofences)
         }.build()
 

@@ -38,7 +38,7 @@ class GeofenceBroadcastReceiver : BroadcastReceiver() {
 
         val geofenceTransition = geofencingEvent.geofenceTransition
 
-        if (geofenceTransition == Geofence.GEOFENCE_TRANSITION_ENTER) {
+        if (geofenceTransition == Geofence.GEOFENCE_TRANSITION_DWELL) {
             val entryPoint = EntryPointAccessors.fromApplication(
                 context.applicationContext,
                 GeofenceEntryPoint::class.java

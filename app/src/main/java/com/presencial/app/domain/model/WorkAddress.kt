@@ -6,6 +6,6 @@ data class WorkAddress(
     val addressText: String,
     val latitude: Double,
     val longitude: Double,
-    val radius: Float = 100f,
+    val radius: Float = 50f,
     val isActive: Boolean = true
 )
