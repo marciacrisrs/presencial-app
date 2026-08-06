@@ -82,7 +82,10 @@ fun DashboardScreen(
             visible = true,
             enter = fadeIn() + slideInVertically(initialOffsetY = { 60 })
         ) {
-            SmartMessageCard(message = dashboard.smartMessage)
+            SmartMessageCard(
+                message = dashboard.smartMessage,
+                isLoading = dashboard.isLoadingAi
+            )
         }
 
         AnimatedVisibility(

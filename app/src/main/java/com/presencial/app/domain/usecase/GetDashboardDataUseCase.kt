@@ -16,6 +16,7 @@ import com.presencial.app.domain.util.SmartMessageGenerator
 import com.presencial.app.domain.util.WorkdayCalculator
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.transform
 import java.time.LocalDate
 import java.time.YearMonth
 import javax.inject.Inject
@@ -23,7 +24,8 @@ import javax.inject.Inject
 class GetDashboardDataUseCase @Inject constructor(
     private val checkInRepository: CheckInRepository,
     private val absenceRepository: AbsenceRepository,
-    private val settingsRepository: SettingsRepository
+    private val settingsRepository: SettingsRepository,
+    private val getAiSmartMessageUseCase: GetAiSmartMessageUseCase
 ) {
     operator fun invoke(yearMonth: YearMonth = YearMonth.now()): Flow<DashboardData> {
         return combine(
@@ -32,6 +34,18 @@ class GetDashboardDataUseCase @Inject constructor(
             settingsRepository.settings
         ) { checkIns, absences, settings ->
             buildDashboard(yearMonth, checkIns, absences, settings.requiredPercentage, settings.countSaturdaysAsWorkdays)
+        }.transform { dashboard ->
+            emit(dashboard.copy(isLoadingAi = true))
+            val aiMessage = getAiSmartMessageUseCase(
+                completedDays = dashboard.completedDays,
+                requiredDays = dashboard.requiredDays,
+                remainingDays = dashboard.remainingDays,
+                achievedPercentage = dashboard.achievedPercentage,
+                today = LocalDate.now(),
+                yearMonth = dashboard.yearMonth,
+                countSaturdays = dashboard.countSaturdays
+            )
+            emit(dashboard.copy(smartMessage = aiMessage, isLoadingAi = false))
         }
     }
 
@@ -73,6 +87,7 @@ class GetDashboardDataUseCase @Inject constructor(
                 completedDays, requiredDays, remainingDays, achievedPercentage,
                 today, yearMonth, countSaturdays
             ),
+            countSaturdays = countSaturdays,
             todayIsPresencial = todayCheckIn?.status == DayStatus.PRESENCIAL,
             todayIsWorkday = WorkdayCalculator.isWorkday(today, countSaturdays),
             yesterdayIsPending = yesterdayIsPending,

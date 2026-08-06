@@ -98,18 +98,28 @@ fun CircularProgressCard(
 }
 
 @Composable
-fun SmartMessageCard(message: String, modifier: Modifier = Modifier) {
+fun SmartMessageCard(
+    message: String,
+    modifier: Modifier = Modifier,
+    isLoading: Boolean = false
+) {
     Card(
         modifier = modifier.fillMaxWidth(),
         shape = RoundedCornerShape(12.dp),
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.5f))
     ) {
-        Text(
-            text = message,
-            modifier = Modifier.padding(12.dp).fillMaxWidth(),
-            style = MaterialTheme.typography.bodyLarge,
-            textAlign = TextAlign.Center
-        )
+        Box(modifier = Modifier.padding(12.dp).fillMaxWidth()) {
+            if (isLoading) {
+                ShimmerBox(height = 20.dp, widthFraction = 0.8f)
+            } else {
+                Text(
+                    text = message,
+                    style = MaterialTheme.typography.bodyLarge,
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier.fillMaxWidth()
+                )
+            }
+        }
     }
 }
 
