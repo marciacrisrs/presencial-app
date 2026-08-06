@@ -29,6 +29,7 @@ mockk = "1.14.11"
 turbine = "1.2.1"
 kover = "0.8.3"
 junit-platform = "1.11.0"
+detekt = "2.0.0-alpha.5"
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
@@ -81,3 +82,4 @@ kotlin-compose = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "ko
 ksp = { id = "com.google.devtools.ksp", version.ref = "ksp" }
 hilt = { id = "com.google.dagger.hilt.android", version.ref = "hilt" }
 kover = { id = "org.jetbrains.kotlinx.kover", version.ref = "kover" }
+detekt = { id = "dev.detekt", version.ref = "detekt" }
