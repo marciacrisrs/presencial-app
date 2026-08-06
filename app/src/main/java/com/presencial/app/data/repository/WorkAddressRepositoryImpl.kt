@@ -2,6 +2,8 @@ package com.presencial.app.data.repository
 
 import com.presencial.app.data.local.dao.WorkAddressDao
 import com.presencial.app.data.local.entity.WorkAddressEntity
+import com.presencial.app.data.local.mapper.toDomain
+import com.presencial.app.data.local.mapper.toEntity
 import com.presencial.app.domain.model.WorkAddress
 import com.presencial.app.domain.repository.WorkAddressRepository
 import kotlinx.coroutines.flow.Flow
@@ -32,24 +34,4 @@ class WorkAddressRepositoryImpl @Inject constructor(
 
     override suspend fun getAddressById(id: Long): WorkAddress? =
         workAddressDao.getAddressById(id)?.toDomain()
-
-    private fun WorkAddressEntity.toDomain() = WorkAddress(
-        id = id,
-        name = name,
-        addressText = addressText,
-        latitude = latitude,
-        longitude = longitude,
-        radius = radius,
-        isActive = isActive
-    )
-
-    private fun WorkAddress.toEntity() = WorkAddressEntity(
-        id = id,
-        name = name,
-        addressText = addressText,
-        latitude = latitude,
-        longitude = longitude,
-        radius = radius,
-        isActive = isActive
-    )
 }

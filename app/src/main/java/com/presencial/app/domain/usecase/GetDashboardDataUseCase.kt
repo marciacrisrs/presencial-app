@@ -13,6 +13,7 @@ import com.presencial.app.domain.repository.SettingsRepository
 import com.presencial.app.domain.util.GoalCalculator
 import com.presencial.app.domain.util.HolidayCalculator
 import com.presencial.app.domain.util.SmartMessageGenerator
+import com.presencial.app.domain.util.TimeProvider
 import com.presencial.app.domain.util.WorkdayCalculator
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
@@ -25,9 +26,10 @@ class GetDashboardDataUseCase @Inject constructor(
     private val checkInRepository: CheckInRepository,
     private val absenceRepository: AbsenceRepository,
     private val settingsRepository: SettingsRepository,
-    private val getAiSmartMessageUseCase: GetAiSmartMessageUseCase
+    private val getAiSmartMessageUseCase: GetAiSmartMessageUseCase,
+    private val timeProvider: TimeProvider
 ) {
-    operator fun invoke(yearMonth: YearMonth = YearMonth.now()): Flow<DashboardData> {
+    operator fun invoke(yearMonth: YearMonth = timeProvider.currentMonth()): Flow<DashboardData> {
         return combine(
             checkInRepository.observeCheckInsForMonth(yearMonth),
             absenceRepository.getAbsencesInRange(yearMonth.atDay(1), yearMonth.atEndOfMonth()),
@@ -41,7 +43,7 @@ class GetDashboardDataUseCase @Inject constructor(
                 requiredDays = dashboard.requiredDays,
                 remainingDays = dashboard.remainingDays,
                 achievedPercentage = dashboard.achievedPercentage,
-                today = LocalDate.now(),
+                today = timeProvider.today(),
                 yearMonth = dashboard.yearMonth,
                 countSaturdays = dashboard.countSaturdays
             )
@@ -56,7 +58,7 @@ class GetDashboardDataUseCase @Inject constructor(
         requiredPercentage: Int,
         countSaturdays: Boolean
     ): DashboardData {
-        val today = LocalDate.now()
+        val today = timeProvider.today()
         val workdays = WorkdayCalculator.countLiquidWorkdaysInMonth(yearMonth, countSaturdays, absences)
         val requiredDays = GoalCalculator.calculateRequiredDays(workdays, requiredPercentage)
         val completedDays = checkIns.count { it.status == DayStatus.PRESENCIAL }

@@ -8,6 +8,7 @@ import com.presencial.app.domain.repository.AbsenceRepository
 import com.presencial.app.domain.repository.CheckInRepository
 import com.presencial.app.domain.repository.SettingsRepository
 import com.presencial.app.domain.util.HolidayCalculator
+import com.presencial.app.domain.util.TimeProvider
 import com.presencial.app.domain.util.WorkdayCalculator
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
@@ -18,7 +19,8 @@ import javax.inject.Inject
 class GetMonthCalendarUseCase @Inject constructor(
     private val checkInRepository: CheckInRepository,
     private val absenceRepository: AbsenceRepository,
-    private val settingsRepository: SettingsRepository
+    private val settingsRepository: SettingsRepository,
+    private val timeProvider: TimeProvider
 ) {
     operator fun invoke(yearMonth: YearMonth): Flow<List<DayInfo>> {
         return combine(
@@ -36,7 +38,7 @@ class GetMonthCalendarUseCase @Inject constructor(
         absences: List<Absence>,
         countSaturdays: Boolean
     ): List<DayInfo> {
-        val today = LocalDate.now()
+        val today = timeProvider.today()
         val checkInMap = checkIns.associateBy { it.date }
         val start = yearMonth.atDay(1)
         val end = yearMonth.atEndOfMonth()

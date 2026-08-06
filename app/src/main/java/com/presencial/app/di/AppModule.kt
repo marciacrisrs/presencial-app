@@ -19,6 +19,8 @@ import com.presencial.app.domain.repository.CheckInRepository
 import com.presencial.app.domain.repository.MonthlySummaryRepository
 import com.presencial.app.domain.repository.SettingsRepository
 import com.presencial.app.domain.repository.WorkAddressRepository
+import com.presencial.app.domain.util.DefaultTimeProvider
+import com.presencial.app.domain.util.TimeProvider
 import dagger.Binds
 import dagger.Module
 import dagger.Provides
@@ -62,7 +64,11 @@ interface RepositoryModule {
 
     @Binds
     @Singleton
-    abstract fun bindCheckInRepository(impl: CheckInRepositoryImpl): CheckInRepository
+    fun bindTimeProvider(impl: DefaultTimeProvider): TimeProvider
+
+    @Binds
+    @Singleton
+    fun bindCheckInRepository(impl: CheckInRepositoryImpl): CheckInRepository
 
     @Binds
     @Singleton

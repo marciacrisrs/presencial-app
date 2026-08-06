@@ -2,6 +2,8 @@ package com.presencial.app.data.repository
 
 import com.presencial.app.data.local.dao.AbsenceDao
 import com.presencial.app.data.local.entity.AbsenceEntity
+import com.presencial.app.data.local.mapper.toDomain
+import com.presencial.app.data.local.mapper.toEntity
 import com.presencial.app.domain.model.Absence
 import com.presencial.app.domain.model.AbsenceType
 import com.presencial.app.domain.repository.AbsenceRepository
@@ -32,26 +34,4 @@ class AbsenceRepositoryImpl @Inject constructor(
     override suspend fun deleteById(id: Long) {
         absenceDao.deleteById(id)
     }
-
-    private fun AbsenceEntity.toDomain() = Absence(
-        id = id,
-        type = AbsenceType.valueOf(type),
-        startDate = LocalDate.ofEpochDay(startDateEpochDay),
-        endDate = LocalDate.ofEpochDay(endDateEpochDay),
-        isFullDay = isFullDay,
-        hours = hours,
-        notes = notes,
-        isCounted = isCounted
-    )
-
-    private fun Absence.toEntity() = AbsenceEntity(
-        id = id,
-        type = type.name,
-        startDateEpochDay = startDate.toEpochDay(),
-        endDateEpochDay = endDate.toEpochDay(),
-        isFullDay = isFullDay,
-        hours = hours,
-        notes = notes,
-        isCounted = isCounted
-    )
 }
