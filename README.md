@@ -9,9 +9,10 @@ Aplicativo Android para controle de comparecimento presencial no trabalho. Calcu
 - **Histórico** — resumo de todos os meses registrados com compartilhamento
 - **Estatísticas** — gráficos de evolução, média anual, sequências e exportação PDF
 - **Configurações** — percentual de presença, sábados como dias úteis, backup/restauração JSON
+- **Ausências** — registro de férias, day off, licenças e ausências com desconto automático na meta mensal
 - **Notificações** — lembrete às 18h em dias úteis (se ainda não confirmou presença)
 - **Widget** — exibe "Faltam X dias presenciais" diretamente na tela inicial
-- **Sobre** — informações da versão, política de privacidade (dados locais) e link para o desenvolvedor
+- **Sobre** — informações da versão 1.0.1, política de privacidade (dados locais) e link para o desenvolvedor
 - **Tema claro/escuro** — Material Design 3 com Material You
 
 ## Tecnologias
@@ -51,8 +52,8 @@ UI (Compose) → ViewModel → UseCase → Repository → Room / DataStore
 
 ### Regras de negócio principais
 
-1. **Meta mensal:** `ceil(dias_úteis × percentual / 100)`
-2. **Dias úteis:** exclui domingos, feriados nacionais e sábados (configurável)
+1. **Meta mensal:** `ceil(dias_úteis_líquidos × percentual / 100)`
+2. **Dias úteis líquidos:** exclui domingos, feriados nacionais, sábados (configurável) e períodos de ausência registrados (férias, licenças, etc.)
 3. **Feriados móveis:** calculados a partir da Páscoa (algoritmo de Meeus/Jones/Butcher)
 4. **Check-in:** apenas dias úteis passados ou hoje são editáveis
 
@@ -104,6 +105,7 @@ Testes unitários na camada de domínio:
 ## Estrutura de entidades Room
 
 - **CheckIn** — `dateEpochDay`, `status`, `updatedAt`
+- **Absence** — `id`, `type`, `startDate`, `endDate`, `notes` (períodos de afastamento)
 - **MonthlySummary** — agregado mensal cacheado para histórico rápido
 - **Settings** — entidade reservada; configurações ativas via DataStore
 
