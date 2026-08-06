@@ -1,4 +1,4 @@
-package com.presencial.app.presentation.location
+package com.presencial.app.presentation.location.model
 
 import android.annotation.SuppressLint
 import androidx.lifecycle.ViewModel

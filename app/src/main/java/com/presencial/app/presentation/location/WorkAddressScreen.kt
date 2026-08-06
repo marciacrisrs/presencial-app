@@ -1,49 +1,65 @@
 package com.presencial.app.presentation.location
 
 import android.Manifest
-import androidx.compose.animation.*
-import androidx.compose.animation.core.tween
-import androidx.compose.foundation.layout.*
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.expandVertically
+import androidx.compose.animation.fadeIn
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.itemsIndexed
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.*
+import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.rememberMultiplePermissionsState
 import com.presencial.app.domain.model.WorkAddress
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxWidth
+import com.presencial.app.presentation.location.components.WorkAddressDialog
+import com.presencial.app.presentation.location.model.WorkAddressViewModel
 
-@OptIn(ExperimentalMaterial3Api::class, ExperimentalPermissionsApi::class)
+@OptIn(
+    ExperimentalMaterial3Api::class,
+    ExperimentalPermissionsApi::class
+)
 @Composable
 fun WorkAddressScreen(
     viewModel: WorkAddressViewModel = hiltViewModel(),
     onBack: () -> Unit
 ) {
+
     val addresses by viewModel.addresses.collectAsStateWithLifecycle()
     val editingAddress by viewModel.editingAddress.collectAsStateWithLifecycle()
     val message by viewModel.message.collectAsStateWithLifecycle()
-    val snackbarHostState = remember { SnackbarHostState() }
-    var showBackgroundRationale by remember { mutableStateOf(false) }
 
-    val foregroundPermissionsState = rememberMultiplePermissionsState(
+    val snackbarHostState = remember { SnackbarHostState() }
+
+    var showBackgroundDialog by remember {
+        mutableStateOf(false)
+    }
+
+    val foregroundPermissions = rememberMultiplePermissionsState(
         listOf(
             Manifest.permission.ACCESS_FINE_LOCATION,
             Manifest.permission.ACCESS_COARSE_LOCATION
         )
     )
 
-    val backgroundPermissionState = rememberMultiplePermissionsState(
-        listOf(Manifest.permission.ACCESS_BACKGROUND_LOCATION)
+    val backgroundPermission = rememberMultiplePermissionsState(
+        listOf(
+            Manifest.permission.ACCESS_BACKGROUND_LOCATION
+        )
     )
 
     LaunchedEffect(message) {
@@ -55,116 +71,214 @@ fun WorkAddressScreen(
 
     Scaffold(
         topBar = {
-            TopAppBar(
-                title = { Text("Locais de Trabalho") },
-                navigationIcon = {
-                    IconButton(onClick = onBack) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Voltar")
-                    }
-                }
-            )
+            TopBar(onBack)
+        },
+        snackbarHost = {
+            SnackbarHost(snackbarHostState)
         },
         floatingActionButton = {
-            FloatingActionButton(onClick = { viewModel.startEditing(null) }) {
-                Icon(Icons.Default.Add, contentDescription = "Adicionar Local")
+            FloatingActionButton(
+                onClick = {
+                    viewModel.startEditing(null)
+                }
+            ) {
+                Icon(
+                    Icons.Default.Add,
+                    contentDescription = "Adicionar"
+                )
             }
-        },
-        snackbarHost = { SnackbarHost(hostState = snackbarHostState) }
+        }
     ) { padding ->
-        Column(modifier = Modifier.padding(padding).fillMaxSize()) {
-            AnimatedVisibility(
-                visible = !foregroundPermissionsState.allPermissionsGranted,
-                enter = expandVertically() + fadeIn()
-            ) {
-                PermissionCard(
-                    title = "Localização Necessária",
-                    description = "Para o check-in automático funcionar, precisamos de acesso à sua localização.",
-                    buttonText = "Conceder Permissão",
-                    onClick = { foregroundPermissionsState.launchMultiplePermissionRequest() }
-                )
-            }
 
-            AnimatedVisibility(
-                visible = foregroundPermissionsState.allPermissionsGranted && !backgroundPermissionState.allPermissionsGranted,
-                enter = expandVertically() + fadeIn()
-            ) {
-                PermissionCard(
-                    title = "Localização em Background",
-                    description = "O check-in automático só funciona se o app puder acessar a localização \"O tempo todo\". Isso permite registrar sua presença mesmo com o celular no bolso.",
-                    buttonText = "Configurar 'O tempo todo'",
-                    onClick = { showBackgroundRationale = true }
-                )
-            }
+        Column(
+            modifier = Modifier
+                .padding(padding)
+                .fillMaxSize()
+        ) {
 
-            if (addresses.isEmpty()) {
-                Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                    Text("Nenhum local cadastrado", style = MaterialTheme.typography.bodyLarge)
+            PermissionSection(
+                foregroundGranted = foregroundPermissions.allPermissionsGranted,
+                backgroundGranted = backgroundPermission.allPermissionsGranted,
+                onForegroundPermission = {
+                    foregroundPermissions.launchMultiplePermissionRequest()
+                },
+                onBackgroundPermission = {
+                    showBackgroundDialog = true
                 }
-            } else {
-                LazyColumn(
-                    contentPadding = PaddingValues(16.dp),
-                    verticalArrangement = Arrangement.spacedBy(12.dp)
-                ) {
-                    itemsIndexed(addresses, key = { _, it -> it.id }) { index, address ->
-                        AnimatedVisibility(
-                            visible = true,
-                            enter = fadeIn(animationSpec = tween(400, delayMillis = index * 50)) +
-                                    slideInHorizontally(animationSpec = tween(400, delayMillis = index * 50)) { -it / 4 }
-                        ) {
-                            WorkAddressItem(
-                                address = address,
-                                onDelete = { viewModel.deleteAddress(address) },
-                                onToggle = { viewModel.toggleActive(address) },
-                                onEdit = { viewModel.startEditing(address) }
-                            )
-                        }
-                    }
-                }
-            }
+            )
+
+            WorkAddressList(
+                addresses = addresses,
+                onDelete = viewModel::deleteAddress,
+                onToggle = viewModel::toggleActive,
+                onEdit = viewModel::startEditing
+            )
         }
     }
 
-    if (showBackgroundRationale) {
-        AlertDialog(
-            onDismissRequest = { showBackgroundRationale = false },
-            title = { Text("Permissão em Background") },
-            text = { Text("Para habilitar o check-in automático, selecione 'Permitir o tempo todo' na próxima tela de configurações.") },
-            confirmButton = {
-                Button(onClick = {
-                    showBackgroundRationale = false
-                    backgroundPermissionState.launchMultiplePermissionRequest()
-                }) {
-                    Text("Entendi")
-                }
+    if (showBackgroundDialog) {
+        BackgroundPermissionDialog(
+            onDismiss = {
+                showBackgroundDialog = false
+            },
+            onConfirm = {
+                showBackgroundDialog = false
+                backgroundPermission.launchMultiplePermissionRequest()
             }
         )
     }
 
     editingAddress?.let { address ->
+
         WorkAddressDialog(
             address = address,
+            permissionsGranted = foregroundPermissions.allPermissionsGranted,
             onDismiss = viewModel::stopEditing,
             onConfirm = { name, addressText, radius, useCurrent ->
+
                 if (useCurrent) {
-                    viewModel.saveCurrentLocationAsWorkAddress(name, addressText, radius)
+                    viewModel.saveCurrentLocationAsWorkAddress(
+                        name,
+                        addressText,
+                        radius
+                    )
                 } else {
-                    viewModel.saveAddress(address.copy(name = name, addressText = addressText, radius = radius))
+                    viewModel.saveAddress(
+                        address.copy(
+                            name = name,
+                            addressText = addressText,
+                            radius = radius
+                        )
+                    )
                 }
-            },
-            permissionsGranted = foregroundPermissionsState.allPermissionsGranted
+            }
+        )
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun TopBar(
+    onBack: () -> Unit
+) {
+    TopAppBar(
+        title = {
+            Text("Locais de Trabalho")
+        },
+        navigationIcon = {
+            IconButton(onClick = onBack) {
+                Icon(
+                    Icons.AutoMirrored.Filled.ArrowBack,
+                    contentDescription = "Voltar"
+                )
+            }
+        }
+    )
+}
+
+@Composable
+private fun PermissionSection(
+    foregroundGranted: Boolean,
+    backgroundGranted: Boolean,
+    onForegroundPermission: () -> Unit,
+    onBackgroundPermission: () -> Unit
+) {
+
+    AnimatedVisibility(
+        visible = !foregroundGranted,
+        enter = expandVertically() + fadeIn()
+    ) {
+
+        PermissionCard(
+            title = "Localização Necessária",
+            description = "Para o check-in automático funcionar, precisamos de acesso à sua localização.",
+            buttonText = "Conceder Permissão",
+            onClick = onForegroundPermission
+        )
+    }
+
+    AnimatedVisibility(
+        visible = foregroundGranted && !backgroundGranted,
+        enter = expandVertically() + fadeIn()
+    ) {
+
+        PermissionCard(
+            title = "Localização em Background",
+            description = "O check-in automático só funciona se o app puder acessar a localização \"O tempo todo\".",
+            buttonText = "Configurar",
+            onClick = onBackgroundPermission
         )
     }
 }
 
 @Composable
-fun PermissionCard(title: String, description: String, buttonText: String, onClick: () -> Unit) {
-    Card(
-        modifier = Modifier.padding(16.dp).fillMaxWidth(),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.errorContainer)
+private fun WorkAddressList(
+    addresses: List<WorkAddress>,
+    onDelete: (WorkAddress) -> Unit,
+    onToggle: (WorkAddress) -> Unit,
+    onEdit: (WorkAddress) -> Unit
+) {
+
+    if (addresses.isEmpty()) {
+
+        EmptyAddressState()
+        return
+    }
+
+    LazyColumn {
+
+        itemsIndexed(
+            addresses,
+            key = { _, item -> item.id }
+        ) { _, address ->
+
+            WorkAddressItem(
+                address = address,
+                onDelete = {
+                    onDelete(address)
+                },
+                onToggle = {
+                    onToggle(address)
+                },
+                onEdit = {
+                    onEdit(address)
+                }
+            )
+        }
+    }
+}
+
+@Composable
+private fun EmptyAddressState() {
+    androidx.compose.foundation.layout.Box(
+        modifier = Modifier.fillMaxSize(),
+        contentAlignment = androidx.compose.ui.Alignment.Center
     ) {
-        Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-            Text(title, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
-            Text(description)
+        Text("Nenhum local cadastrado")
+    }
+}
+
+@Composable
+private fun PermissionCard(
+    title: String,
+    description: String,
+    buttonText: String,
+    onClick: () -> Unit
+) {
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(16.dp),
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.secondaryContainer
+        )
+    ) {
+        Column(
+            modifier = Modifier.padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            Text(text = title, style = MaterialTheme.typography.titleMedium)
+            Text(text = description, style = MaterialTheme.typography.bodyMedium)
             Button(onClick = onClick) {
                 Text(buttonText)
             }
@@ -173,91 +287,19 @@ fun PermissionCard(title: String, description: String, buttonText: String, onCli
 }
 
 @Composable
-fun WorkAddressItem(
-    address: WorkAddress,
-    onDelete: () -> Unit,
-    onToggle: () -> Unit,
-    onEdit: () -> Unit
-) {
-    Card(
-        shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.4f)),
-        onClick = onEdit
-    ) {
-        Row(
-            modifier = Modifier.padding(16.dp).fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Column(modifier = Modifier.weight(1f)) {
-                Text(text = address.name, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
-                Text(text = address.addressText, style = MaterialTheme.typography.bodySmall)
-                Text(
-                    text = "Raio: ${address.radius.toInt()}m",
-                    style = MaterialTheme.typography.labelSmall,
-                    color = MaterialTheme.colorScheme.primary
-                )
-            }
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Switch(checked = address.isActive, onCheckedChange = { onToggle() })
-                IconButton(onClick = onDelete) {
-                    Icon(Icons.Default.Delete, contentDescription = "Remover", tint = MaterialTheme.colorScheme.error)
-                }
-            }
-        }
-    }
-}
-
-@Composable
-fun WorkAddressDialog(
-    address: WorkAddress?,
+private fun BackgroundPermissionDialog(
     onDismiss: () -> Unit,
-    onConfirm: (String, String, Float, Boolean) -> Unit,
-    permissionsGranted: Boolean
+    onConfirm: () -> Unit
 ) {
-    val isNewAddress = address == null || address.id == 0L
-
-    var name by remember { mutableStateOf(address?.name.orEmpty()) }
-    var addressText by remember { mutableStateOf(address?.addressText.orEmpty()) }
-    var radius by remember { mutableStateOf(address?.radius ?: 50f) }
-
-    val dialogTitle = if (isNewAddress) "Novo Local" else "Editar Local"
-    val confirmButtonText =
-        if (isNewAddress) "Salvar Local Atual" else "Atualizar Local"
-
-    val canSave =
-        name.isNotBlank() && (permissionsGranted || !isNewAddress)
-
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = {
-            Text(dialogTitle)
-        },
+        title = { Text("Localização \"O tempo todo\"") },
         text = {
-            WorkAddressDialogContent(
-                name = name,
-                onNameChange = { name = it },
-                addressText = addressText,
-                onAddressChange = { addressText = it },
-                radius = radius,
-                onRadiusChange = { radius = it },
-                isNewAddress = isNewAddress,
-                permissionsGranted = permissionsGranted
-            )
+            Text("Para que o app registre seu comparecimento automaticamente, selecione a opção \"Permitir o tempo todo\" na próxima tela de configurações.")
         },
         confirmButton = {
-            Button(
-                onClick = {
-                    onConfirm(
-                        name,
-                        addressText,
-                        radius,
-                        isNewAddress
-                    )
-                },
-                enabled = canSave
-            ) {
-                Text(confirmButtonText)
+            TextButton(onClick = onConfirm) {
+                Text("Ir para Configurações")
             }
         },
         dismissButton = {
@@ -269,78 +311,46 @@ fun WorkAddressDialog(
 }
 
 @Composable
-private fun WorkAddressDialogContent(
-    name: String,
-    onNameChange: (String) -> Unit,
-    addressText: String,
-    onAddressChange: (String) -> Unit,
-    radius: Float,
-    onRadiusChange: (Float) -> Unit,
-    isNewAddress: Boolean,
-    permissionsGranted: Boolean
+private fun WorkAddressItem(
+    address: WorkAddress,
+    onDelete: () -> Unit,
+    onToggle: () -> Unit,
+    onEdit: () -> Unit
 ) {
-    Column(
-        verticalArrangement = Arrangement.spacedBy(12.dp)
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp, vertical = 8.dp),
+        onClick = onEdit
     ) {
-
-        OutlinedTextField(
-            value = name,
-            onValueChange = onNameChange,
-            label = { Text("Nome (ex: Escritório)") },
-            modifier = Modifier.fillMaxWidth()
-        )
-
-        OutlinedTextField(
-            value = addressText,
-            onValueChange = onAddressChange,
-            label = { Text("Endereço (opcional)") },
-            modifier = Modifier.fillMaxWidth()
-        )
-
-        Text(
-            text = "Raio de Ativação: ${radius.toInt()} metros",
-            style = MaterialTheme.typography.labelMedium
-        )
-
-        Slider(
-            value = radius,
-            onValueChange = onRadiusChange,
-            valueRange = 50f..500f,
-            steps = 9
-        )
-
-        AddressMessage(
-            isNewAddress = isNewAddress,
-            permissionsGranted = permissionsGranted
-        )
-    }
-}
-
-@Composable
-private fun AddressMessage(
-    isNewAddress: Boolean,
-    permissionsGranted: Boolean
-) {
-    when {
-        isNewAddress && permissionsGranted -> {
-            Text(
-                text = "O local será definido com base na sua posição atual.",
-                style = MaterialTheme.typography.bodySmall
-            )
-        }
-
-        isNewAddress -> {
-            Text(
-                text = "Conceda permissão de localização para salvar este local.",
-                color = MaterialTheme.colorScheme.error
-            )
-        }
-
-        else -> {
-            Text(
-                text = "Localização atualizada automaticamente se salvar agora.",
-                style = MaterialTheme.typography.bodySmall
-            )
+        Row(
+            modifier = Modifier
+                .padding(16.dp)
+                .fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceBetween
+        ) {
+            Column(modifier = Modifier.weight(1f)) {
+                Text(text = address.name, style = MaterialTheme.typography.titleMedium)
+                Text(text = address.addressText, style = MaterialTheme.typography.bodySmall)
+                Text(
+                    text = "Raio: ${address.radius.toInt()}m",
+                    style = MaterialTheme.typography.labelSmall
+                )
+            }
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Switch(
+                    checked = address.isActive,
+                    onCheckedChange = { onToggle() }
+                )
+                IconButton(onClick = onDelete) {
+                    Icon(
+                        Icons.Default.Delete,
+                        contentDescription = "Excluir",
+                        tint = MaterialTheme.colorScheme.error
+                    )
+                }
+            }
         }
     }
 }

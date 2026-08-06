@@ -31,10 +31,7 @@ class GeofenceBroadcastReceiver : BroadcastReceiver() {
     override fun onReceive(context: Context, intent: Intent) {
         val geofencingEvent = GeofencingEvent.fromIntent(intent) ?: return
 
-        if (geofencingEvent.hasError()) {
-            val errorMessage = GeofenceStatusCodes.getStatusCodeString(geofencingEvent.errorCode)
-            return
-        }
+        if (geofencingEvent.hasError()) return
 
         val geofenceTransition = geofencingEvent.geofenceTransition
 
