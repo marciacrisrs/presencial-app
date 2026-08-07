@@ -18,3 +18,9 @@ plugins {
     alias(libs.plugins.kover) apply false
     alias(libs.plugins.detekt)
 }
+
+allprojects {
+    tasks.withType<io.gitlab.arturbosch.detekt.Detekt>().configureEach {
+        jvmTarget = "17"
+    }
+}
