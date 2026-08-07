@@ -79,11 +79,53 @@ class WorkdayCalculatorTest {
                 endDate = LocalDate.of(2026, 8, 10),
                 isFullDay = true,
                 isCounted = true
+            ),
+            com.presencial.app.domain.model.Absence( // Overlapping with id 1
+                id = 3L,
+                type = com.presencial.app.domain.model.AbsenceType.LICENSE,
+                startDate = LocalDate.of(2026, 8, 3),
+                endDate = LocalDate.of(2026, 8, 4),
+                isFullDay = true,
+                isCounted = false
             )
         )
         val workdays = WorkdayCalculator.countWorkdaysInMonth(yearMonth, false)
         val liquid = WorkdayCalculator.countLiquidWorkdaysInMonth(yearMonth, false, absences)
         
-        assertEquals(workdays - 1, liquid)
+        // Subtracts Aug 3 and Aug 4. (Aug 3 is shared by id 1 and 3, but only counted once).
+        assertEquals(workdays - 2, liquid)
+    }
+
+    @Test
+    fun `countLiquidWorkdaysInMonth nao subtrai ausencias parciais`() {
+        val yearMonth = YearMonth.of(2026, 8)
+        val absences = listOf(
+            com.presencial.app.domain.model.Absence(
+                id = 1L,
+                type = com.presencial.app.domain.model.AbsenceType.ABSENCE,
+                startDate = LocalDate.of(2026, 8, 3),
+                endDate = LocalDate.of(2026, 8, 3),
+                isFullDay = false,
+                isCounted = false
+            )
+        )
+        val workdays = WorkdayCalculator.countWorkdaysInMonth(yearMonth, false)
+        val liquid = WorkdayCalculator.countLiquidWorkdaysInMonth(yearMonth, false, absences)
+        assertEquals(workdays, liquid)
+    }
+
+    @Test
+    fun `countRemainingWorkdays no ultimo dia do mes`() {
+        val yearMonth = YearMonth.of(2026, 8)
+        val from = LocalDate.of(2026, 8, 31) // Monday, workday
+        val remaining = WorkdayCalculator.countRemainingWorkdays(from, yearMonth, false)
+        assertEquals(1, remaining)
+    }
+
+    @Test
+    fun `feriado que cai no sabado nao e dia util mesmo se contar sabados`() {
+        // May 1st 2027 is a Saturday
+        val holidaySat = LocalDate.of(2027, 5, 1)
+        assertFalse(WorkdayCalculator.isWorkday(holidaySat, countSaturdaysAsWorkdays = true))
     }
 }

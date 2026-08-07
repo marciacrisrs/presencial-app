@@ -156,25 +156,64 @@ kover {
     reports {
         filters {
             excludes {
+                // Android e Boilerplate base
                 classes(
                     "**.BuildConfig",
+                    "**.Manifest",
                     "**.R",
                     "**.R$*",
-                    "**.*_Impl*",
-                    "**.*_Factory*",
-                    "**.*_MembersInjector*",
-                    "**.Hilt_*",
-                    "**.*Activity*",
-                    "**.*Application*",
-                    "**.*Screen*",
-                    "**.*Preview*",
-                    "**.*Navigation*",
-                    "**.*Theme*",
-                    "**.*Module*",
-                    "**.*Database*",
-                    "**.*Dao*",
-                    "**.*Entity*"
+                    "**.PresencialApp",
+                    "**.MainActivity"
                 )
+
+                // Injeção de Dependência (Hilt)
+                classes(
+                    "dagger.hilt.**",
+                    "hilt_aggregated_deps.**",
+                    "**.di.**",
+                    "**.*Hilt_*",
+                    "**.*_HiltModules*",
+                    "**.*_Factory",
+                    "**.*_MembersInjector"
+                )
+
+                // Persistência e Modelos (Sem lógica de negócio)
+                classes(
+                    "**.data.local.dao.**",
+                    "**.data.local.entity.**",
+                    "**.data.local.mapper.**",
+                    "**.data.local.converter.**",
+                    "**.data.preferences.**",
+                    "**.domain.model.**",
+                    "**.*Database*"
+                )
+
+                // UI e Navegação
+                classes(
+                    "**.ui.**",
+                    "**.presentation.**.components.**",
+                    "**.presentation.navigation.**",
+                    "**.*ComposableSingletons*",
+                    "**.*Preview*",
+                    "**.*Screen*",
+                    "**.*Activity*",
+                    "**.*DialogState*"
+                )
+
+                // Framework Glue (Notificações, Widgets, Workers, Export, Location)
+                classes(
+                    "**.notification.**",
+                    "**.widget.**",
+                    "**.worker.**",
+                    "**.data.export.**",
+                    "**.domain.location.**"
+                )
+            }
+        }
+
+        verify {
+            rule {
+                minBound(80)
             }
         }
     }

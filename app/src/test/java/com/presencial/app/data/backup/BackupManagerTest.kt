@@ -140,4 +140,43 @@ class BackupManagerTest {
         
         tempFile.delete()
     }
+
+    @Test
+    fun `when importFromFile with missing fields, then return failure`() = runTest {
+        // Arrange - JSON missing "checkIns"
+        val json = """
+            {
+              "version": 1,
+              "requiredPercentage": 40
+            }
+        """.trimIndent()
+        val tempFile = File.createTempFile("missing_fields", ".json")
+        tempFile.writeText(json)
+
+        // Act
+        val result = backupManager.importFromFile(tempFile)
+
+        // Assert
+        assertTrue(result.isFailure)
+        tempFile.delete()
+    }
+
+    @Test
+    fun `when importFromFile and dao fails, then return failure`() = runTest {
+        // Arrange
+        val json = """
+            {"version":1,"requiredPercentage":40,"countSaturdaysAsWorkdays":false,"checkIns":[],"summaries":[]}
+        """.trimIndent()
+        val tempFile = File.createTempFile("dao_fail", ".json")
+        tempFile.writeText(json)
+
+        coEvery { checkInDao.deleteAll() } throws RuntimeException("Database error")
+
+        // Act
+        val result = backupManager.importFromFile(tempFile)
+
+        // Assert
+        assertTrue(result.isFailure)
+        tempFile.delete()
+    }
 }

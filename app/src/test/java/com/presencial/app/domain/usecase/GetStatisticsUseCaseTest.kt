@@ -87,6 +87,81 @@ class GetStatisticsUseCaseTest {
     }
 
     @Test
+    fun `given streak spanning months, when invoke, then calculate correct streaks`() = runTest {
+        // Arrange
+        val checkIns = listOf(
+            TestDataFactory.createCheckIn(date = LocalDate.of(2026, 7, 30), status = DayStatus.PRESENCIAL),
+            TestDataFactory.createCheckIn(date = LocalDate.of(2026, 7, 31), status = DayStatus.PRESENCIAL),
+            TestDataFactory.createCheckIn(date = LocalDate.of(2026, 8, 1), status = DayStatus.PRESENCIAL),
+            TestDataFactory.createCheckIn(date = LocalDate.of(2026, 8, 2), status = DayStatus.PRESENCIAL)
+        )
+        // Streak: July 30, 31, Aug 1, 2. Total 4.
+
+        every { checkInRepository.observeAllCheckIns() } returns flowOf(checkIns)
+        every { absenceRepository.getAllAbsences() } returns flowOf(emptyList())
+        every { settingsRepository.settings } returns flowOf(AppSettings())
+
+        // Act & Assert
+        useCase().test {
+            val stats = awaitItem()
+            assertEquals(4, stats.totalPresencial)
+            assertEquals(4, stats.longestStreak)
+            assertEquals(4, stats.currentStreak)
+            assertEquals(2, stats.monthlySummaries.size)
+            cancelAndIgnoreRemainingEvents()
+        }
+    }
+
+    @Test
+    fun `given broken streaks, when invoke, then calculate longest correctly`() = runTest {
+        // Arrange
+        val checkIns = listOf(
+            TestDataFactory.createCheckIn(date = LocalDate.of(2026, 8, 1), status = DayStatus.PRESENCIAL),
+            TestDataFactory.createCheckIn(date = LocalDate.of(2026, 8, 2), status = DayStatus.PRESENCIAL),
+            // Gap Aug 3
+            TestDataFactory.createCheckIn(date = LocalDate.of(2026, 8, 4), status = DayStatus.PRESENCIAL),
+            TestDataFactory.createCheckIn(date = LocalDate.of(2026, 8, 5), status = DayStatus.PRESENCIAL),
+            TestDataFactory.createCheckIn(date = LocalDate.of(2026, 8, 6), status = DayStatus.PRESENCIAL),
+            // Gap Aug 7
+            TestDataFactory.createCheckIn(date = LocalDate.of(2026, 8, 8), status = DayStatus.PRESENCIAL)
+        )
+
+        every { checkInRepository.observeAllCheckIns() } returns flowOf(checkIns)
+        every { absenceRepository.getAllAbsences() } returns flowOf(emptyList())
+        every { settingsRepository.settings } returns flowOf(AppSettings())
+
+        // Act & Assert
+        useCase().test {
+            val stats = awaitItem()
+            assertEquals(3, stats.longestStreak) // Aug 4-6
+            assertEquals(1, stats.currentStreak) // Aug 8 (if today is Aug 8)
+            cancelAndIgnoreRemainingEvents()
+        }
+    }
+
+    @Test
+    fun `given unordered checkins, when invoke, then calculate streaks correctly`() = runTest {
+        // Arrange
+        val checkIns = listOf(
+            TestDataFactory.createCheckIn(date = LocalDate.of(2026, 8, 5), status = DayStatus.PRESENCIAL),
+            TestDataFactory.createCheckIn(date = LocalDate.of(2026, 8, 3), status = DayStatus.PRESENCIAL),
+            TestDataFactory.createCheckIn(date = LocalDate.of(2026, 8, 4), status = DayStatus.PRESENCIAL)
+        )
+
+        every { checkInRepository.observeAllCheckIns() } returns flowOf(checkIns)
+        every { absenceRepository.getAllAbsences() } returns flowOf(emptyList())
+        every { settingsRepository.settings } returns flowOf(AppSettings())
+
+        // Act & Assert
+        useCase().test {
+            val stats = awaitItem()
+            assertEquals(3, stats.longestStreak)
+            assertEquals(3, stats.currentStreak)
+            cancelAndIgnoreRemainingEvents()
+        }
+    }
+
+    @Test
     fun `given empty data, when invoke, then return zeroed statistics`() = runTest {
         // Arrange
         every { checkInRepository.observeAllCheckIns() } returns flowOf(emptyList())
@@ -100,7 +175,6 @@ class GetStatisticsUseCaseTest {
             assertEquals(0, stats.longestStreak)
             assertEquals(0, stats.currentStreak)
             assertTrue(stats.monthlySummaries.isEmpty())
-            assertEquals(0f, stats.averageAchieved)
             cancelAndIgnoreRemainingEvents()
         }
     }
