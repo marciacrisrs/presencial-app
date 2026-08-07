@@ -2,6 +2,7 @@ package com.presencial.app.util
 
 import com.presencial.app.data.local.entity.*
 import com.presencial.app.domain.model.*
+import com.presencial.app.domain.usecase.StatisticsData
 import java.time.LocalDate
 import java.time.YearMonth
 
@@ -89,4 +90,39 @@ object TestDataFactory {
         requiredPercentage: Int = 40,
         countSaturdaysAsWorkdays: Boolean = false
     ) = SettingsEntity(id, requiredPercentage, countSaturdaysAsWorkdays)
+
+    fun createDashboardData(
+        yearMonth: YearMonth = YearMonth.of(2026, 8),
+        totalDays: Int = 31,
+        workdays: Int = 22,
+        requiredDays: Int = 9,
+        completedDays: Int = 5,
+        remainingDays: Int = 4,
+        homeOfficeDays: Int = 3,
+        achievedPercentage: Float = 55.5f,
+        requiredPercentage: Int = 40,
+        progressFraction: Float = 0.5f,
+        smartMessage: String = "Boa!",
+        countSaturdays: Boolean = false,
+        todayIsPresencial: Boolean = true,
+        todayIsWorkday: Boolean = true,
+        yesterdayIsPending: Boolean = false,
+        streak: Int = 3
+    ) = DashboardData(
+        yearMonth, totalDays, workdays, requiredDays, completedDays, remainingDays,
+        homeOfficeDays, achievedPercentage, requiredPercentage, progressFraction,
+        smartMessage, false, countSaturdays, todayIsPresencial, todayIsWorkday,
+        yesterdayIsPending, streak
+    )
+
+    fun createStatisticsData(
+        monthlySummaries: List<MonthlySummary> = emptyList(),
+        averageAchieved: Float = 50f,
+        totalPresencial: Int = 10,
+        totalHomeOffice: Int = 10,
+        longestStreak: Int = 5,
+        currentStreak: Int = 2
+    ) = StatisticsData(
+        monthlySummaries, averageAchieved, totalPresencial, totalHomeOffice, longestStreak, currentStreak
+    )
 }

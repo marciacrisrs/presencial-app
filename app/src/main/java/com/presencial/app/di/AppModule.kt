@@ -21,6 +21,9 @@ import com.presencial.app.domain.repository.SettingsRepository
 import com.presencial.app.domain.repository.WorkAddressRepository
 import com.presencial.app.domain.util.DefaultTimeProvider
 import com.presencial.app.domain.util.TimeProvider
+import androidx.datastore.core.DataStore
+import androidx.datastore.preferences.core.Preferences
+import androidx.datastore.preferences.preferencesDataStore
 import dagger.Binds
 import dagger.Module
 import dagger.Provides
@@ -56,6 +59,16 @@ object DatabaseModule {
     @Singleton
     fun provideFusedLocationProviderClient(@ApplicationContext context: Context): FusedLocationProviderClient =
         LocationServices.getFusedLocationProviderClient(context)
+}
+
+private val Context.dataStore: DataStore<Preferences> by preferencesDataStore(name = "presencial_settings")
+
+@Module
+@InstallIn(SingletonComponent::class)
+object DataStoreModule {
+    @Provides
+    @Singleton
+    fun provideDataStore(@ApplicationContext context: Context): DataStore<Preferences> = context.dataStore
 }
 
 @Module

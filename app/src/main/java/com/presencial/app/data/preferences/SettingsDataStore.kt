@@ -6,7 +6,6 @@ import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.intPreferencesKey
-import androidx.datastore.preferences.preferencesDataStore
 import com.presencial.app.domain.model.AppSettings
 import com.presencial.app.domain.repository.SettingsRepository
 import dagger.hilt.android.qualifiers.ApplicationContext
@@ -15,11 +14,10 @@ import kotlinx.coroutines.flow.map
 import javax.inject.Inject
 import javax.inject.Singleton
 
-private val Context.dataStore: DataStore<Preferences> by preferencesDataStore(name = "presencial_settings")
-
 @Singleton
 class SettingsDataStore @Inject constructor(
-    @ApplicationContext private val context: Context
+    @ApplicationContext private val context: Context,
+    private val dataStore: DataStore<Preferences>
 ) : SettingsRepository {
 
     private object Keys {
@@ -27,7 +25,7 @@ class SettingsDataStore @Inject constructor(
         val COUNT_SATURDAYS = booleanPreferencesKey("count_saturdays_as_workdays")
     }
 
-    override val settings: Flow<AppSettings> = context.dataStore.data.map { prefs ->
+    override val settings: Flow<AppSettings> = dataStore.data.map { prefs ->
         AppSettings(
             requiredPercentage = prefs[Keys.REQUIRED_PERCENTAGE] ?: 40,
             countSaturdaysAsWorkdays = prefs[Keys.COUNT_SATURDAYS] ?: false
@@ -37,12 +35,12 @@ class SettingsDataStore @Inject constructor(
     override suspend fun updateRequiredPercentage(percentage: Int) {
         val allowedValues = listOf(20, 40, 60)
         val value = if (percentage in allowedValues) percentage else 40
-        context.dataStore.edit { it[Keys.REQUIRED_PERCENTAGE] = value }
+        dataStore.edit { it[Keys.REQUIRED_PERCENTAGE] = value }
         syncToSharedPreferences(value, null)
     }
 
     override suspend fun updateCountSaturdaysAsWorkdays(count: Boolean) {
-        context.dataStore.edit { it[Keys.COUNT_SATURDAYS] = count }
+        dataStore.edit { it[Keys.COUNT_SATURDAYS] = count }
         syncToSharedPreferences(null, count)
     }
 

@@ -39,6 +39,21 @@ class UpdateDayStatusUseCaseTest {
     }
 
     @Test
+    fun `given home office status, when invoke, then saveCheckIn is called`() = runTest {
+        // Arrange
+        val date = LocalDate.of(2026, 8, 6)
+        coEvery { checkInRepository.saveCheckIn(any(), any(), any()) } returns Unit
+        coEvery { monthlySummaryRepository.refreshSummary(any()) } returns Unit
+
+        // Act
+        useCase(date, DayStatus.HOME_OFFICE)
+
+        // Assert
+        coVerify { checkInRepository.saveCheckIn(date, DayStatus.HOME_OFFICE, "MANUAL") }
+        coVerify { monthlySummaryRepository.refreshSummary(YearMonth.of(2026, 8)) }
+    }
+
+    @Test
     fun `given other status, when invoke, then deleteCheckIn is called`() = runTest {
         // Arrange
         val date = LocalDate.of(2026, 8, 6)

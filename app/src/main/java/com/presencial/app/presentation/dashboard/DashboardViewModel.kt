@@ -21,7 +21,7 @@ class DashboardViewModel @Inject constructor(
     private val timeProvider: TimeProvider
 ) : ViewModel() {
 
-    val dashboardData: StateFlow<DashboardData?> = getDashboardDataUseCase()
+    val dashboardData: StateFlow<DashboardData?> = getDashboardDataUseCase(timeProvider.currentMonth())
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), null)
 
     fun toggleTodayCheckIn(markPresencial: Boolean) {

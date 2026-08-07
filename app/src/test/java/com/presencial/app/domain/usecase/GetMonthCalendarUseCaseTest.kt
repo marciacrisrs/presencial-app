@@ -36,14 +36,18 @@ class GetMonthCalendarUseCaseTest {
     }
 
     @Test
-    fun `given valid month, when invoke, then return list of DayInfo`() = runTest {
+    fun `given valid month, when invoke, then return list of DayInfo with correct statuses`() = runTest {
         // Arrange
-        val yearMonth = YearMonth.of(2026, 8)
-        val today = LocalDate.of(2026, 8, 6)
+        val yearMonth = YearMonth.of(2026, 9) // September has Sept 7 holiday
+        val today = LocalDate.of(2026, 9, 10)
         timeProvider.setToday(today)
 
-        val checkIns = emptyList<com.presencial.app.domain.model.CheckIn>()
-        val absences = emptyList<com.presencial.app.domain.model.Absence>()
+        val checkIns = listOf(
+            com.presencial.app.domain.model.CheckIn(LocalDate.of(2026, 9, 1), DayStatus.PRESENCIAL)
+        )
+        val absences = listOf(
+            com.presencial.app.domain.model.Absence(1L, com.presencial.app.domain.model.AbsenceType.VACATION, LocalDate.of(2026, 9, 14), LocalDate.of(2026, 9, 15), true)
+        )
         val settings = AppSettings(requiredPercentage = 40, countSaturdaysAsWorkdays = false)
 
         every { checkInRepository.observeCheckInsForMonth(yearMonth) } returns flowOf(checkIns)
@@ -53,16 +57,56 @@ class GetMonthCalendarUseCaseTest {
         // Act & Assert
         useCase(yearMonth).test {
             val days = awaitItem()
-            assertEquals(31, days.size)
+            assertEquals(30, days.size)
             
-            val todayDayInfo = days.find { it.date == today }
-            assertNotNull(todayDayInfo)
-            // Aug 6 2026 is Thursday (Workday)
-            assertEquals(DayStatus.HOME_OFFICE, todayDayInfo?.status)
+            // Sept 1: Presencial (from checkIns)
+            assertEquals(DayStatus.PRESENCIAL, days.find { it.date == LocalDate.of(2026, 9, 1) }?.status)
 
-            val futureDay = days.find { it.date == today.plusDays(1) }
-            assertEquals(DayStatus.FUTURO, futureDay?.status)
+            // Sept 6: Sunday (FIM_DE_SEMANA)
+            assertEquals(DayStatus.FIM_DE_SEMANA, days.find { it.date == LocalDate.of(2026, 9, 6) }?.status)
 
+            // Sept 7: Holiday (FERIADO)
+            val sept7 = days.find { it.date == LocalDate.of(2026, 9, 7) }
+            assertEquals(DayStatus.FERIADO, sept7?.status)
+            assertEquals("Independência", sept7?.holidayName)
+
+            // Sept 8: Workday before today without check-in (FALTOU)
+            assertEquals(DayStatus.FALTOU, days.find { it.date == LocalDate.of(2026, 9, 8) }?.status)
+
+            // Sept 10: Today without check-in (HOME_OFFICE)
+            assertEquals(DayStatus.HOME_OFFICE, days.find { it.date == LocalDate.of(2026, 9, 10) }?.status)
+
+            // Sept 14: Absence (ABSENCE)
+            assertEquals(DayStatus.ABSENCE, days.find { it.date == LocalDate.of(2026, 9, 14) }?.status)
+
+            // Sept 20: Future (FUTURO)
+            assertEquals(DayStatus.FUTURO, days.find { it.date == LocalDate.of(2026, 9, 20) }?.status)
+
+            cancelAndIgnoreRemainingEvents()
+        }
+    }
+
+    @Test
+    fun `given saturdays as workdays, when invoke, then saturdays are not weekends`() = runTest {
+        // Arrange
+        val yearMonth = YearMonth.of(2026, 8)
+        val saturday = LocalDate.of(2026, 8, 8)
+        timeProvider.setToday(LocalDate.of(2026, 8, 1))
+
+        val checkIns = emptyList<com.presencial.app.domain.model.CheckIn>()
+        val absences = emptyList<com.presencial.app.domain.model.Absence>()
+        val settings = AppSettings(requiredPercentage = 40, countSaturdaysAsWorkdays = true)
+
+        every { checkInRepository.observeCheckInsForMonth(yearMonth) } returns flowOf(checkIns)
+        every { absenceRepository.getAbsencesInRange(any(), any()) } returns flowOf(absences)
+        every { settingsRepository.settings } returns flowOf(settings)
+
+        // Act & Assert
+        useCase(yearMonth).test {
+            val days = awaitItem()
+            val satInfo = days.find { it.date == saturday }
+            assertEquals(false, satInfo?.status == DayStatus.FIM_DE_SEMANA)
+            assertEquals(true, satInfo?.isWorkday)
             cancelAndIgnoreRemainingEvents()
         }
     }

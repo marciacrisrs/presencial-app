@@ -49,18 +49,52 @@ class MonthlySummaryRepositoryImplTest {
     }
 
     @Test
+    fun `when getSummary, then return domain object from dao`() = runTest {
+        // Arrange
+        val yearMonth = YearMonth.of(2026, 8)
+        val entity = TestDataFactory.createMonthlySummaryEntity(yearMonthKey = yearMonth.toString())
+        coEvery { monthlySummaryDao.getByKey(yearMonth.toString()) } returns entity
+
+        // Act
+        val result = repository.getSummary(yearMonth)
+
+        // Assert
+        assertEquals(yearMonth, result?.yearMonth)
+    }
+
+    @Test
+    fun `when saveSummary, then dao upsert is called`() = runTest {
+        // Arrange
+        val summary = TestDataFactory.createMonthlySummary()
+        coEvery { monthlySummaryDao.upsert(any()) } returns Unit
+
+        // Act
+        repository.saveSummary(summary)
+
+        // Assert
+        coVerify { monthlySummaryDao.upsert(any()) }
+    }
+
+    @Test
     fun `when refreshSummary, then calculate and save new summary`() = runTest {
         // Arrange
         val yearMonth = YearMonth.of(2026, 8)
         val settings = AppSettings(requiredPercentage = 40, countSaturdaysAsWorkdays = false)
         every { settingsRepository.settings } returns flowOf(settings)
-        coEvery { checkInDao.getBetween(any(), any()) } returns emptyList()
+        
+        val checkIns = listOf(
+            TestDataFactory.createCheckInEntity(status = "PRESENCIAL"),
+            TestDataFactory.createCheckInEntity(status = "HOME_OFFICE")
+        )
+        coEvery { checkInDao.getBetween(any(), any()) } returns checkIns
         coEvery { monthlySummaryDao.upsert(any()) } returns Unit
 
         // Act
         repository.refreshSummary(yearMonth)
 
         // Assert
-        coVerify { monthlySummaryDao.upsert(any()) }
+        coVerify { monthlySummaryDao.upsert(match { 
+            it.completedDays == 1 && it.homeOfficeDays == 1 && it.yearMonthKey == yearMonth.toString()
+        }) }
     }
 }

@@ -68,4 +68,4 @@ jobs:
           serviceAccountJsonPlainText: ${{ secrets.PLAY_STORE_SERVICE_ACCOUNT_JSON }}
           packageName: com.presencial.app
           releaseFiles: app/build/outputs/bundle/release/*.aab
-          track: internal
+          tracks: internal

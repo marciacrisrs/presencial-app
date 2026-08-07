@@ -38,7 +38,7 @@ abstract class PresencialDatabase : RoomDatabase() {
                         context.applicationContext,
                         PresencialDatabase::class.java,
                         "presencial.db"
-                    ).fallbackToDestructiveMigration().build()
+                    ).fallbackToDestructiveMigration(dropAllTables = true).build()
                     INSTANCE = newInstance
                     newInstance
                 }
