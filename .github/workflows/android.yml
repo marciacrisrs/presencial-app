@@ -41,17 +41,26 @@ jobs:
       - name: Grant execute permission
         run: chmod +x gradlew
 
-      - name: List reports
-        run: |
-          pwd
-          find . -name "*.xml"
-          find . -name "report.xml"
+      - name: Run Detekt
+        run: ./gradlew detekt --stacktrace
 
-      - name: Quality Checks
-        run: ./gradlew detekt lintDebug testDebugUnitTest koverXmlReport --stacktrace
+      - name: Run Android Lint
+        run: ./gradlew lintDebug --stacktrace
+
+      - name: Run Unit Tests
+        run: ./gradlew testDebugUnitTest --stacktrace
+
+      - name: Generate Coverage Report
+        run: ./gradlew koverXmlReport --stacktrace
 
       - name: SonarCloud
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
         run: ./gradlew sonar
+
+      - name: List reports
+        run: |
+          pwd
+          find . -name "*.xml"
+          find . -name "report.xml"
