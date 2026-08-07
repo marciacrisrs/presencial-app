@@ -59,12 +59,33 @@ jobs:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
         run: ./gradlew sonar
 
-      - name: Upload Quality Reports
+      - name: Upload Detekt Reports
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: quality-reports
-          retention-days: 30
+          name: detekt-report
+          path: app/build/reports/detekt/**
+
+      - name: Upload Lint Reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: lint-report
           path: |
-            app/build/reports/**
-            build/reports/**
+            app/build/reports/lint-results-debug.html
+            app/build/reports/lint-results-debug.xml
+            app/build/reports/lint-results-debug.sarif
+
+      - name: Upload Coverage Reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: kover-report
+          path: app/build/reports/kover/**
+
+      - name: Upload Gradle Problems
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: gradle-problems
+          path: build/reports/problems/**
