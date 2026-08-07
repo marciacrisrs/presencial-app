@@ -1,6 +1,5 @@
 package com.presencial.app.data.backup
 
-import android.content.Context
 import com.presencial.app.data.local.dao.CheckInDao
 import com.presencial.app.data.local.dao.MonthlySummaryDao
 import com.presencial.app.domain.model.AppSettings
@@ -10,6 +9,7 @@ import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Assertions.assertTrue
@@ -20,16 +20,16 @@ import java.io.File
 
 class BackupManagerTest {
 
-    private val context: Context = mockk()
     private val checkInDao: CheckInDao = mockk()
     private val monthlySummaryDao: MonthlySummaryDao = mockk()
     private val settingsRepository: SettingsRepository = mockk()
+    private val ioDispatcher = Dispatchers.IO
 
     private lateinit var backupManager: BackupManager
 
     @BeforeEach
     fun setup() {
-        backupManager = BackupManager(context, checkInDao, monthlySummaryDao, settingsRepository)
+        backupManager = BackupManager(checkInDao, monthlySummaryDao, settingsRepository, ioDispatcher)
     }
 
     @Test
