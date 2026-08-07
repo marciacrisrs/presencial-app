@@ -7,7 +7,8 @@ naming:
 complexity:
   LongParameterList:
     active: true
-    threshold: 6
+    functionThreshold: 6
+    constructorThreshold: 6
     ignoreDefaultParameters: true
   LongMethod:
     active: true
