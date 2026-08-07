@@ -1,3 +1,15 @@
+import java.util.Properties
+
+val versionProperties = Properties().apply {
+    load(rootProject.file("version.properties").inputStream())
+}
+
+val versionMajor = versionProperties["VERSION_MAJOR"].toString().toInt()
+val versionMinor = versionProperties["VERSION_MINOR"].toString().toInt()
+val versionPatch = versionProperties["VERSION_PATCH"].toString().toInt()
+
+val versionName = "$versionMajor.$versionMinor.$versionPatch"
+
 plugins {
     alias(libs.plugins.android.application) apply false
     alias(libs.plugins.ksp) apply false

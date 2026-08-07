@@ -1,5 +1,18 @@
 import com.android.build.api.dsl.ApplicationExtension
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
+import java.util.Properties
+
+val versionProperties = Properties().apply {
+    load(rootProject.file("version.properties").inputStream())
+}
+
+val versionMajor = versionProperties.getProperty("VERSION_MAJOR").toInt()
+val versionMinor = versionProperties.getProperty("VERSION_MINOR").toInt()
+val versionPatch = versionProperties.getProperty("VERSION_PATCH").toInt()
+
+val appVersionName = "$versionMajor.$versionMinor.$versionPatch"
+
+val appVersionCode = System.getenv("GITHUB_RUN_NUMBER")?.toInt() ?: 1
 
 plugins {
     alias(libs.plugins.android.application)
@@ -17,8 +30,8 @@ android {
         applicationId = "com.presencial.app"
         minSdk = 26
         targetSdk = 36
-        versionCode = 6
-        versionName = "1.0.2"
+        versionCode = appVersionCode
+        versionName = appVersionName
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
 
