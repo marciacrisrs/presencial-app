@@ -5,7 +5,8 @@ import io.mockk.mockkObject
 import io.mockk.unmockkObject
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.AfterEach
-import org.junit.jupiter.api.Assertions.*
+import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Assertions.assertNull
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import kotlin.random.Random
@@ -62,7 +63,8 @@ class AiIntelligenceServiceTest {
     }
 
     @Test
-    fun `given many workdays compared to remaining, when fetchSmartMessage, then return home office message`() = runTest {
+    fun `given many workdays compared to remaining, when fetchSmartMessage, then return home office message`() =
+        runTest {
         // Arrange
         every { Random.nextInt(100) } returns 10
 

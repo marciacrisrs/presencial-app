@@ -113,46 +113,18 @@ private fun DayEditorDialog(
             }
         )
     }
-    
+
     AlertDialog(
         onDismissRequest = onDismiss,
         title = { Text("Editar — $dateLabel") },
         text = {
             Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                day.holidayName?.let { 
-                    Text(
-                        "🎉 Feriado: $it", 
-                        style = MaterialTheme.typography.bodyMedium, 
-                        color = MaterialTheme.colorScheme.primary
-                    ) 
-                }
-                if (day.source == "AUTOMATICO") {
-                    Text(
-                        "📍 Registrado automaticamente via GPS", 
-                        style = MaterialTheme.typography.bodySmall, 
-                        color = MaterialTheme.colorScheme.secondary
-                    )
-                }
+                DayInfoDetails(day)
                 Text("Selecione o status do dia:")
-
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
-                ) {
-                    val options = listOf(
-                        DayStatus.PRESENCIAL to "🏢 Presencial",
-                        DayStatus.HOME_OFFICE to "🏠 Home Office",
-                        DayStatus.ABSENCE to "❌ Ausência"
-                    )
-
-                    options.forEach { (status, label) ->
-                        FilterChip(
-                            selected = selectedStatus == status,
-                            onClick = { selectedStatus = status },
-                            label = { Text(label) }
-                        )
-                    }
-                }
+                StatusSelector(
+                    selectedStatus = selectedStatus,
+                    onStatusSelected = { selectedStatus = it }
+                )
             }
         },
         confirmButton = {
@@ -161,14 +133,69 @@ private fun DayEditorDialog(
             }
         },
         dismissButton = {
-            Row {
-                TextButton(onClick = { onStatusSelected(DayStatus.FUTURO) }) {
-                    Text("Limpar")
-                }
-                TextButton(onClick = onDismiss) {
-                    Text("Cancelar")
-                }
-            }
+            DialogDismissButtons(
+                onClear = { onStatusSelected(DayStatus.FUTURO) },
+                onDismiss = onDismiss
+            )
         }
     )
+}
+
+@Composable
+private fun DayInfoDetails(day: com.presencial.app.domain.model.DayInfo) {
+    day.holidayName?.let {
+        Text(
+            "🎉 Feriado: $it",
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.primary
+        )
+    }
+    if (day.source == "AUTOMATICO") {
+        Text(
+            "📍 Registrado automaticamente via GPS",
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.secondary
+        )
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun StatusSelector(
+    selectedStatus: DayStatus,
+    onStatusSelected: (DayStatus) -> Unit
+) {
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.spacedBy(8.dp)
+    ) {
+        val options = listOf(
+            DayStatus.PRESENCIAL to "🏢 Presencial",
+            DayStatus.HOME_OFFICE to "🏠 Home Office",
+            DayStatus.ABSENCE to "❌ Ausência"
+        )
+
+        options.forEach { (status, label) ->
+            FilterChip(
+                selected = selectedStatus == status,
+                onClick = { onStatusSelected(status) },
+                label = { Text(label) }
+            )
+        }
+    }
+}
+
+@Composable
+private fun DialogDismissButtons(
+    onClear: () -> Unit,
+    onDismiss: () -> Unit
+) {
+    Row {
+        TextButton(onClick = onClear) {
+            Text("Limpar")
+        }
+        TextButton(onClick = onDismiss) {
+            Text("Cancelar")
+        }
+    }
 }
