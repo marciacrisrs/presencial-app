@@ -29,3 +29,21 @@ allprojects {
         buildUponDefaultConfig = true
     }
 }
+sonar {
+    properties {
+
+        property("sonar.projectKey", "presencial-app")
+        property("sonar.organization", "marciacrisrs")
+        property("sonar.host.url", "https://sonarcloud.io")
+
+        property(
+            "sonar.coverage.jacoco.xmlReportPaths",
+            "app/build/reports/kover/report.xml"
+        )
+
+        property(
+            "sonar.kotlin.detekt.reportPaths",
+            "app/build/reports/detekt/detekt.xml"
+        )
+    }
+}
