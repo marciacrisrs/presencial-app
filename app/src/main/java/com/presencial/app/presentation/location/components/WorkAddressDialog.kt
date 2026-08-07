@@ -5,6 +5,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -30,7 +31,7 @@ internal fun WorkAddressDialog(
     }
 
     var radius by remember {
-        mutableStateOf(address?.radius ?: DEFAULT_RADIUS)
+        mutableFloatStateOf(address?.radius ?: DEFAULT_RADIUS)
     }
 
     val state = rememberWorkAddressDialogState(

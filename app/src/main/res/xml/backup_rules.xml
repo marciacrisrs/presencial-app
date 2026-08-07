@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<full-backup-content>
+    <include domain="database" path="presencial.db"/>
+    <include domain="sharedpref" path="presencial_settings.xml"/>
+</full-backup-content>
