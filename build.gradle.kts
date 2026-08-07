@@ -32,18 +32,31 @@ allprojects {
 sonar {
     properties {
 
-        property("sonar.projectKey", "presencial-app")
+        property("sonar.projectKey", "marciacrisrs_presencial-app")
         property("sonar.organization", "marciacrisrs")
         property("sonar.host.url", "https://sonarcloud.io")
 
         property(
             "sonar.coverage.jacoco.xmlReportPaths",
-            "build/reports/kover/report.xml"
+            rootProject.layout.projectDirectory
+                .file("app/build/reports/kover/report.xml")
+                .asFile.absolutePath
         )
 
         property(
             "sonar.kotlin.detekt.reportPaths",
-            "build/reports/detekt/detekt.xml"
+            rootProject.layout.projectDirectory
+                .file("app/build/reports/detekt/detekt.xml")
+                .asFile.absolutePath
         )
+
+        property(
+            "sonar.androidLint.reportPaths",
+            rootProject.layout.projectDirectory
+                .file("app/build/reports/lint-results-debug.xml")
+                .asFile.absolutePath
+        )
+
+        property("sonar.sourceEncoding", "UTF-8")
     }
 }

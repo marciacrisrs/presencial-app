@@ -47,22 +47,6 @@ jobs:
       - name: Run Android Lint
         run: ./gradlew lintDebug --stacktrace
 
-      - name: Upload Lint Reports
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: lint-report
-          path: |
-            app/build/reports/lint-results-debug.html
-            app/build/reports/lint-results-debug.sarif- name: Upload Lint Reports
-            if: always()
-            uses: actions/upload-artifact@v4
-            with:
-              name: lint-report
-              path: |
-                app/build/reports/lint-results-debug.html
-                app/build/reports/lint-results-debug.sarif
-
       - name: Run Unit Tests
         run: ./gradlew testDebugUnitTest --stacktrace
 
@@ -75,8 +59,12 @@ jobs:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
         run: ./gradlew sonar
 
-      - name: List reports
-        run: |
-          pwd
-          find . -name "*.xml"
-          find . -name "report.xml"
+      - name: Upload Quality Reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: quality-reports
+          retention-days: 30
+          path: |
+            app/build/reports/**
+            build/reports/**
