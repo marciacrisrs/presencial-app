@@ -1,0 +1,20 @@
+naming:
+  FunctionNaming:
+    active: true
+    ignoreAnnotated:
+      - 'Composable'
+
+complexity:
+  LongParameterList:
+    active: true
+    threshold: 6
+    ignoreDefaultParameters: true
+  LongMethod:
+    active: true
+    threshold: 60
+
+exceptions:
+  TooGenericExceptionCaught:
+    active: true
+  SwallowedException:
+    active: true

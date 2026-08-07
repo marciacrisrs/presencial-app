@@ -40,31 +40,31 @@ fun MonthCalendarGrid(
         // Header com dias da semana
         androidx.compose.foundation.layout.Row(
             modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(4.dp)
+            horizontalArrangement = Arrangement.spacedBy(SPACING_GRID.dp)
         ) {
             weekDays.forEach { day ->
                 Text(
                     text = day,
                     style = MaterialTheme.typography.labelSmall,
                     textAlign = TextAlign.Center,
-                    modifier = Modifier.weight(1f).padding(4.dp),
-                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
+                    modifier = Modifier.weight(1f).padding(SPACING_GRID.dp),
+                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = ALPHA_GRID_LABEL)
                 )
             }
         }
 
-        val firstDayOfWeek = days.firstOrNull()?.date?.dayOfWeek?.value?.rem(7) ?: 0
+        val firstDayOfWeek = days.firstOrNull()?.date?.dayOfWeek?.value?.rem(DAYS_IN_WEEK) ?: 0
         val gridItems = List(firstDayOfWeek) { null } + days
-        val rows = gridItems.chunked(7)
+        val rows = gridItems.chunked(DAYS_IN_WEEK)
 
         Column(
             modifier = Modifier.fillMaxWidth(),
-            verticalArrangement = Arrangement.spacedBy(4.dp)
+            verticalArrangement = Arrangement.spacedBy(SPACING_GRID.dp)
         ) {
             rows.forEach { rowItems ->
                 androidx.compose.foundation.layout.Row(
                     modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(4.dp)
+                    horizontalArrangement = Arrangement.spacedBy(SPACING_GRID.dp)
                 ) {
                     rowItems.forEach { dayInfo ->
                         Box(modifier = Modifier.weight(1f).aspectRatio(1f)) {
@@ -74,8 +74,8 @@ fun MonthCalendarGrid(
                         }
                     }
                     // Preencher o final da última linha se necessário
-                    if (rowItems.size < 7) {
-                        repeat(7 - rowItems.size) {
+                    if (rowItems.size < DAYS_IN_WEEK) {
+                        repeat(DAYS_IN_WEEK - rowItems.size) {
                             Box(modifier = Modifier.weight(1f).aspectRatio(1f))
                         }
                     }
@@ -83,7 +83,7 @@ fun MonthCalendarGrid(
             }
         }
         
-        CalendarLegend(modifier = Modifier.padding(top = 16.dp))
+        CalendarLegend(modifier = Modifier.padding(top = PADDING_LEGEND_TOP.dp))
     }
 }
 
@@ -95,8 +95,8 @@ private fun CalendarDayCell(
 ) {
     val backgroundColor = dayColor(dayInfo.status, isToday)
     val textColor = when (dayInfo.status) {
-        DayStatus.FUTURO, DayStatus.FIM_DE_SEMANA -> MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f)
-        DayStatus.FERIADO -> Color(0xFF5D4037)
+        DayStatus.FUTURO, DayStatus.FIM_DE_SEMANA -> MaterialTheme.colorScheme.onSurface.copy(alpha = ALPHA_DAY_FUTURO)
+        DayStatus.FERIADO -> Color(TEXT_COLOR_BROWN)
         else -> Color.White
     }
 
@@ -106,7 +106,7 @@ private fun CalendarDayCell(
             .clip(CircleShape)
             .background(backgroundColor)
             .then(
-                if (isToday) Modifier.border(2.dp, MaterialTheme.colorScheme.secondary, CircleShape)
+                if (isToday) Modifier.border(BORDER_WIDTH_TODAY.dp, MaterialTheme.colorScheme.secondary, CircleShape)
                 else Modifier
             )
             .then(
@@ -120,7 +120,7 @@ private fun CalendarDayCell(
             style = MaterialTheme.typography.bodySmall,
             fontWeight = if (isToday) FontWeight.Bold else FontWeight.Normal,
             color = if (dayInfo.status == DayStatus.FUTURO || dayInfo.status == DayStatus.FIM_DE_SEMANA)
-                MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
+                MaterialTheme.colorScheme.onSurface.copy(alpha = ALPHA_DAY_LABEL)
             else if (dayInfo.status == DayStatus.HOME_OFFICE)
                 MaterialTheme.colorScheme.onSurface
             else textColor
@@ -131,30 +131,30 @@ private fun CalendarDayCell(
 @Composable
 fun CalendarLegend(modifier: Modifier = Modifier) {
     val items = listOf(
-        "🏢 Presencial" to Color(0xFF1B873B),
-        "🏠 Home Office" to Color(0xFF9AA0A6),
-        "❌ Faltou" to Color(0xFFD93025),
-        "🧡 Ausência" to Color(0xFFFF8C00),
+        "🏢 Presencial" to Color(COLOR_GREEN),
+        "🏠 Home Office" to Color(COLOR_GRAY),
+        "❌ Faltou" to Color(COLOR_RED),
+        "🧡 Ausência" to Color(COLOR_ORANGE),
         "🔵 Hoje" to MaterialTheme.colorScheme.secondary,
-        "🎉 Feriado" to Color(0xFFF9AB00)
+        "🎉 Feriado" to Color(COLOR_YELLOW)
     )
     
     Column(
         modifier = modifier.fillMaxWidth(),
-        verticalArrangement = Arrangement.spacedBy(8.dp)
+        verticalArrangement = Arrangement.spacedBy(SPACING_LEGEND.dp)
     ) {
-        items.chunked(3).forEach { rowItems ->
+        items.chunked(LEGEND_COLUMNS).forEach { rowItems ->
             androidx.compose.foundation.layout.Row(
                 modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
+                horizontalArrangement = Arrangement.spacedBy(SPACING_LEGEND.dp)
             ) {
                 rowItems.forEach { (label, color) ->
                     Box(
                         modifier = Modifier
                             .weight(1f)
-                            .clip(RoundedCornerShape(8.dp))
-                            .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f))
-                            .padding(horizontal = 8.dp, vertical = 4.dp)
+                            .clip(RoundedCornerShape(CORNER_RADIUS_LEGEND.dp))
+                            .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = ALPHA_LEGEND_BG))
+                            .padding(horizontal = PADDING_LEGEND_ITEM_H.dp, vertical = PADDING_LEGEND_ITEM_V.dp)
                     ) {
                         Text(
                             text = "● $label",
@@ -165,8 +165,8 @@ fun CalendarLegend(modifier: Modifier = Modifier) {
                     }
                 }
                 // Preencher o final da linha se necessário
-                if (rowItems.size < 3) {
-                    repeat(3 - rowItems.size) {
+                if (rowItems.size < LEGEND_COLUMNS) {
+                    repeat(LEGEND_COLUMNS - rowItems.size) {
                         Box(modifier = Modifier.weight(1f))
                     }
                 }
@@ -176,15 +176,18 @@ fun CalendarLegend(modifier: Modifier = Modifier) {
 }
 
 fun dayColor(status: DayStatus, isToday: Boolean): Color {
-    if (isToday && status != DayStatus.PRESENCIAL && status != DayStatus.ABSENCE) return Color(0xFF1A73E8).copy(alpha = 0.3f)
+    val isMarked = status == DayStatus.PRESENCIAL || status == DayStatus.ABSENCE
+    if (isToday && !isMarked) {
+        return Color(COLOR_BLUE_TODAY).copy(alpha = ALPHA_TODAY_BG)
+    }
     return when (status) {
-        DayStatus.PRESENCIAL -> Color(0xFF1B873B)
-        DayStatus.HOME_OFFICE -> Color(0xFF9AA0A6)
-        DayStatus.FERIADO -> Color(0xFFF9AB00)
+        DayStatus.PRESENCIAL -> Color(COLOR_GREEN)
+        DayStatus.HOME_OFFICE -> Color(COLOR_GRAY)
+        DayStatus.FERIADO -> Color(COLOR_YELLOW)
         DayStatus.FIM_DE_SEMANA -> Color.Transparent
         DayStatus.FUTURO -> Color.Transparent
-        DayStatus.FALTOU -> Color(0xFFD93025).copy(alpha = 0.7f)
-        DayStatus.ABSENCE -> Color(0xFFFF8C00)
+        DayStatus.FALTOU -> Color(COLOR_RED).copy(alpha = ALPHA_FALTOU)
+        DayStatus.ABSENCE -> Color(COLOR_ORANGE)
     }
 }
 
@@ -192,3 +195,27 @@ fun formatMonthYear(year: Int, month: Int): String {
     val monthName = java.time.Month.of(month).getDisplayName(TextStyle.FULL, Locale.forLanguageTag("pt-BR"))
     return "${monthName.replaceFirstChar { it.uppercase() }} $year"
 }
+
+private const val DAYS_IN_WEEK = 7
+private const val LEGEND_COLUMNS = 3
+private const val COLOR_GREEN = 0xFF1B873B
+private const val COLOR_GRAY = 0xFF9AA0A6
+private const val COLOR_RED = 0xFFD93025
+private const val COLOR_ORANGE = 0xFFFF8C00
+private const val COLOR_YELLOW = 0xFFF9AB00
+private const val COLOR_BLUE_TODAY = 0xFF1A73E8
+private const val TEXT_COLOR_BROWN = 0xFF5D4037
+
+private const val SPACING_GRID = 4
+private const val SPACING_LEGEND = 8
+private const val PADDING_LEGEND_TOP = 16
+private const val PADDING_LEGEND_ITEM_H = 8
+private const val PADDING_LEGEND_ITEM_V = 4
+private const val ALPHA_GRID_LABEL = 0.6f
+private const val ALPHA_DAY_FUTURO = 0.5f
+private const val ALPHA_DAY_LABEL = 0.6f
+private const val ALPHA_LEGEND_BG = 0.3f
+private const val ALPHA_TODAY_BG = 0.3f
+private const val ALPHA_FALTOU = 0.7f
+private const val BORDER_WIDTH_TODAY = 2
+private const val CORNER_RADIUS_LEGEND = 8

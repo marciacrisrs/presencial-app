@@ -1,7 +1,9 @@
 package com.presencial.app.presentation.history
 
 import android.content.Intent
-import androidx.compose.animation.*
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -10,19 +12,23 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Share
-import androidx.compose.material3.*
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.LinearProgressIndicator
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
-import androidx.core.content.ContextCompat
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.presencial.app.domain.model.MonthlySummary
@@ -45,32 +51,21 @@ fun HistoryScreen(viewModel: HistoryViewModel = hiltViewModel()) {
             HistorySkeleton()
         } else {
             LazyColumn(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                itemsIndexed(summaries.sortedByDescending { it.yearMonth }, key = { _, it -> it.yearMonth }) { index, summary ->
+                itemsIndexed(
+                    items = summaries.sortedByDescending { it.yearMonth },
+                    key = { _, summary -> summary.yearMonth }
+                ) { index, summary ->
                     AnimatedVisibility(
                         visible = true,
-                        enter = fadeIn(animationSpec = tween(500, delayMillis = index * 100)) +
-                                slideInVertically(animationSpec = tween(500, delayMillis = index * 100)) { it / 2 }
+                        enter = fadeIn(animationSpec = tween(ANIM_DURATION, index * ANIM_DELAY)) +
+                                slideInVertically(
+                                    animationSpec = tween(ANIM_DURATION, index * ANIM_DELAY)
+                                ) { it / 2 }
                     ) {
                         HistoryMonthCard(
                             summary = summary,
                             onShare = {
-                                val monthName = summary.yearMonth.month.getDisplayName(TextStyle.FULL, Locale.forLanguageTag("pt-BR"))
-                                val text = buildString {
-                                    append("📊 Presencial — $monthName ${summary.yearMonth.year}\n")
-                                    append("Dias úteis: ${summary.workdays}\n")
-                                    append("Meta: ${summary.requiredDays} dias (${summary.requiredPercentage}%)\n")
-                                    append("Cumpridos: ${summary.completedDays}\n")
-                                    append("Percentual: ${"%.1f".format(summary.achievedPercentage)}%")
-                                }
-                                val intent = Intent(Intent.ACTION_SEND).apply {
-                                    type = "text/plain"
-                                    putExtra(Intent.EXTRA_TEXT, text)
-                                }
-                                ContextCompat.startActivity(
-                                    context,
-                                    Intent.createChooser(intent, "Compartilhar resumo"),
-                                    null
-                                )
+                                shareSummary(context, summary)
                             }
                         )
                     }
@@ -80,14 +75,39 @@ fun HistoryScreen(viewModel: HistoryViewModel = hiltViewModel()) {
     }
 }
 
+private fun shareSummary(context: android.content.Context, summary: MonthlySummary) {
+    val monthName = summary.yearMonth.month.getDisplayName(
+        TextStyle.FULL, 
+        Locale.forLanguageTag("pt-BR")
+    )
+    val text = buildString {
+        append("📊 Presencial — $monthName ${summary.yearMonth.year}\n")
+        append("Dias úteis: ${summary.workdays}\n")
+        append("Meta: ${summary.requiredDays} dias (${summary.requiredPercentage}%)\n")
+        append("Cumpridos: ${summary.completedDays}\n")
+        append("Percentual: ${"%.1f".format(summary.achievedPercentage)}%")
+    }
+    val intent = Intent(Intent.ACTION_SEND).apply {
+        type = "text/plain"
+        putExtra(Intent.EXTRA_TEXT, text)
+    }
+    context.startActivity(
+        Intent.createChooser(intent, "Compartilhar resumo")
+    )
+}
+
 @Composable
 fun HistorySkeleton() {
     Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-        repeat(3) {
+        repeat(SKELETON_COUNT) {
             ShimmerBox(height = 140.dp, shape = RoundedCornerShape(20.dp))
         }
     }
 }
+
+private const val ANIM_DURATION = 500
+private const val ANIM_DELAY = 100
+private const val SKELETON_COUNT = 3
 
 @Composable
 private fun HistoryMonthCard(summary: MonthlySummary, onShare: () -> Unit) {
@@ -102,7 +122,7 @@ private fun HistoryMonthCard(summary: MonthlySummary, onShare: () -> Unit) {
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.4f))
     ) {
         Column(modifier = Modifier.padding(20.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-            androidx.compose.foundation.layout.Row(
+            Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {

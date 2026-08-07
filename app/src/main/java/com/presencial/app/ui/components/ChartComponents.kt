@@ -34,30 +34,41 @@ fun MonthlyBarChart(
 
     Card(
         modifier = modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(20.dp),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.4f))
+        shape = RoundedCornerShape(CORNER_RADIUS_EXTRA_LARGE),
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = ALPHA_SURFACE_VARIANT)
+        )
     ) {
-        Column(modifier = Modifier.padding(20.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+        Column(
+            modifier = Modifier.padding(PADDING_EXTRA_LARGE),
+            verticalArrangement = Arrangement.spacedBy(PADDING_MEDIUM)
+        ) {
             Text("Comparecimento por mês", style = MaterialTheme.typography.titleLarge)
-            Canvas(modifier = Modifier.fillMaxWidth().height(180.dp)) {
-                val barWidth = size.width / (summaries.size * 2f)
-                val maxValue = summaries.maxOf { it.achievedPercentage }.coerceAtLeast(1f)
+            Canvas(modifier = Modifier.fillMaxWidth().height(CHART_HEIGHT_DP)) {
+                val barWidth = size.width / (summaries.size * BAR_WIDTH_DIVISOR)
+                val maxValue = summaries.maxOf { it.achievedPercentage }.coerceAtLeast(MAX_VALUE_DEFAULT)
                 summaries.forEachIndexed { index, summary ->
-                    val barHeight = (summary.achievedPercentage / maxValue) * size.height * 0.85f
-                    val x = index * (barWidth * 2) + barWidth * 0.5f
+                    val barHeight = (summary.achievedPercentage / maxValue) * 
+                                    size.height * BAR_HEIGHT_FRACTION
+                    val x = index * (barWidth * BAR_WIDTH_DIVISOR) + barWidth * BAR_WIDTH_OFFSET_FRACTION
                     val y = size.height - barHeight
                     drawRoundRect(
-                        color = Color(0xFF1B873B),
+                        color = Color(COLOR_GREEN),
                         topLeft = Offset(x, y),
                         size = Size(barWidth, barHeight),
-                        cornerRadius = CornerRadius(8f, 8f)
+                        cornerRadius = CornerRadius(CORNER_RADIUS_PX, CORNER_RADIUS_PX)
                     )
                 }
             }
-            summaries.takeLast(6).forEach { summary ->
-                val month = summary.yearMonth.month.getDisplayName(TextStyle.SHORT,Locale.forLanguageTag("pt-BR"))
+            summaries.takeLast(MAX_VISIBLE_MONTHS).forEach { summary ->
+                val month = summary.yearMonth.month.getDisplayName(
+                    TextStyle.SHORT,
+                    Locale.forLanguageTag("pt-BR")
+                )
+                val text = "$month: ${"%.0f".format(summary.achievedPercentage)}% " +
+                           "(${summary.completedDays}/${summary.requiredDays})"
                 Text(
-                    text = "$month: ${"%.0f".format(summary.achievedPercentage)}% (${summary.completedDays}/${summary.requiredDays})",
+                    text = text,
                     style = MaterialTheme.typography.bodySmall
                 )
             }
@@ -69,12 +80,35 @@ fun MonthlyBarChart(
 fun StatSummaryRow(label: String, value: String, modifier: Modifier = Modifier) {
     Card(
         modifier = modifier,
-        shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f))
+        shape = RoundedCornerShape(CORNER_RADIUS_LARGE),
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = ALPHA_SURFACE_VARIANT_LOW)
+        )
     ) {
-        Column(modifier = Modifier.padding(16.dp)) {
-            Text(label, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f))
+        Column(modifier = Modifier.padding(PADDING_LARGE)) {
+            Text(
+                text = label, 
+                style = MaterialTheme.typography.bodyMedium, 
+                color = MaterialTheme.colorScheme.onSurface.copy(alpha = ALPHA_ON_SURFACE_MEDIUM)
+            )
             Text(value, style = MaterialTheme.typography.headlineMedium)
         }
     }
 }
+
+private val CHART_HEIGHT_DP = 180.dp
+private const val BAR_HEIGHT_FRACTION = 0.85f
+private const val BAR_WIDTH_OFFSET_FRACTION = 0.5f
+private const val COLOR_GREEN = 0xFF1B873B
+private const val CORNER_RADIUS_PX = 8f
+private const val MAX_VISIBLE_MONTHS = 6
+private const val ALPHA_SURFACE_VARIANT = 0.4f
+private const val ALPHA_SURFACE_VARIANT_LOW = 0.3f
+private const val ALPHA_ON_SURFACE_MEDIUM = 0.7f
+private const val BAR_WIDTH_DIVISOR = 2f
+private const val MAX_VALUE_DEFAULT = 1f
+private val PADDING_MEDIUM = 12.dp
+private val PADDING_LARGE = 16.dp
+private val PADDING_EXTRA_LARGE = 20.dp
+private val CORNER_RADIUS_LARGE = 16.dp
+private val CORNER_RADIUS_EXTRA_LARGE = 20.dp

@@ -34,12 +34,14 @@ fun SmartMessageCard(
 ) {
     Card(
         modifier = modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(12.dp),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.5f))
+        shape = RoundedCornerShape(CORNER_RADIUS_MEDIUM),
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.secondaryContainer.copy(alpha = CARD_ALPHA_SECONDARY)
+        )
     ) {
-        Box(modifier = Modifier.padding(12.dp).fillMaxWidth()) {
+        Box(modifier = Modifier.padding(PADDING_MEDIUM).fillMaxWidth()) {
             if (isLoading) {
-                ShimmerBox(height = 20.dp, widthFraction = 0.8f)
+                ShimmerBox(height = 20.dp, widthFraction = SHIMMER_WIDTH_FRACTION)
             } else {
                 Text(
                     text = message,
@@ -61,18 +63,28 @@ fun StatCard(
 ) {
     Card(
         modifier = modifier,
-        shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)),
+        shape = RoundedCornerShape(CORNER_RADIUS_LARGE),
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = CARD_ALPHA_SURFACE)
+        ),
         elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
     ) {
         Column(
-            modifier = Modifier.padding(12.dp),
-            verticalArrangement = Arrangement.spacedBy(2.dp)
+            modifier = Modifier.padding(PADDING_MEDIUM),
+            verticalArrangement = Arrangement.spacedBy(SPACING_TINY)
         ) {
-            Text(text = title, style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f))
+            Text(
+                text = title, 
+                style = MaterialTheme.typography.labelMedium, 
+                color = MaterialTheme.colorScheme.onSurface.copy(alpha = ON_SURFACE_ALPHA_MEDIUM)
+            )
             Text(text = value, style = MaterialTheme.typography.titleLarge)
             subtitle?.let {
-                Text(text = it, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f))
+                Text(
+                    text = it, 
+                    style = MaterialTheme.typography.bodySmall, 
+                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = ON_SURFACE_ALPHA_LOW)
+                )
             }
         }
     }
@@ -86,31 +98,33 @@ fun CircularProgressCard(
 ) {
     val animatedProgress by animateFloatAsState(
         targetValue = progress,
-        animationSpec = tween(800),
+        animationSpec = tween(ANIM_DURATION_PROGRESS),
         label = "progress"
     )
 
     Card(
         modifier = modifier,
-        shape = RoundedCornerShape(24.dp),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.3f))
+        shape = RoundedCornerShape(CORNER_RADIUS_EXTRA_LARGE),
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.primaryContainer.copy(alpha = CARD_ALPHA_PRIMARY)
+        )
     ) {
         Column(
-            modifier = Modifier.padding(24.dp).fillMaxWidth(),
+            modifier = Modifier.padding(PADDING_EXTRA_LARGE).fillMaxWidth(),
             horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(16.dp)
+            verticalArrangement = Arrangement.spacedBy(SPACING_MEDIUM)
         ) {
-            Box(contentAlignment = Alignment.Center, modifier = Modifier.size(180.dp)) {
+            Box(contentAlignment = Alignment.Center, modifier = Modifier.size(CIRCLE_SIZE_DP)) {
                 CircularProgressIndicator(
                     progress = { animatedProgress },
-                    modifier = Modifier.fillMaxWidth().aspectRatio(1f),
-                    strokeWidth = 14.dp,
+                    modifier = Modifier.fillMaxWidth().aspectRatio(ASPECT_RATIO_SQUARE),
+                    strokeWidth = STROKE_WIDTH_DP,
                     strokeCap = StrokeCap.Round,
                     color = MaterialTheme.colorScheme.primary,
                     trackColor = MaterialTheme.colorScheme.surfaceVariant
                 )
                 Text(
-                    text = "${(animatedProgress * 100).toInt()}%",
+                    text = "${(animatedProgress * PERCENT_MULTIPLIER).toInt()}%",
                     style = MaterialTheme.typography.displayLarge,
                     color = MaterialTheme.colorScheme.primary
                 )
@@ -128,13 +142,13 @@ fun CircularProgressCard(
 fun DashboardProgressBar(data: DashboardData, modifier: Modifier = Modifier) {
     val animatedProgress by animateFloatAsState(
         targetValue = data.progressFraction,
-        animationSpec = tween(600),
+        animationSpec = tween(ANIM_DURATION_LINEAR),
         label = "linear"
     )
-    Column(modifier = modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+    Column(modifier = modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(SPACING_SMALL)) {
         LinearProgressIndicator(
             progress = { animatedProgress },
-            modifier = Modifier.fillMaxWidth().clip(RoundedCornerShape(8.dp)),
+            modifier = Modifier.fillMaxWidth().clip(RoundedCornerShape(CORNER_RADIUS_SMALL)),
             strokeCap = StrokeCap.Round,
             color = MaterialTheme.colorScheme.primary,
             trackColor = MaterialTheme.colorScheme.surfaceVariant
@@ -142,7 +156,29 @@ fun DashboardProgressBar(data: DashboardData, modifier: Modifier = Modifier) {
         Text(
             text = "${data.completedDays} de ${data.requiredDays} dias presenciais",
             style = MaterialTheme.typography.bodyMedium,
-            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
+            color = MaterialTheme.colorScheme.onSurface.copy(alpha = ON_SURFACE_ALPHA_MEDIUM)
         )
     }
 }
+
+private const val ANIM_DURATION_PROGRESS = 800
+private const val ANIM_DURATION_LINEAR = 600
+private val CIRCLE_SIZE_DP = 180.dp
+private const val CARD_ALPHA_SECONDARY = 0.5f
+private const val CARD_ALPHA_SURFACE = 0.5f
+private const val CARD_ALPHA_PRIMARY = 0.3f
+private const val ON_SURFACE_ALPHA_MEDIUM = 0.7f
+private const val ON_SURFACE_ALPHA_LOW = 0.6f
+private const val PERCENT_MULTIPLIER = 100
+private val PADDING_MEDIUM = 12.dp
+private val PADDING_EXTRA_LARGE = 24.dp
+private val SPACING_TINY = 2.dp
+private val SPACING_SMALL = 8.dp
+private val SPACING_MEDIUM = 16.dp
+private val CORNER_RADIUS_SMALL = 8.dp
+private val CORNER_RADIUS_MEDIUM = 12.dp
+private val CORNER_RADIUS_LARGE = 16.dp
+private val CORNER_RADIUS_EXTRA_LARGE = 24.dp
+private val STROKE_WIDTH_DP = 14.dp
+private const val SHIMMER_WIDTH_FRACTION = 0.8f
+private const val ASPECT_RATIO_SQUARE = 1f

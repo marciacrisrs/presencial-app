@@ -18,7 +18,7 @@ class StatisticsViewModel @Inject constructor(
 ) : ViewModel() {
 
     val statistics: StateFlow<StatisticsData?> = getStatisticsUseCase()
-        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), null)
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(STOP_TIMEOUT_MS), null)
 
     fun exportPdf(outputStream: java.io.OutputStream): Result<Unit> {
         val data = statistics.value ?: return Result.failure(IllegalStateException("Sem dados"))
@@ -31,3 +31,5 @@ class StatisticsViewModel @Inject constructor(
         )
     }
 }
+
+private const val STOP_TIMEOUT_MS = 5000L

@@ -3,15 +3,11 @@ package com.presencial.app.domain.usecase
 import com.presencial.app.domain.model.Absence
 import com.presencial.app.domain.model.CheckIn
 import com.presencial.app.domain.model.DashboardData
-import com.presencial.app.domain.model.DayInfo
 import com.presencial.app.domain.model.DayStatus
-import com.presencial.app.domain.model.MonthlySummary
 import com.presencial.app.domain.repository.AbsenceRepository
 import com.presencial.app.domain.repository.CheckInRepository
-import com.presencial.app.domain.repository.MonthlySummaryRepository
 import com.presencial.app.domain.repository.SettingsRepository
 import com.presencial.app.domain.util.GoalCalculator
-import com.presencial.app.domain.util.HolidayCalculator
 import com.presencial.app.domain.util.SmartMessageGenerator
 import com.presencial.app.domain.util.TimeProvider
 import com.presencial.app.domain.util.WorkdayCalculator
@@ -35,17 +31,25 @@ class GetDashboardDataUseCase @Inject constructor(
             absenceRepository.getAbsencesInRange(yearMonth.atDay(1), yearMonth.atEndOfMonth()),
             settingsRepository.settings
         ) { checkIns, absences, settings ->
-            buildDashboard(yearMonth, checkIns, absences, settings.requiredPercentage, settings.countSaturdaysAsWorkdays)
+            buildDashboard(
+                yearMonth, 
+                checkIns, 
+                absences, 
+                settings.requiredPercentage, 
+                settings.countSaturdaysAsWorkdays
+            )
         }.transform { dashboard ->
             emit(dashboard.copy(isLoadingAi = true))
             val aiMessage = getAiSmartMessageUseCase(
-                completedDays = dashboard.completedDays,
-                requiredDays = dashboard.requiredDays,
-                remainingDays = dashboard.remainingDays,
-                achievedPercentage = dashboard.achievedPercentage,
-                today = timeProvider.today(),
-                yearMonth = dashboard.yearMonth,
-                countSaturdays = dashboard.countSaturdays
+                SmartMessageParams(
+                    completedDays = dashboard.completedDays,
+                    requiredDays = dashboard.requiredDays,
+                    remainingDays = dashboard.remainingDays,
+                    achievedPercentage = dashboard.achievedPercentage,
+                    today = timeProvider.today(),
+                    yearMonth = dashboard.yearMonth,
+                    countSaturdays = dashboard.countSaturdays
+                )
             )
             emit(dashboard.copy(smartMessage = aiMessage, isLoadingAi = false))
         }
@@ -74,6 +78,16 @@ class GetDashboardDataUseCase @Inject constructor(
         
         val streak = calculateStreak(checkIns, today)
 
+        val params = SmartMessageParams(
+            completedDays = completedDays,
+            requiredDays = requiredDays,
+            remainingDays = remainingDays,
+            achievedPercentage = achievedPercentage,
+            today = today,
+            yearMonth = yearMonth,
+            countSaturdays = countSaturdays
+        )
+
         return DashboardData(
             yearMonth = yearMonth,
             totalDays = yearMonth.lengthOfMonth(),
@@ -85,10 +99,7 @@ class GetDashboardDataUseCase @Inject constructor(
             achievedPercentage = achievedPercentage,
             requiredPercentage = requiredPercentage,
             progressFraction = progressFraction,
-            smartMessage = SmartMessageGenerator.generate(
-                completedDays, requiredDays, remainingDays, achievedPercentage,
-                today, yearMonth, countSaturdays
-            ),
+            smartMessage = SmartMessageGenerator.generate(params),
             countSaturdays = countSaturdays,
             todayIsPresencial = todayCheckIn?.status == DayStatus.PRESENCIAL,
             todayIsWorkday = WorkdayCalculator.isWorkday(today, countSaturdays),

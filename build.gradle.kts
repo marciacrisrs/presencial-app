@@ -20,7 +20,11 @@ plugins {
 }
 
 allprojects {
+    apply(plugin = "io.gitlab.arturbosch.detekt")
+
     tasks.withType<io.gitlab.arturbosch.detekt.Detekt>().configureEach {
         jvmTarget = "17"
+        config.setFrom(files("$rootDir/config/detekt/detekt.yml"))
+        buildUponDefaultConfig = true
     }
 }

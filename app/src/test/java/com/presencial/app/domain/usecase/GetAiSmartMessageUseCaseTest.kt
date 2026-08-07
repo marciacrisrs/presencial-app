@@ -6,7 +6,9 @@ import io.mockk.mockk
 import kotlinx.coroutines.test.runTest
 import java.time.LocalDate
 import java.time.YearMonth
-import org.junit.jupiter.api.Assertions.*
+import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Assertions.assertNotEquals
+import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 
@@ -27,8 +29,10 @@ class GetAiSmartMessageUseCaseTest {
 
         // Act
         val result = useCase(
-            5, 10, 5, 50f,
-            LocalDate.now(), YearMonth.now(), false
+            SmartMessageParams(
+                5, 10, 5, 50f,
+                LocalDate.now(), YearMonth.now(), false
+            )
         )
 
         // Assert
@@ -38,12 +42,14 @@ class GetAiSmartMessageUseCaseTest {
     @Test
     fun `given ai service fails, when invoke, then return fallback message`() = runTest {
         // Arrange
-        coEvery { aiService.fetchSmartMessage(any(), any(), any(), any()) } throws Exception("Error")
+        coEvery { aiService.fetchSmartMessage(any(), any(), any(), any()) } throws java.io.IOException("Error")
 
         // Act
         val result = useCase(
-            5, 10, 5, 50f,
-            LocalDate.now(), YearMonth.now(), false
+            SmartMessageParams(
+                5, 10, 5, 50f,
+                LocalDate.now(), YearMonth.now(), false
+            )
         )
 
         // Assert

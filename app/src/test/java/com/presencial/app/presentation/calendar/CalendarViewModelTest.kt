@@ -61,7 +61,12 @@ class CalendarViewModelTest {
     fun `calendarDays should reflect use case flow for selected month`() = runTest {
         val month = YearMonth.now().plusMonths(1)
         val days = listOf(
-            DayInfo(LocalDate.of(2026, 8, 1), DayStatus.PRESENCIAL, isWorkday = true, isHoliday = false)
+            DayInfo(
+                LocalDate.of(2026, 8, 1),
+                DayStatus.PRESENCIAL,
+                isWorkday = true,
+                isHoliday = false
+            )
         )
         every { getMonthCalendarUseCase(month) } returns flowOf(days)
 
@@ -76,21 +81,39 @@ class CalendarViewModelTest {
 
     @Test
     fun `selectDay should update selectedDay if editable`() = runTest {
-        val day = DayInfo(LocalDate.now(), DayStatus.PRESENCIAL, isWorkday = true, isHoliday = false, isEditable = true)
+        val day = DayInfo(
+            date = LocalDate.now(),
+            status = DayStatus.PRESENCIAL,
+            isWorkday = true,
+            isHoliday = false,
+            isEditable = true
+        )
         viewModel.selectDay(day)
         assertEquals(day, viewModel.selectedDay.value)
     }
 
     @Test
     fun `selectDay should NOT update selectedDay if not editable`() = runTest {
-        val day = DayInfo(LocalDate.now(), DayStatus.PRESENCIAL, isWorkday = true, isHoliday = false, isEditable = false)
+        val day = DayInfo(
+            date = LocalDate.now(),
+            status = DayStatus.PRESENCIAL,
+            isWorkday = true,
+            isHoliday = false,
+            isEditable = false
+        )
         viewModel.selectDay(day)
         assertNull(viewModel.selectedDay.value)
     }
 
     @Test
     fun `dismissDayEditor should clear selectedDay`() = runTest {
-        val day = DayInfo(LocalDate.now(), DayStatus.PRESENCIAL, isWorkday = true, isHoliday = false, isEditable = true)
+        val day = DayInfo(
+            date = LocalDate.now(),
+            status = DayStatus.PRESENCIAL,
+            isWorkday = true,
+            isHoliday = false,
+            isEditable = true
+        )
         viewModel.selectDay(day)
         viewModel.dismissDayEditor()
         assertNull(viewModel.selectedDay.value)
@@ -99,7 +122,13 @@ class CalendarViewModelTest {
     @Test
     fun `updateDayStatus should call use case and clear selection`() = runTest {
         val date = LocalDate.of(2026, 8, 6)
-        val day = DayInfo(date, DayStatus.PRESENCIAL, isWorkday = true, isHoliday = false, isEditable = true)
+        val day = DayInfo(
+            date = date,
+            status = DayStatus.PRESENCIAL,
+            isWorkday = true,
+            isHoliday = false,
+            isEditable = true
+        )
         viewModel.selectDay(day)
 
         coEvery { updateDayStatusUseCase(date, DayStatus.PRESENCIAL) } returns Unit

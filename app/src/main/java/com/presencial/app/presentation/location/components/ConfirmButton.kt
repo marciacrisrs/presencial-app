@@ -16,14 +16,6 @@ internal fun ConfirmButton(
         enabled = enabled,
         onClick = onClick
     ) {
-
-        Text(
-            if (state.isNewAddress)
-                "Salvar Local Atual"
-            else
-                "Atualizar Local"
-        )
-
+        Text(state.confirmButtonText)
     }
-
 }

@@ -27,14 +27,14 @@ class SettingsDataStore @Inject constructor(
 
     override val settings: Flow<AppSettings> = dataStore.data.map { prefs ->
         AppSettings(
-            requiredPercentage = prefs[Keys.REQUIRED_PERCENTAGE] ?: 40,
+            requiredPercentage = prefs[Keys.REQUIRED_PERCENTAGE] ?: DEFAULT_PERCENTAGE,
             countSaturdaysAsWorkdays = prefs[Keys.COUNT_SATURDAYS] ?: false
         )
     }
 
     override suspend fun updateRequiredPercentage(percentage: Int) {
-        val allowedValues = listOf(20, 40, 60)
-        val value = if (percentage in allowedValues) percentage else 40
+        val allowedValues = listOf(PERCENT_20, PERCENT_40, PERCENT_60)
+        val value = if (percentage in allowedValues) percentage else DEFAULT_PERCENTAGE
         dataStore.edit { it[Keys.REQUIRED_PERCENTAGE] = value }
         syncToSharedPreferences(value, null)
     }
@@ -54,5 +54,9 @@ class SettingsDataStore @Inject constructor(
 
     companion object {
         private const val WIDGET_PREFS = "presencial_settings"
+        private const val DEFAULT_PERCENTAGE = 40
+        private const val PERCENT_20 = 20
+        private const val PERCENT_40 = 40
+        private const val PERCENT_60 = 60
     }
 }

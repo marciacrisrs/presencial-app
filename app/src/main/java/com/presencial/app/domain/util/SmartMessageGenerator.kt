@@ -1,63 +1,59 @@
 package com.presencial.app.domain.util
 
-import java.time.LocalDate
-import java.time.YearMonth
+import com.presencial.app.domain.usecase.SmartMessageParams
 
 /**
  * Gera mensagens inteligentes para o dashboard com base no progresso atual.
  */
 object SmartMessageGenerator {
 
-    fun generate(
-        completedDays: Int,
-        requiredDays: Int,
-        remainingDays: Int,
-        achievedPercentage: Float,
-        today: LocalDate,
-        yearMonth: YearMonth,
-        countSaturdaysAsWorkdays: Boolean
-    ): String {
-        if (requiredDays <= 0) {
-            return "Configure seu percentual de presença nas configurações."
-        }
+    private const val PERCENTAGE_THRESHOLD_HIGH = 80f
+    private const val DAYS_PER_WEEK = 5.0
+    private const val REMAINING_THRESHOLD_LOW = 3
+    private const val MIN_WEEKS = 1.0
+    private const val PROGRESS_FACTOR_HALF = 2
+    private const val SAFETY_MARGIN_FACTOR = 2
+    private const val ZERO_DAYS = 0
 
-        if (completedDays >= requiredDays) {
-            return "Meta concluída 🎉"
+    fun generate(params: SmartMessageParams): String {
+        return when {
+            params.requiredDays <= ZERO_DAYS -> "Configure seu percentual de presença nas configurações."
+            params.completedDays >= params.requiredDays || params.remainingDays == ZERO_DAYS -> "Meta concluída 🎉"
+            else -> generateConditionalMessage(params)
         }
+    }
 
-        if (remainingDays == 0) {
-            return "Meta concluída 🎉"
-        }
-
+    private fun generateConditionalMessage(params: SmartMessageParams): String {
         val remainingWorkdays = WorkdayCalculator.countRemainingWorkdays(
-            today, yearMonth, countSaturdaysAsWorkdays
+            params.today, params.yearMonth, params.countSaturdays
         )
 
-        if (achievedPercentage >= 80f) {
-            return "Você já cumpriu ${achievedPercentage.toInt()}% da meta."
-        }
+        return when {
+            params.achievedPercentage >= PERCENTAGE_THRESHOLD_HIGH ->
+                "Você já cumpriu ${params.achievedPercentage.toInt()}% da meta."
 
-        if (remainingDays <= remainingWorkdays && remainingWorkdays > 0) {
-            val weeks = (remainingWorkdays / 5.0).coerceAtLeast(1.0)
-            if (remainingDays <= 3) {
-                return "Faltam apenas $remainingDays ${dayLabel(remainingDays)}."
-            }
-            return "Você precisará ir $remainingDays vezes nas próximas ${weeks.toInt()} semanas."
-        }
+            params.remainingDays <= remainingWorkdays && remainingWorkdays > ZERO_DAYS ->
+                generateRemainingDaysMessage(params.remainingDays, remainingWorkdays)
 
-        if (remainingDays > remainingWorkdays) {
-            return "Atenção: faltam $remainingDays dias e restam apenas $remainingWorkdays dias úteis."
-        }
+            params.remainingDays > remainingWorkdays ->
+                "Atenção: faltam ${params.remainingDays} dias e restam apenas $remainingWorkdays dias úteis."
 
-        if (completedDays > requiredDays / 2) {
-            return "Você está adiantado."
-        }
+            params.completedDays > params.requiredDays / PROGRESS_FACTOR_HALF -> "Você está adiantado."
 
-        if (remainingWorkdays > remainingDays * 2) {
-            return "Mesmo não indo esta semana, ainda atingirá a meta."
-        }
+            remainingWorkdays > params.remainingDays * SAFETY_MARGIN_FACTOR ->
+                "Mesmo não indo esta semana, ainda atingirá a meta."
 
-        return "Faltam $remainingDays ${dayLabel(remainingDays)} presenciais para a meta."
+            else -> "Faltam ${params.remainingDays} ${dayLabel(params.remainingDays)} presenciais para a meta."
+        }
+    }
+
+    private fun generateRemainingDaysMessage(remainingDays: Int, remainingWorkdays: Int): String {
+        val weeks = (remainingWorkdays / DAYS_PER_WEEK).coerceAtLeast(MIN_WEEKS)
+        return if (remainingDays <= REMAINING_THRESHOLD_LOW) {
+            "Faltam apenas $remainingDays ${dayLabel(remainingDays)}."
+        } else {
+            "Você precisará ir $remainingDays vezes nas próximas ${weeks.toInt()} semanas."
+        }
     }
 
     private fun dayLabel(count: Int): String = if (count == 1) "dia" else "dias"

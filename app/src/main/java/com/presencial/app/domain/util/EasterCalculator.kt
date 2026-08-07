@@ -8,6 +8,7 @@ import java.time.LocalDate
  */
 object EasterCalculator {
 
+    @Suppress("MagicNumber")
     fun calculateEaster(year: Int): LocalDate {
         val a = year % 19
         val b = year / 100

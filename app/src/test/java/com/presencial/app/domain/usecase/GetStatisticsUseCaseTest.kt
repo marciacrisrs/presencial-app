@@ -12,7 +12,8 @@ import io.mockk.mockk
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.runTest
 import java.time.LocalDate
-import org.junit.jupiter.api.Assertions.*
+import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 
@@ -54,7 +55,10 @@ class GetStatisticsUseCaseTest {
         // Wait, if today is Aug 10, current streak is 1. If today was Aug 5, it would be 3.
         
         val absences = listOf(
-            TestDataFactory.createAbsence(startDate = LocalDate.of(2026, 8, 17), endDate = LocalDate.of(2026, 8, 21))
+            TestDataFactory.createAbsence(
+                startDate = LocalDate.of(2026, 8, 17),
+                endDate = LocalDate.of(2026, 8, 21)
+            )
         )
         // 5 workdays subtracted from Aug 2026.
         // Aug 2026 has 21 workdays - 5 = 16 liquid workdays.
@@ -70,7 +74,8 @@ class GetStatisticsUseCaseTest {
             val stats = awaitItem()
             assertEquals(5, stats.totalPresencial)
             assertEquals(3, stats.longestStreak)
-            assertEquals(1, stats.currentStreak) // Aug 10 is the latest, but Aug 9 was Sunday (not in checkins anyway), Aug 8 Sat. Aug 7 Fri (missing).
+            assertEquals(1, stats.currentStreak) 
+            // Aug 10 is the latest, but Aug 9 was Sunday (not in checkins anyway), Aug 8 Sat. Aug 7 Fri (missing).
             
             val augSummary = stats.monthlySummaries.find { it.yearMonth == java.time.YearMonth.of(2026, 8) }
             assertEquals(16, augSummary?.workdays)

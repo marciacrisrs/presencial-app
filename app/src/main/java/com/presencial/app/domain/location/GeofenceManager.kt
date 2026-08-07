@@ -43,7 +43,7 @@ class GeofenceManager @Inject constructor(
                 .setCircularRegion(address.latitude, address.longitude, address.radius)
                 .setExpirationDuration(Geofence.NEVER_EXPIRE)
                 .setTransitionTypes(Geofence.GEOFENCE_TRANSITION_DWELL)
-                .setLoiteringDelay(30000) // 30 seconds
+                .setLoiteringDelay(LOITERING_DELAY_MS)
                 .build()
         }
 
@@ -64,5 +64,9 @@ class GeofenceManager @Inject constructor(
 
     fun removeGeofences() {
         geofencingClient.removeGeofences(geofencePendingIntent)
+    }
+
+    companion object {
+        private const val LOITERING_DELAY_MS = 30000
     }
 }

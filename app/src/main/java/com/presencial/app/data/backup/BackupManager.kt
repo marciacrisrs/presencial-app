@@ -1,13 +1,12 @@
 package com.presencial.app.data.backup
 
-import android.content.Context
 import com.presencial.app.data.local.dao.CheckInDao
 import com.presencial.app.data.local.dao.MonthlySummaryDao
 import com.presencial.app.data.local.entity.CheckInEntity
 import com.presencial.app.data.local.entity.MonthlySummaryEntity
+import com.presencial.app.di.IoDispatcher
 import com.presencial.app.domain.repository.SettingsRepository
-import dagger.hilt.android.qualifiers.ApplicationContext
-import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.withContext
 import org.json.JSONArray
@@ -19,23 +18,16 @@ import javax.inject.Singleton
 
 @Singleton
 class BackupManager @Inject constructor(
-    @ApplicationContext private val context: Context,
     private val checkInDao: CheckInDao,
     private val monthlySummaryDao: MonthlySummaryDao,
-    private val settingsRepository: SettingsRepository
+    private val settingsRepository: SettingsRepository,
+    @IoDispatcher private val ioDispatcher: CoroutineDispatcher
 ) {
 
-    suspend fun exportToStream(outputStream: OutputStream): Result<Unit> = withContext(Dispatchers.IO) {
+    suspend fun exportToStream(outputStream: OutputStream): Result<Unit> = withContext(ioDispatcher) {
         runCatching {
             val json = createBackupJson()
             outputStream.use { it.write(json.toString(2).toByteArray()) }
-        }
-    }
-
-    suspend fun exportToFile(file: File): Result<Unit> = withContext(Dispatchers.IO) {
-        runCatching {
-            val json = createBackupJson()
-            file.writeText(json.toString(2))
         }
     }
 
@@ -73,7 +65,7 @@ class BackupManager @Inject constructor(
         }
     }
 
-    suspend fun importFromFile(file: File): Result<Unit> = withContext(Dispatchers.IO) {
+    suspend fun importFromFile(file: File): Result<Unit> = withContext(ioDispatcher) {
         runCatching {
             val json = JSONObject(file.readText())
             checkInDao.deleteAll()

@@ -13,7 +13,7 @@ import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.runTest
 import java.time.LocalDate
 import java.time.YearMonth
-import org.junit.jupiter.api.Assertions.*
+import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 
@@ -43,10 +43,19 @@ class GetMonthCalendarUseCaseTest {
         timeProvider.setToday(today)
 
         val checkIns = listOf(
-            com.presencial.app.domain.model.CheckIn(LocalDate.of(2026, 9, 1), DayStatus.PRESENCIAL)
+            com.presencial.app.domain.model.CheckIn(
+                LocalDate.of(2026, 9, 1),
+                DayStatus.PRESENCIAL
+            )
         )
         val absences = listOf(
-            com.presencial.app.domain.model.Absence(1L, com.presencial.app.domain.model.AbsenceType.VACATION, LocalDate.of(2026, 9, 14), LocalDate.of(2026, 9, 15), true)
+            com.presencial.app.domain.model.Absence(
+                1L,
+                com.presencial.app.domain.model.AbsenceType.VACATION,
+                LocalDate.of(2026, 9, 14),
+                LocalDate.of(2026, 9, 15),
+                true
+            )
         )
         val settings = AppSettings(requiredPercentage = 40, countSaturdaysAsWorkdays = false)
 

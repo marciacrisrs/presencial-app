@@ -11,7 +11,6 @@ import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
-import java.time.LocalDate
 import javax.inject.Inject
 
 @HiltViewModel
@@ -22,7 +21,7 @@ class DashboardViewModel @Inject constructor(
 ) : ViewModel() {
 
     val dashboardData: StateFlow<DashboardData?> = getDashboardDataUseCase(timeProvider.currentMonth())
-        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), null)
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(STOP_TIMEOUT_MS), null)
 
     fun toggleTodayCheckIn(markPresencial: Boolean) {
         viewModelScope.launch {
@@ -39,3 +38,5 @@ class DashboardViewModel @Inject constructor(
         }
     }
 }
+
+private const val STOP_TIMEOUT_MS = 5000L

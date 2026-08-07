@@ -82,40 +82,69 @@ fun CalendarScreen(
     }
 
     selectedDay?.let { day ->
-        val dateLabel = "${day.date.dayOfMonth} de ${day.date.month.getDisplayName(TextStyle.FULL, Locale.forLanguageTag("pt-BR"))}"
-        AlertDialog(
-            onDismissRequest = viewModel::dismissDayEditor,
-            title = { Text("Editar — $dateLabel") },
-            text = {
-                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                    day.holidayName?.let { Text("🎉 Feriado: $it", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.primary) }
-                    if (day.source == "AUTOMATICO") {
-                        Text("📍 Registrado automaticamente via GPS", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.secondary)
-                    }
-                    Text("Selecione o status do dia:")
+        DayEditorDialog(
+            day = day,
+            onStatusSelected = viewModel::updateDayStatus,
+            onDismiss = viewModel::dismissDayEditor
+        )
+    }
+}
+
+@Composable
+private fun DayEditorDialog(
+    day: com.presencial.app.domain.model.DayInfo,
+    onStatusSelected: (DayStatus) -> Unit,
+    onDismiss: () -> Unit
+) {
+    val monthName = day.date.month.getDisplayName(TextStyle.FULL, Locale.forLanguageTag("pt-BR"))
+    val dateLabel = "${day.date.dayOfMonth} de $monthName"
+    
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text("Editar — $dateLabel") },
+        text = {
+            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                day.holidayName?.let { 
+                    Text(
+                        "🎉 Feriado: $it", 
+                        style = MaterialTheme.typography.bodyMedium, 
+                        color = MaterialTheme.colorScheme.primary
+                    ) 
                 }
-            },
-            confirmButton = {
-                TextButton(onClick = { viewModel.updateDayStatus(DayStatus.PRESENCIAL) }) {
-                    Text("🏢 Presencial")
+                if (day.source == "AUTOMATICO") {
+                    Text(
+                        "📍 Registrado automaticamente via GPS", 
+                        style = MaterialTheme.typography.bodySmall, 
+                        color = MaterialTheme.colorScheme.secondary
+                    )
                 }
-            },
-            dismissButton = {
+                Text("Selecione o status do dia:")
+            }
+        },
+        confirmButton = {
+            TextButton(onClick = { onStatusSelected(DayStatus.PRESENCIAL) }) {
+                Text("🏢 Presencial")
+            }
+        },
+        dismissButton = {
+            Column {
                 Row {
-                    TextButton(onClick = { viewModel.updateDayStatus(DayStatus.HOME_OFFICE) }) {
+                    TextButton(onClick = { onStatusSelected(DayStatus.HOME_OFFICE) }) {
                         Text("🏠 Home Office")
                     }
-                    TextButton(onClick = { viewModel.updateDayStatus(DayStatus.ABSENCE) }) {
+                    TextButton(onClick = { onStatusSelected(DayStatus.ABSENCE) }) {
                         Text("❌ Ausência")
                     }
-                    TextButton(onClick = { viewModel.updateDayStatus(DayStatus.FUTURO) }) {
+                }
+                Row {
+                    TextButton(onClick = { onStatusSelected(DayStatus.FUTURO) }) {
                         Text("🧹 Limpar")
                     }
-                    TextButton(onClick = viewModel::dismissDayEditor) {
+                    TextButton(onClick = onDismiss) {
                         Text("Cancelar")
                     }
                 }
             }
-        )
-    }
+        }
+    )
 }

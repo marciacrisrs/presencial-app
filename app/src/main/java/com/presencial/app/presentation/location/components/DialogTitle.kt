@@ -8,12 +8,5 @@ import com.presencial.app.presentation.location.WorkAddressDialogState
 fun DialogTitle(
     state: WorkAddressDialogState
 ) {
-
-    Text(
-        if (state.isNewAddress)
-            "Novo Local"
-        else
-            "Editar Local"
-    )
-
+    Text(state.dialogTitle)
 }

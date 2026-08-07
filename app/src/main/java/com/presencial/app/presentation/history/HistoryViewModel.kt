@@ -16,5 +16,7 @@ class HistoryViewModel @Inject constructor(
 ) : ViewModel() {
 
     val summaries: StateFlow<List<MonthlySummary>> = getHistoryUseCase()
-        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(STOP_TIMEOUT_MS), emptyList())
 }
+
+private const val STOP_TIMEOUT_MS = 5000L

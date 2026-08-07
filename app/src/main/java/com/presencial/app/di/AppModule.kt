@@ -30,7 +30,38 @@ import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
+import kotlinx.coroutines.CoroutineDispatcher
+import kotlinx.coroutines.Dispatchers
+import javax.inject.Qualifier
 import javax.inject.Singleton
+
+@Qualifier
+@Retention(AnnotationRetention.BINARY)
+annotation class IoDispatcher
+
+@Qualifier
+@Retention(AnnotationRetention.BINARY)
+annotation class DefaultDispatcher
+
+@Qualifier
+@Retention(AnnotationRetention.BINARY)
+annotation class MainDispatcher
+
+@Module
+@InstallIn(SingletonComponent::class)
+object DispatcherModule {
+    @Provides
+    @IoDispatcher
+    fun provideIoDispatcher(): CoroutineDispatcher = Dispatchers.IO
+
+    @Provides
+    @DefaultDispatcher
+    fun provideDefaultDispatcher(): CoroutineDispatcher = Dispatchers.Default
+
+    @Provides
+    @MainDispatcher
+    fun provideMainDispatcher(): CoroutineDispatcher = Dispatchers.Main
+}
 
 @Module
 @InstallIn(SingletonComponent::class)
@@ -40,7 +71,7 @@ object DatabaseModule {
     @Singleton
     fun provideDatabase(@ApplicationContext context: Context): PresencialDatabase =
         Room.databaseBuilder(context, PresencialDatabase::class.java, "presencial.db")
-            .fallbackToDestructiveMigration()
+            .fallbackToDestructiveMigration(dropAllTables = false)
             .build()
 
     @Provides
@@ -73,6 +104,7 @@ object DataStoreModule {
 
 @Module
 @InstallIn(SingletonComponent::class)
+@Suppress("unused")
 interface RepositoryModule {
 
     @Binds
@@ -85,17 +117,17 @@ interface RepositoryModule {
 
     @Binds
     @Singleton
-    abstract fun bindSettingsRepository(impl: SettingsDataStore): SettingsRepository
+    fun bindSettingsRepository(impl: SettingsDataStore): SettingsRepository
 
     @Binds
     @Singleton
-    abstract fun bindMonthlySummaryRepository(impl: MonthlySummaryRepositoryImpl): MonthlySummaryRepository
+    fun bindMonthlySummaryRepository(impl: MonthlySummaryRepositoryImpl): MonthlySummaryRepository
 
     @Binds
     @Singleton
-    abstract fun bindAbsenceRepository(impl: AbsenceRepositoryImpl): AbsenceRepository
+    fun bindAbsenceRepository(impl: AbsenceRepositoryImpl): AbsenceRepository
 
     @Binds
     @Singleton
-    abstract fun bindWorkAddressRepository(impl: WorkAddressRepositoryImpl): WorkAddressRepository
+    fun bindWorkAddressRepository(impl: WorkAddressRepositoryImpl): WorkAddressRepository
 }

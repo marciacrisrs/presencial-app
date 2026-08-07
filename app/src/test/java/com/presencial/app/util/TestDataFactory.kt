@@ -1,7 +1,16 @@
 package com.presencial.app.util
 
-import com.presencial.app.data.local.entity.*
-import com.presencial.app.domain.model.*
+import com.presencial.app.data.local.entity.AbsenceEntity
+import com.presencial.app.data.local.entity.CheckInEntity
+import com.presencial.app.data.local.entity.MonthlySummaryEntity
+import com.presencial.app.data.local.entity.WorkAddressEntity
+import com.presencial.app.domain.model.Absence
+import com.presencial.app.domain.model.AbsenceType
+import com.presencial.app.domain.model.CheckIn
+import com.presencial.app.domain.model.DashboardData
+import com.presencial.app.domain.model.DayStatus
+import com.presencial.app.domain.model.MonthlySummary
+import com.presencial.app.domain.model.WorkAddress
 import com.presencial.app.domain.usecase.StatisticsData
 import java.time.LocalDate
 import java.time.YearMonth
@@ -68,7 +77,15 @@ object TestDataFactory {
         homeOfficeDays: Int = 3,
         requiredPercentage: Int = 40,
         achievedPercentage: Float = 55.5f
-    ) = MonthlySummary(yearMonth, workdays, requiredDays, completedDays, homeOfficeDays, requiredPercentage, achievedPercentage)
+    ) = MonthlySummary(
+        yearMonth,
+        workdays,
+        requiredDays,
+        completedDays,
+        homeOfficeDays,
+        requiredPercentage,
+        achievedPercentage
+    )
 
     fun createMonthlySummaryEntity(
         yearMonthKey: String = "2026-08",
@@ -78,18 +95,15 @@ object TestDataFactory {
         homeOfficeDays: Int = 3,
         requiredPercentage: Int = 40,
         achievedPercentage: Float = 55.5f
-    ) = MonthlySummaryEntity(yearMonthKey, workdays, requiredDays, completedDays, homeOfficeDays, requiredPercentage, achievedPercentage)
-
-    fun createAppSettings(
-        requiredPercentage: Int = 40,
-        countSaturdaysAsWorkdays: Boolean = false
-    ) = AppSettings(requiredPercentage, countSaturdaysAsWorkdays)
-
-    fun createSettingsEntity(
-        id: Int = 1,
-        requiredPercentage: Int = 40,
-        countSaturdaysAsWorkdays: Boolean = false
-    ) = SettingsEntity(id, requiredPercentage, countSaturdaysAsWorkdays)
+    ) = MonthlySummaryEntity(
+        yearMonthKey,
+        workdays,
+        requiredDays,
+        completedDays,
+        homeOfficeDays,
+        requiredPercentage,
+        achievedPercentage
+    )
 
     fun createDashboardData(
         yearMonth: YearMonth = YearMonth.of(2026, 8),
@@ -109,10 +123,23 @@ object TestDataFactory {
         yesterdayIsPending: Boolean = false,
         streak: Int = 3
     ) = DashboardData(
-        yearMonth, totalDays, workdays, requiredDays, completedDays, remainingDays,
-        homeOfficeDays, achievedPercentage, requiredPercentage, progressFraction,
-        smartMessage, false, countSaturdays, todayIsPresencial, todayIsWorkday,
-        yesterdayIsPending, streak
+        yearMonth,
+        totalDays,
+        workdays,
+        requiredDays,
+        completedDays,
+        remainingDays,
+        homeOfficeDays,
+        achievedPercentage,
+        requiredPercentage,
+        progressFraction,
+        smartMessage,
+        false,
+        countSaturdays,
+        todayIsPresencial,
+        todayIsWorkday,
+        yesterdayIsPending,
+        streak
     )
 
     fun createStatisticsData(
@@ -123,6 +150,11 @@ object TestDataFactory {
         longestStreak: Int = 5,
         currentStreak: Int = 2
     ) = StatisticsData(
-        monthlySummaries, averageAchieved, totalPresencial, totalHomeOffice, longestStreak, currentStreak
+        monthlySummaries,
+        averageAchieved,
+        totalPresencial,
+        totalHomeOffice,
+        longestStreak,
+        currentStreak
     )
 }

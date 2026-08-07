@@ -2,7 +2,6 @@ package com.presencial.app.domain.usecase
 
 import app.cash.turbine.test
 import com.presencial.app.domain.model.AppSettings
-import com.presencial.app.domain.model.DayStatus
 import com.presencial.app.domain.repository.AbsenceRepository
 import com.presencial.app.domain.repository.CheckInRepository
 import com.presencial.app.domain.repository.SettingsRepository
@@ -15,7 +14,9 @@ import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.runTest
 import java.time.LocalDate
 import java.time.YearMonth
-import org.junit.jupiter.api.Assertions.*
+import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Assertions.assertFalse
+import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 
@@ -55,7 +56,7 @@ class GetDashboardDataUseCaseTest {
         every { checkInRepository.observeCheckInsForMonth(yearMonth) } returns flowOf(checkIns)
         every { absenceRepository.getAbsencesInRange(any(), any()) } returns flowOf(absences)
         every { settingsRepository.settings } returns flowOf(settings)
-        coEvery { getAiSmartMessageUseCase(any(), any(), any(), any(), any(), any(), any()) } returns "AI Message"
+        coEvery { getAiSmartMessageUseCase(any()) } returns "AI Message"
 
         // Act & Assert
         useCase(yearMonth).test {
@@ -81,7 +82,7 @@ class GetDashboardDataUseCaseTest {
         every { checkInRepository.observeCheckInsForMonth(yearMonth) } returns flowOf(emptyList())
         every { absenceRepository.getAbsencesInRange(any(), any()) } returns flowOf(emptyList())
         every { settingsRepository.settings } returns flowOf(AppSettings(40, false))
-        coEvery { getAiSmartMessageUseCase(any(), any(), any(), any(), any(), any(), any()) } returns "AI Message"
+        coEvery { getAiSmartMessageUseCase(any()) } returns "AI Message"
 
         // Act & Assert
         useCase(yearMonth).test {
@@ -103,7 +104,7 @@ class GetDashboardDataUseCaseTest {
         every { checkInRepository.observeCheckInsForMonth(yearMonth) } returns flowOf(emptyList())
         every { absenceRepository.getAbsencesInRange(any(), any()) } returns flowOf(emptyList())
         every { settingsRepository.settings } returns flowOf(AppSettings(40, false))
-        coEvery { getAiSmartMessageUseCase(any(), any(), any(), any(), any(), any(), any()) } returns "AI"
+        coEvery { getAiSmartMessageUseCase(any()) } returns "AI"
 
         // Act & Assert
         useCase(yearMonth).test {
@@ -129,7 +130,7 @@ class GetDashboardDataUseCaseTest {
         every { checkInRepository.observeCheckInsForMonth(yearMonth) } returns flowOf(checkIns)
         every { absenceRepository.getAbsencesInRange(any(), any()) } returns flowOf(emptyList())
         every { settingsRepository.settings } returns flowOf(AppSettings(40, false))
-        coEvery { getAiSmartMessageUseCase(any(), any(), any(), any(), any(), any(), any()) } returns "AI"
+        coEvery { getAiSmartMessageUseCase(any()) } returns "AI"
 
         // Act & Assert
         useCase(yearMonth).test {
@@ -148,7 +149,7 @@ class GetDashboardDataUseCaseTest {
         every { checkInRepository.observeCheckInsForMonth(yearMonth) } returns flowOf(emptyList())
         every { absenceRepository.getAbsencesInRange(any(), any()) } returns flowOf(emptyList())
         every { settingsRepository.settings } returns flowOf(AppSettings(40, true))
-        coEvery { getAiSmartMessageUseCase(any(), any(), any(), any(), any(), any(), any()) } returns "AI"
+        coEvery { getAiSmartMessageUseCase(any()) } returns "AI"
 
         // August 2026 has 5 Saturdays and 21 weekdays (Mon-Fri) = 26 workdays if Saturday is included
         // Wait, let's verify: Aug 1 (Sat), 8, 15, 22, 29. 5 Saturdays.

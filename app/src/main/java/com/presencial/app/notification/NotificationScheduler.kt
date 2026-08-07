@@ -19,14 +19,17 @@ class NotificationScheduler @Inject constructor(
     fun scheduleDailyReminder() {
         val now = Calendar.getInstance()
         val target = Calendar.getInstance().apply {
-            set(Calendar.HOUR_OF_DAY, 18)
+            set(Calendar.HOUR_OF_DAY, TARGET_HOUR)
             set(Calendar.MINUTE, 0)
             set(Calendar.SECOND, 0)
             if (before(now)) add(Calendar.DAY_OF_MONTH, 1)
         }
         val initialDelay = target.timeInMillis - now.timeInMillis
 
-        val workRequest = PeriodicWorkRequestBuilder<CheckInReminderWorker>(24, TimeUnit.HOURS)
+        val workRequest = PeriodicWorkRequestBuilder<CheckInReminderWorker>(
+            INTERVAL_HOURS, 
+            TimeUnit.HOURS
+        )
             .setInitialDelay(initialDelay, TimeUnit.MILLISECONDS)
             .build()
 
@@ -35,5 +38,10 @@ class NotificationScheduler @Inject constructor(
             ExistingPeriodicWorkPolicy.KEEP,
             workRequest
         )
+    }
+
+    companion object {
+        private const val TARGET_HOUR = 18
+        private const val INTERVAL_HOURS = 24L
     }
 }

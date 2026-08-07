@@ -20,7 +20,7 @@ class AbsenceViewModel @Inject constructor(
 ) : ViewModel() {
 
     val absences: StateFlow<List<Absence>> = absenceRepository.getAllAbsences()
-        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(STOP_TIMEOUT_MS), emptyList())
 
     private val _message = MutableStateFlow<String?>(null)
     val message: StateFlow<String?> = _message
@@ -65,3 +65,5 @@ class AbsenceViewModel @Inject constructor(
         _message.value = null
     }
 }
+
+private const val STOP_TIMEOUT_MS = 5000L

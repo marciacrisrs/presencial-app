@@ -6,18 +6,17 @@ import androidx.compose.runtime.Composable
 
 @Composable
 fun AddressMessage(
-    isNewAddress: Boolean,
-    permissionsGranted: Boolean
+    state: com.presencial.app.presentation.location.WorkAddressDialogState
 ) {
     when {
-        isNewAddress && permissionsGranted -> {
+        state.canUseCurrentLocation && state.permissionsGranted -> {
             Text(
                 text = "O local será definido com base na sua posição atual.",
                 style = MaterialTheme.typography.bodySmall
             )
         }
 
-        isNewAddress && !permissionsGranted -> {
+        state.canUseCurrentLocation && !state.permissionsGranted -> {
             Text(
                 text = "Conceda permissão de localização para salvar este local.",
                 color = MaterialTheme.colorScheme.error,

@@ -33,11 +33,6 @@ fun DialogContent(
             onRadiusChanged
         )
 
-        AddressMessage(
-            state.isNewAddress,
-            state.permissionsGranted
-        )
-
+        AddressMessage(state)
     }
-
 }

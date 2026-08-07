@@ -27,16 +27,14 @@ class CheckInReminderWorker @AssistedInject constructor(
         val today = LocalDate.now()
         val settings = settingsRepository.settings.first()
 
-        if (!WorkdayCalculator.isWorkday(today, settings.countSaturdaysAsWorkdays)) {
-            return Result.success()
-        }
-
+        val isWorkday = WorkdayCalculator.isWorkday(today, settings.countSaturdaysAsWorkdays)
         val existing = checkInRepository.getCheckIn(today)
-        if (existing?.status == DayStatus.PRESENCIAL) {
-            return Result.success()
+        val isAlreadyCheckedIn = existing?.status == DayStatus.PRESENCIAL
+
+        if (isWorkday && !isAlreadyCheckedIn) {
+            notificationHelper.showCheckInReminder()
         }
 
-        notificationHelper.showCheckInReminder()
         return Result.success()
     }
 

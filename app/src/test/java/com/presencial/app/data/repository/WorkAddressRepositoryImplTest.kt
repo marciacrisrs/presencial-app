@@ -3,7 +3,10 @@ package com.presencial.app.data.repository
 import app.cash.turbine.test
 import com.presencial.app.data.local.dao.WorkAddressDao
 import com.presencial.app.util.TestDataFactory
-import io.mockk.*
+import io.mockk.coEvery
+import io.mockk.coVerify
+import io.mockk.every
+import io.mockk.mockk
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Assertions.assertEquals

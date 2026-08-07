@@ -1,0 +1,54 @@
+package com.presencial.app.presentation.dashboard.components
+
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.hapticfeedback.HapticFeedback
+import androidx.compose.ui.unit.dp
+import com.presencial.app.domain.model.DashboardData
+
+@Composable
+fun DashboardContent(
+    dashboard: DashboardData,
+    onToggleTodayCheckIn: () -> Unit,
+    onMarkYesterdayPresencial: () -> Unit,
+    haptic: HapticFeedback
+) {
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .verticalScroll(rememberScrollState())
+            .padding(SCREEN_PADDING),
+        verticalArrangement = Arrangement.spacedBy(CONTENT_SPACING)
+    ) {
+        DashboardHeader(dashboard)
+
+        DashboardSmartMessageSection(dashboard)
+
+        DashboardProgressSection(dashboard)
+
+        DashboardStats(dashboard)
+
+        DashboardProgressBarSection(dashboard)
+
+        DashboardActionSection(
+            dashboard = dashboard,
+            onToggleTodayCheckIn = onToggleTodayCheckIn,
+            onMarkYesterdayPresencial = onMarkYesterdayPresencial,
+            haptic = haptic
+        )
+
+        Spacer(modifier = Modifier.height(BOTTOM_SPACER))
+    }
+}
+
+private val SCREEN_PADDING = 16.dp
+private val CONTENT_SPACING = 12.dp
+private val BOTTOM_SPACER = 8.dp

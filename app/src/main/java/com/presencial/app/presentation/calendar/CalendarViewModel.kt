@@ -29,7 +29,7 @@ class CalendarViewModel @Inject constructor(
     @OptIn(ExperimentalCoroutinesApi::class)
     val calendarDays: StateFlow<List<DayInfo>> = _selectedMonth
         .flatMapLatest { getMonthCalendarUseCase(it) }
-        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(STOP_TIMEOUT_MS), emptyList())
 
     private val _selectedDay = MutableStateFlow<DayInfo?>(null)
     val selectedDay: StateFlow<DayInfo?> = _selectedDay
@@ -58,3 +58,5 @@ class CalendarViewModel @Inject constructor(
         }
     }
 }
+
+private const val STOP_TIMEOUT_MS = 5000L

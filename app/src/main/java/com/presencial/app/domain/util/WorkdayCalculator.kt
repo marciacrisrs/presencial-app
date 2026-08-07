@@ -50,7 +50,9 @@ object WorkdayCalculator {
         while (!current.isAfter(end)) {
             if (isWorkday(current, countSaturdaysAsWorkdays)) {
                 val isAbsent = absences.any { absence ->
-                    !absence.isCounted && !current.isBefore(absence.startDate) && !current.isAfter(absence.endDate) && absence.isFullDay
+                    val inRange = !current.isBefore(absence.startDate) && 
+                                 !current.isAfter(absence.endDate)
+                    !absence.isCounted && inRange && absence.isFullDay
                 }
                 if (!isAbsent) {
                     liquidWorkdays.add(current)
@@ -59,23 +61,6 @@ object WorkdayCalculator {
             current = current.plusDays(1)
         }
         return liquidWorkdays.size
-    }
-
-    fun getWorkdaysInMonth(
-        yearMonth: YearMonth,
-        countSaturdaysAsWorkdays: Boolean
-    ): List<LocalDate> {
-        val start = yearMonth.atDay(1)
-        val end = yearMonth.atEndOfMonth()
-        val result = mutableListOf<LocalDate>()
-        var current = start
-        while (!current.isAfter(end)) {
-            if (isWorkday(current, countSaturdaysAsWorkdays)) {
-                result.add(current)
-            }
-            current = current.plusDays(1)
-        }
-        return result
     }
 
     fun countRemainingWorkdays(
@@ -87,20 +72,6 @@ object WorkdayCalculator {
         if (fromDate.isAfter(end)) return 0
         var count = 0
         var current = fromDate
-        while (!current.isAfter(end)) {
-            if (isWorkday(current, countSaturdaysAsWorkdays)) count++
-            current = current.plusDays(1)
-        }
-        return count
-    }
-
-    fun countWorkdaysInRange(
-        start: LocalDate,
-        end: LocalDate,
-        countSaturdaysAsWorkdays: Boolean
-    ): Int {
-        var count = 0
-        var current = start
         while (!current.isAfter(end)) {
             if (isWorkday(current, countSaturdaysAsWorkdays)) count++
             current = current.plusDays(1)

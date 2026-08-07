@@ -24,7 +24,7 @@ class WorkAddressViewModel @Inject constructor(
 ) : ViewModel() {
 
     val addresses: StateFlow<List<WorkAddress>> = repository.getAllAddresses()
-        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(STOP_TIMEOUT_MS), emptyList())
 
     private val _editingAddress = MutableStateFlow<WorkAddress?>(null)
     val editingAddress: StateFlow<WorkAddress?> = _editingAddress
@@ -35,8 +35,11 @@ class WorkAddressViewModel @Inject constructor(
     @SuppressLint("MissingPermission")
     fun saveCurrentLocationAsWorkAddress(name: String, addressText: String, radius: Float) {
         viewModelScope.launch {
-            try {
-                val location = fusedLocationProviderClient.lastLocation.await()
+            val result = runCatching {
+                fusedLocationProviderClient.lastLocation.await()
+            }
+            
+            result.onSuccess { location ->
                 if (location != null) {
                     val addressToSave = _editingAddress.value?.copy(
                         name = name,
@@ -56,7 +59,7 @@ class WorkAddressViewModel @Inject constructor(
                 } else {
                     _message.value = "Não foi possível obter a localização atual"
                 }
-            } catch (e: Exception) {
+            }.onFailure { e ->
                 _message.value = "Erro ao obter localização: ${e.message}"
             }
         }
@@ -117,3 +120,5 @@ class WorkAddressViewModel @Inject constructor(
         _message.value = null
     }
 }
+
+private const val STOP_TIMEOUT_MS = 5000L
