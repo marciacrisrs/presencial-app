@@ -87,6 +87,80 @@ class GetMonthCalendarUseCaseTest {
     }
 
     @Test
+    fun `given check-in on Sunday, when invoke, then status should be PRESENCIAL instead of FIM_DE_SEMANA`() = runTest {
+        // Arrange
+        val yearMonth = YearMonth.of(2026, 8)
+        val sunday = LocalDate.of(2026, 8, 2) // Sunday
+        timeProvider.setToday(LocalDate.of(2026, 8, 3))
+
+        val checkIns = listOf(
+            com.presencial.app.domain.model.CheckIn(sunday, DayStatus.PRESENCIAL)
+        )
+        val settings = AppSettings(requiredPercentage = 40, countSaturdaysAsWorkdays = false)
+
+        every { checkInRepository.observeCheckInsForMonth(yearMonth) } returns flowOf(checkIns)
+        every { absenceRepository.getAbsencesInRange(any(), any()) } returns flowOf(emptyList())
+        every { settingsRepository.settings } returns flowOf(settings)
+
+        // Act & Assert
+        useCase(yearMonth).test {
+            val days = awaitItem()
+            val sundayInfo = days.find { it.date == sunday }
+            assertEquals(DayStatus.PRESENCIAL, sundayInfo?.status, "Sunday check-in should be PRESENCIAL")
+            cancelAndIgnoreRemainingEvents()
+        }
+    }
+
+    @Test
+    fun `given check-in on Saturday, when invoke, then status should be PRESENCIAL even if not workday`() = runTest {
+        // Arrange
+        val yearMonth = YearMonth.of(2026, 8)
+        val saturday = LocalDate.of(2026, 8, 1) // Saturday
+        timeProvider.setToday(LocalDate.of(2026, 8, 3))
+
+        val checkIns = listOf(
+            com.presencial.app.domain.model.CheckIn(saturday, DayStatus.PRESENCIAL)
+        )
+        val settings = AppSettings(requiredPercentage = 40, countSaturdaysAsWorkdays = false)
+
+        every { checkInRepository.observeCheckInsForMonth(yearMonth) } returns flowOf(checkIns)
+        every { absenceRepository.getAbsencesInRange(any(), any()) } returns flowOf(emptyList())
+        every { settingsRepository.settings } returns flowOf(settings)
+
+        // Act & Assert
+        useCase(yearMonth).test {
+            val days = awaitItem()
+            val satInfo = days.find { it.date == saturday }
+            assertEquals(DayStatus.PRESENCIAL, satInfo?.status, "Saturday check-in should be PRESENCIAL")
+            cancelAndIgnoreRemainingEvents()
+        }
+    }
+
+    @Test
+    fun `given holiday with check-in, when invoke, then status should be PRESENCIAL instead of FERIADO`() = runTest {
+        // Arrange
+        val yearMonth = YearMonth.of(2026, 9)
+        val holiday = LocalDate.of(2026, 9, 7) // Independência
+        timeProvider.setToday(LocalDate.of(2026, 9, 10))
+
+        val checkIns = listOf(
+            com.presencial.app.domain.model.CheckIn(holiday, DayStatus.PRESENCIAL)
+        )
+
+        every { checkInRepository.observeCheckInsForMonth(yearMonth) } returns flowOf(checkIns)
+        every { absenceRepository.getAbsencesInRange(any(), any()) } returns flowOf(emptyList())
+        every { settingsRepository.settings } returns flowOf(AppSettings(40, false))
+
+        // Act & Assert
+        useCase(yearMonth).test {
+            val days = awaitItem()
+            val holidayInfo = days.find { it.date == holiday }
+            assertEquals(DayStatus.PRESENCIAL, holidayInfo?.status, "Holiday check-in should be PRESENCIAL")
+            cancelAndIgnoreRemainingEvents()
+        }
+    }
+
+    @Test
     fun `given saturdays as workdays, when invoke, then saturdays are not weekends`() = runTest {
         // Arrange
         val yearMonth = YearMonth.of(2026, 8)

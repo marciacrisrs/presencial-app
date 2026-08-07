@@ -58,10 +58,10 @@ class GetMonthCalendarUseCase @Inject constructor(
 
             val status = when {
                 isAbsent -> DayStatus.ABSENCE
+                savedStatus != null -> savedStatus
                 current.isAfter(today) -> DayStatus.FUTURO
                 isHoliday -> DayStatus.FERIADO
                 isWeekend -> DayStatus.FIM_DE_SEMANA
-                savedStatus != null -> savedStatus
                 isWorkday && current.isBefore(today) -> DayStatus.FALTOU
                 else -> DayStatus.HOME_OFFICE
             }
