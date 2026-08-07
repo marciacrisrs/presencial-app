@@ -41,8 +41,8 @@ jobs:
       - name: Quality Checks
         run: ./gradlew detekt lintDebug testDebugUnitTest koverXmlReport --stacktrace
 
-      - name: SonarCloud Scan
-        uses: SonarSource/sonarqube-scan-action@v7
+      - name: SonarCloud
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+        run: ./gradlew sonar
