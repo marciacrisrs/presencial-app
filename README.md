@@ -4,16 +4,17 @@ Aplicativo Android para controle de comparecimento presencial no trabalho. Calcu
 
 ## Funcionalidades
 
-- **Dashboard** — progresso em tempo real, barras circular/linear, mensagens inteligentes e check-in diário
+- **Dashboard** — progresso em tempo real, barras circular/linear, mensagens inteligentes geradas por IA e check-in diário
+- **Check-in Automático** — cadastro de locais de trabalho (Geofencing) para registro automático de presença ao chegar no escritório
 - **Calendário mensal** — visualização colorida por status com edição de dias passados
 - **Histórico** — resumo de todos os meses registrados com compartilhamento
 - **Estatísticas** — gráficos de evolução, média anual, sequências e exportação PDF
 - **Configurações** — percentual de presença, sábados como dias úteis, backup/restauração JSON
 - **Ausências** — registro de férias, day off, licenças e ausências com desconto automático na meta mensal
-- **Notificações** — lembrete às 18h em dias úteis (se ainda não confirmou presença)
+- **Notificações** — lembrete às 18h em dias úteis (se ainda não confirmou presença) e aviso de check-in automático
 - **Widget** — exibe "Faltam X dias presenciais" diretamente na tela inicial
-- **Sobre** — informações da versão 1.0.1, política de privacidade (dados locais) e link para o desenvolvedor
-- **Tema claro/escuro** — Material Design 3 com Material You
+- **Sobre** — informações da versão 1.0.3, política de privacidade (dados locais) e link para o desenvolvedor
+- **Tema claro/escuro** — Material Design 3 com suporte a Dynamic Color (Material You)
 
 ## Tecnologias
 
@@ -25,6 +26,8 @@ Aplicativo Android para controle de comparecimento presencial no trabalho. Calcu
 | Dados | Room, DataStore Preferences |
 | Async | Kotlin Coroutines + Flow |
 | Background | WorkManager |
+| Localização | Google Play Services Location (Geofencing) |
+| Permissões | Accompanist Permissions |
 | Widget | Glance AppWidget |
 | Datas | `java.time` (API 26+) |
 
@@ -36,16 +39,16 @@ app/src/main/java/com/presencial/app/
 ├── domain/         # Modelos, interfaces de repositório, use cases, utilitários
 ├── presentation/   # ViewModels e telas Compose por feature
 ├── ui/             # Tema Material 3 e componentes reutilizáveis
-├── di/             # Módulos Hilt
+├── di/             # Módulos Hilt e injeção de Dispatchers
 ├── notification/   # Canal e agendamento de lembretes
 ├── widget/         # Widget Glance
-└── worker/         # Worker de notificação diária
+└── worker/         # Worker de notificação diária e processos em background
 ```
 
 ### Fluxo de dados
 
 ```
-UI (Compose) → ViewModel → UseCase → Repository → Room / DataStore
+UI (Compose) → ViewModel → UseCase → Repository → Room / DataStore / Remote
                               ↑
                          Domain Models
 ```
@@ -55,15 +58,15 @@ UI (Compose) → ViewModel → UseCase → Repository → Room / DataStore
 1. **Meta mensal:** `ceil(dias_úteis_líquidos × percentual / 100)`
 2. **Dias úteis líquidos:** exclui domingos, feriados nacionais, sábados (configurável) e períodos de ausência registrados (férias, licenças, etc.)
 3. **Feriados móveis:** calculados a partir da Páscoa (algoritmo de Meeus/Jones/Butcher)
-4. **Check-in:** apenas dias úteis passados ou hoje são editáveis
+4. **Geofencing:** o check-in automático é disparado ao entrar num raio de X metros de um local ativo cadastrado.
 
 ## Como executar
 
 ### Pré-requisitos
 
-- Android Studio Ladybug (2024.2+) ou mais recente
+- Android Studio Meerkat (2024.3+) ou mais recente
 - JDK 17
-- Android SDK 35
+- Android SDK 37 (Target)
 - Dispositivo/emulador API 26+
 
 ### Passos
@@ -80,12 +83,13 @@ UI (Compose) → ViewModel → UseCase → Repository → Room / DataStore
 
 ## Testes
 
-Testes unitários na camada de domínio:
+Testes unitários abrangentes na camada de domínio e dados:
 
-- `WorkdayCalculatorTest` — cálculo de dias úteis
-- `GoalCalculatorTest` — meta e percentuais
-- `HolidayCalculatorTest` — feriados nacionais
-- `EasterCalculatorTest` — Páscoa e feriados móveis
+- `WorkdayCalculatorTest` — lógica de cálculo de dias úteis
+- `GoalCalculatorTest` — cálculos de meta e percentuais
+- `HolidayCalculatorTest` — feriados nacionais e móveis
+- `SettingsDataStoreTest` — persistência de configurações
+- `BackupManagerTest` — integridade de exportação/importação
 
 ```bash
 ./gradlew test
@@ -97,17 +101,17 @@ Testes unitários na camada de domínio:
 |---------|--------|
 | DataStore para settings, Room para check-ins | Settings são pequenas e tipadas; check-ins precisam de queries relacionais |
 | Feriados calculados localmente | Offline-first, sem dependência de APIs externas |
-| WorkManager para notificações | Respeita Doze mode e reinício do dispositivo |
-| Use cases por feature | ViewModels finos, lógica testável isolada |
-| Glance para widget | API moderna alinhada com Compose |
-| `java.time` nativo | minSdk 26 dispensa ThreeTenABP |
+| WorkManager para notificações | Respeita Doze mode e garante execução persistente |
+| Dispatchers injetados | Facilita testes unitários substituindo o IO/Default |
+| Glance para widget | API moderna e declarativa alinhada com Compose |
+| `java.time` nativo | minSdk 26 elimina a necessidade de bibliotecas legadas |
 
 ## Estrutura de entidades Room
 
-- **CheckIn** — `dateEpochDay`, `status`, `updatedAt`
+- **CheckIn** — `dateEpochDay`, `status`, `updatedAt`, `source` (MANUAL ou AUTOMATIC)
 - **Absence** — `id`, `type`, `startDate`, `endDate`, `notes` (períodos de afastamento)
+- **WorkAddress** — `id`, `name`, `latitude`, `longitude`, `radius`, `isActive`
 - **MonthlySummary** — agregado mensal cacheado para histórico rápido
-- **Settings** — entidade reservada; configurações ativas via DataStore
 
 ## Licença
 
