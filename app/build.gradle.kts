@@ -151,3 +151,31 @@ dependencies {
 tasks.withType<Test> {
     useJUnitPlatform()
 }
+
+kover {
+    reports {
+        filters {
+            excludes {
+                classes(
+                    "**.BuildConfig",
+                    "**.R",
+                    "**.R$*",
+                    "**.*_Impl*",
+                    "**.*_Factory*",
+                    "**.*_MembersInjector*",
+                    "**.Hilt_*",
+                    "**.*Activity*",
+                    "**.*Application*",
+                    "**.*Screen*",
+                    "**.*Preview*",
+                    "**.*Navigation*",
+                    "**.*Theme*",
+                    "**.*Module*",
+                    "**.*Database*",
+                    "**.*Dao*",
+                    "**.*Entity*"
+                )
+            }
+        }
+    }
+}

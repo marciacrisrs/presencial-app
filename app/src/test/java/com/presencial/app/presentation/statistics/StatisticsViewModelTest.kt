@@ -86,4 +86,22 @@ class StatisticsViewModelTest {
             ) }
         }
     }
+
+    @Test
+    fun `exportPdf should return failure if pdfExporter fails`() = runTest {
+        val statsData = TestDataFactory.createStatisticsData()
+        every { getStatisticsUseCase() } returns flowOf(statsData)
+        viewModel = StatisticsViewModel(getStatisticsUseCase, pdfExporter)
+        
+        val outputStream = mockk<OutputStream>()
+        val exception = Exception("PDF error")
+        every { pdfExporter.exportStatistics(any(), any(), any(), any(), any()) } returns Result.failure(exception)
+
+        viewModel.statistics.test {
+            awaitItem()
+            val result = viewModel.exportPdf(outputStream)
+            assertTrue(result.isFailure)
+            assertEquals(exception, result.exceptionOrNull())
+        }
+    }
 }

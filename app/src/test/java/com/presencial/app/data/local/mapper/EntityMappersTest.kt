@@ -25,28 +25,50 @@ class EntityMappersTest {
 
         assertEquals(domain.yearMonth, domainBack.yearMonth)
         assertEquals(domain.workdays, domainBack.workdays)
+        assertEquals(domain.requiredDays, domainBack.requiredDays)
+        assertEquals(domain.completedDays, domainBack.completedDays)
+        assertEquals(domain.homeOfficeDays, domainBack.homeOfficeDays)
+        assertEquals(domain.requiredPercentage, domainBack.requiredPercentage)
         assertEquals(domain.achievedPercentage, domainBack.achievedPercentage)
     }
 
     @Test
     fun `Absence to domain and back`() {
-        val domain = TestDataFactory.createAbsence()
+        val domain = TestDataFactory.createAbsence(
+            isFullDay = false,
+            hours = 4.5f,
+            notes = "Dentista",
+            isCounted = true
+        )
         val entity = domain.toEntity()
         val domainBack = entity.toDomain()
 
         assertEquals(domain.id, domainBack.id)
         assertEquals(domain.type, domainBack.type)
         assertEquals(domain.startDate, domainBack.startDate)
+        assertEquals(domain.endDate, domainBack.endDate)
+        assertEquals(domain.isFullDay, domainBack.isFullDay)
+        assertEquals(domain.hours, domainBack.hours)
+        assertEquals(domain.notes, domainBack.notes)
+        assertEquals(domain.isCounted, domainBack.isCounted)
     }
 
     @Test
     fun `WorkAddress to domain and back`() {
-        val domain = TestDataFactory.createWorkAddress()
+        val domain = TestDataFactory.createWorkAddress(
+            addressText = "Rua tal",
+            radius = 150f,
+            isActive = false
+        )
         val entity = domain.toEntity()
         val domainBack = entity.toDomain()
 
         assertEquals(domain.id, domainBack.id)
         assertEquals(domain.name, domainBack.name)
+        assertEquals(domain.addressText, domainBack.addressText)
         assertEquals(domain.latitude, domainBack.latitude)
+        assertEquals(domain.longitude, domainBack.longitude)
+        assertEquals(domain.radius, domainBack.radius)
+        assertEquals(domain.isActive, domainBack.isActive)
     }
 }

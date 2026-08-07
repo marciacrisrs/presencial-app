@@ -45,4 +45,45 @@ class WorkdayCalculatorTest {
         assertTrue(remaining > 0)
         assertTrue(remaining <= 12)
     }
+
+    @Test
+    fun `countRemainingWorkdays return zero if fromDate is after month`() {
+        val yearMonth = YearMonth.of(2026, 8)
+        val from = LocalDate.of(2026, 9, 1)
+        assertEquals(0, WorkdayCalculator.countRemainingWorkdays(from, yearMonth, false))
+    }
+
+    @Test
+    fun `fevereiro ano bissexto conta dias corretamente`() {
+        val leapYearMonth = YearMonth.of(2024, 2)
+        val workdays = WorkdayCalculator.countWorkdaysInMonth(leapYearMonth, false)
+        assertEquals(19, workdays) // Feb 2024: 21 workdays - 2 (Carnaval) = 19
+    }
+
+    @Test
+    fun `countLiquidWorkdaysInMonth subtrai ausencias de dia inteiro que nao contam`() {
+        val yearMonth = YearMonth.of(2026, 8)
+        val absences = listOf(
+            com.presencial.app.domain.model.Absence(
+                id = 1L,
+                type = com.presencial.app.domain.model.AbsenceType.VACATION,
+                startDate = LocalDate.of(2026, 8, 3), // Mon
+                endDate = LocalDate.of(2026, 8, 3),
+                isFullDay = true,
+                isCounted = false
+            ),
+            com.presencial.app.domain.model.Absence(
+                id = 2L,
+                type = com.presencial.app.domain.model.AbsenceType.VACATION,
+                startDate = LocalDate.of(2026, 8, 10), // Mon
+                endDate = LocalDate.of(2026, 8, 10),
+                isFullDay = true,
+                isCounted = true
+            )
+        )
+        val workdays = WorkdayCalculator.countWorkdaysInMonth(yearMonth, false)
+        val liquid = WorkdayCalculator.countLiquidWorkdaysInMonth(yearMonth, false, absences)
+        
+        assertEquals(workdays - 1, liquid)
+    }
 }

@@ -57,8 +57,10 @@ object TestDataFactory {
         startDate: LocalDate = LocalDate.of(2026, 8, 1),
         endDate: LocalDate = LocalDate.of(2026, 8, 5),
         isFullDay: Boolean = true,
-        notes: String? = "Férias de agosto"
-    ) = Absence(id, type, startDate, endDate, isFullDay, notes = notes)
+        hours: Float = 8f,
+        notes: String? = "Férias de agosto",
+        isCounted: Boolean = false
+    ) = Absence(id, type, startDate, endDate, isFullDay, hours, notes, isCounted)
 
     fun createAbsenceEntity(
         id: Long = 1L,
@@ -66,8 +68,10 @@ object TestDataFactory {
         startDateEpochDay: Long = LocalDate.of(2026, 8, 1).toEpochDay(),
         endDateEpochDay: Long = LocalDate.of(2026, 8, 5).toEpochDay(),
         isFullDay: Boolean = true,
-        notes: String? = "Férias de agosto"
-    ) = AbsenceEntity(id, type, startDateEpochDay, endDateEpochDay, isFullDay, notes = notes)
+        hours: Float = 8f,
+        notes: String? = "Férias de agosto",
+        isCounted: Boolean = false
+    ) = AbsenceEntity(id, type, startDateEpochDay, endDateEpochDay, isFullDay, hours, notes, isCounted)
 
     fun createMonthlySummary(
         yearMonth: YearMonth = YearMonth.of(2026, 8),

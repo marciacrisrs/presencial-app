@@ -9,7 +9,6 @@ import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
-import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Assertions.assertEquals
@@ -87,6 +86,13 @@ class SettingsViewModelTest {
     }
 
     @Test
+    fun `exportBackup should do nothing if outputStream is null`() = runTest {
+        viewModel.exportBackup(null)
+        coVerify(exactly = 0) { backupManager.exportToStream(any()) }
+        assertNull(viewModel.message.value)
+    }
+
+    @Test
     fun `importBackup should show success message on success`() = runTest {
         val file = mockk<File>()
         coEvery { backupManager.importFromFile(file) } returns Result.success(Unit)
@@ -94,6 +100,16 @@ class SettingsViewModelTest {
         viewModel.importBackup(file)
 
         assertEquals("Backup restaurado com sucesso!", viewModel.message.value)
+    }
+
+    @Test
+    fun `importBackup should show error message on failure`() = runTest {
+        val file = mockk<File>()
+        coEvery { backupManager.importFromFile(file) } returns Result.failure(Exception("Invalid file"))
+
+        viewModel.importBackup(file)
+
+        assertEquals("Erro ao restaurar: Invalid file", viewModel.message.value)
     }
 
     @Test

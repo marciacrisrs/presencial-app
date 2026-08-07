@@ -54,6 +54,40 @@ class BackupManagerTest {
     }
 
     @Test
+    fun `when exportToStream fails to write, then return failure`() = runTest {
+        // Arrange
+        val settings = AppSettings()
+        every { settingsRepository.settings } returns flowOf(settings)
+        every { checkInDao.observeAll() } returns flowOf(emptyList())
+        every { monthlySummaryDao.observeAll() } returns flowOf(emptyList())
+        
+        val outputStream = mockk<java.io.OutputStream>()
+        every { outputStream.write(any<ByteArray>()) } throws java.io.IOException("Disk full")
+        every { outputStream.close() } returns Unit
+
+        // Act
+        val result = backupManager.exportToStream(outputStream)
+
+        // Assert
+        assertTrue(result.isFailure)
+        assertTrue(result.exceptionOrNull() is java.io.IOException)
+    }
+
+    @Test
+    fun `when importFromFile with invalid JSON, then return failure`() = runTest {
+        // Arrange
+        val tempFile = File.createTempFile("invalid_backup", ".json")
+        tempFile.writeText("invalid json")
+        
+        // Act
+        val result = backupManager.importFromFile(tempFile)
+
+        // Assert
+        assertTrue(result.isFailure)
+        tempFile.delete()
+    }
+
+    @Test
     fun `when importFromFile, then call daos and repository`() = runTest {
         // Arrange
         val json = """
