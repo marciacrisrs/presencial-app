@@ -21,6 +21,8 @@ plugins {
     alias(libs.plugins.detekt)
 }
 
+
+
 android {
     namespace = "com.presencial.app"
 

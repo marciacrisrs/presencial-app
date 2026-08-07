@@ -20,7 +20,7 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v7
+        uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
@@ -40,6 +40,12 @@ jobs:
 
       - name: Grant execute permission
         run: chmod +x gradlew
+
+      - name: List reports
+        run: |
+          pwd
+          find . -name "*.xml"
+          find . -name "report.xml"
 
       - name: Quality Checks
         run: ./gradlew detekt lintDebug testDebugUnitTest koverXmlReport --stacktrace

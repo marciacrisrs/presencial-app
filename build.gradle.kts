@@ -38,12 +38,12 @@ sonar {
 
         property(
             "sonar.coverage.jacoco.xmlReportPaths",
-            "app/build/reports/kover/report.xml"
+            "build/reports/kover/report.xml"
         )
 
         property(
             "sonar.kotlin.detekt.reportPaths",
-            "app/build/reports/detekt/detekt.xml"
+            "build/reports/detekt/detekt.xml"
         )
     }
 }
