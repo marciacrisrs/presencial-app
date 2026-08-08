@@ -25,12 +25,12 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        uses: actions/checkout@eef6142e184e90a55f2e9c303f90b1451e0ca2c3 # v4.2.1
         with:
           persist-credentials: false
 
       - name: Setup JDK 17
-        uses: actions/setup-java@3a4f6e1af504cf6a31855fa899c6aa5301ba6726 # v4.5.0
+        uses: actions/setup-java@38af9b20f915cd28f96556e929740523a1d95cf2 # v4.4.0
         with:
           distribution: temurin
           java-version: 17
@@ -61,7 +61,7 @@ jobs:
             -Pandroid.injected.signing.key.password=$ANDROID_KEY_PASSWORD
 
       - name: Upload Release Artifact
-        uses: actions/upload-artifact@b4b15b8c7c6ac21ea08fcf65892d2ee8f75cf882 # v4.4.3
+        uses: actions/upload-artifact@60a1915033c469e74ba91ea4e92f7b88825f42a6 # v4.4.2
         with:
           name: presencial-release-aab
           path: app/build/outputs/bundle/release/*.aab
