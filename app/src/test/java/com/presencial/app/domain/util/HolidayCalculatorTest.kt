@@ -1,24 +1,46 @@
 package com.presencial.app.domain.util
 
-import org.junit.jupiter.api.Assertions.assertEquals
-import org.junit.jupiter.api.Assertions.assertNotNull
-import org.junit.jupiter.api.Assertions.assertTrue
+import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.Test
 import java.time.LocalDate
 
 class HolidayCalculatorTest {
 
     @Test
-    fun `feriados fixos de 2026`() {
-        assertNotNull(HolidayCalculator.getHoliday(LocalDate.of(2026, 1, 1)))
-        assertNotNull(HolidayCalculator.getHoliday(LocalDate.of(2026, 4, 21)))
-        assertNotNull(HolidayCalculator.getHoliday(LocalDate.of(2026, 12, 25)))
+    fun `todos feriados fixos estao presentes`() {
+        val year = 2026
+        val holidays = HolidayCalculator.getHolidaysForYear(year)
+        val names = holidays.map { it.name }
+        
+        assertTrue(names.contains("Confraternização Universal"))
+        assertTrue(names.contains("Tiradentes"))
+        assertTrue(names.contains("Dia do Trabalho"))
+        assertTrue(names.contains("Independência"))
+        assertTrue(names.contains("Nossa Senhora Aparecida"))
+        assertTrue(names.contains("Finados"))
+        assertTrue(names.contains("Proclamação da República"))
+        assertTrue(names.contains("Consciência Negra"))
+        assertTrue(names.contains("Natal"))
     }
 
     @Test
-    fun `consciencia negra inclusa`() {
+    fun `todos feriados moveis estao presentes`() {
+        val year = 2026
+        val holidays = HolidayCalculator.getHolidaysForYear(year)
+        val names = holidays.map { it.name }
+        
+        assertEquals(2, names.count { it == "Carnaval" })
+        assertTrue(names.contains("Sexta-feira Santa"))
+        assertTrue(names.contains("Corpus Christi"))
+    }
+
+    @Test
+    fun `getHoliday identifica feriados corretamente`() {
+        assertTrue(HolidayCalculator.isHoliday(LocalDate.of(2026, 1, 1)))
+        assertTrue(HolidayCalculator.isHoliday(LocalDate.of(2026, 12, 25)))
+        assertFalse(HolidayCalculator.isHoliday(LocalDate.of(2026, 1, 2)))
+        
         val holiday = HolidayCalculator.getHoliday(LocalDate.of(2026, 11, 20))
-        assertNotNull(holiday)
         assertEquals("Consciência Negra", holiday?.name)
     }
 
@@ -27,19 +49,9 @@ class HolidayCalculatorTest {
         val easter = EasterCalculator.calculateEaster(2026)
         assertEquals(LocalDate.of(2026, 4, 5), easter)
 
+        assertNotNull(HolidayCalculator.getHoliday(easter.minusDays(48))) // Carnaval Seg
+        assertNotNull(HolidayCalculator.getHoliday(easter.minusDays(47))) // Carnaval Ter
         assertNotNull(HolidayCalculator.getHoliday(easter.minusDays(2))) // Sexta-feira Santa
         assertNotNull(HolidayCalculator.getHoliday(easter.plusDays(60))) // Corpus Christi
-    }
-
-    @Test
-    fun `total de feriados nacionais por ano`() {
-        val holidays = HolidayCalculator.getHolidaysForYear(2026)
-        // 9 fixos + 4 moveis (2 carnaval + sexta + corpus)
-        assertTrue(holidays.size >= 13)
-    }
-
-    @Test
-    fun `dia comum nao e feriado`() {
-        assertEquals(null, HolidayCalculator.getHoliday(LocalDate.of(2026, 3, 10)))
     }
 }

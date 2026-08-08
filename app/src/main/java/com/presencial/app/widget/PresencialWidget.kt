@@ -33,7 +33,6 @@ import com.presencial.app.domain.util.WorkdayCalculator
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.runBlocking
 import java.time.YearMonth
-import java.util.Locale
 
 abstract class BasePresencialWidget(private val widgetSize: WidgetSize) : GlanceAppWidget() {
     override suspend fun provideGlance(context: Context, id: GlanceId) {
@@ -57,10 +56,6 @@ private fun WidgetContent(context: Context, widgetSize: WidgetSize) {
     val countSaturdays = prefs.getBoolean(PREF_COUNT_SATURDAYS, false)
 
     val yearMonth = YearMonth.now()
-    val monthName = yearMonth.month.getDisplayName(
-        java.time.format.TextStyle.FULL, 
-        Locale.forLanguageTag("pt-BR")
-    ).uppercase()
     
     val workdays = WorkdayCalculator.countWorkdaysInMonth(yearMonth, countSaturdays)
     val required = GoalCalculator.calculateRequiredDays(workdays, percentage)
@@ -73,14 +68,11 @@ private fun WidgetContent(context: Context, widgetSize: WidgetSize) {
     val completed = checkIns.count { it.status == DayStatus.PRESENCIAL.name }
     val remaining = GoalCalculator.calculateRemainingDays(completed, required)
 
-    val progress = WidgetProgress(completed, required, remaining)
+    val info = WidgetInfo.create(completed, required, remaining, yearMonth)
 
-    @Suppress("RestrictedApi")
-    val backgroundProvider = ColorProvider(R.color.widget_background)
-    @Suppress("RestrictedApi")
-    val successProvider = ColorProvider(R.color.widget_success)
-    @Suppress("RestrictedApi")
-    val secondaryTextProvider = ColorProvider(R.color.widget_text_secondary)
+    val backgroundProvider = ColorProvider(androidx.compose.ui.graphics.Color(context.getColor(R.color.widget_background)))
+    val successProvider = ColorProvider(androidx.compose.ui.graphics.Color(context.getColor(R.color.widget_success)))
+    val secondaryTextProvider = ColorProvider(androidx.compose.ui.graphics.Color(context.getColor(R.color.widget_text_secondary)))
 
     val colors = WidgetColors(successProvider, secondaryTextProvider)
 
@@ -91,15 +83,15 @@ private fun WidgetContent(context: Context, widgetSize: WidgetSize) {
         .padding(WIDGET_PADDING.dp)
 
     when (widgetSize) {
-        WidgetSize.SMALL -> SmallLayout(progress, colors, modifier)
-        WidgetSize.MEDIUM -> MediumLayout(progress, colors, modifier)
-        WidgetSize.LARGE -> LargeLayout(monthName, progress, colors, modifier)
+        WidgetSize.SMALL -> SmallLayout(info, colors, modifier)
+        WidgetSize.MEDIUM -> MediumLayout(info, colors, modifier)
+        WidgetSize.LARGE -> LargeLayout(info, colors, modifier)
     }
 }
 
 @Composable
 private fun SmallLayout(
-    progress: WidgetProgress,
+    info: WidgetInfo,
     colors: WidgetColors,
     modifier: GlanceModifier
 ) {
@@ -109,7 +101,11 @@ private fun SmallLayout(
         horizontalAlignment = Alignment.Horizontal.CenterHorizontally
     ) {
         Text(
-            text = "${progress.completed} / ${progress.required}",
+            text = androidx.glance.LocalContext.current.getString(
+                R.string.widget_progress_format,
+                info.completed,
+                info.required
+            ),
             style = TextStyle(
                 color = colors.success,
                 fontSize = 16.sp,
@@ -122,7 +118,7 @@ private fun SmallLayout(
 
 @Composable
 private fun MediumLayout(
-    progress: WidgetProgress,
+    info: WidgetInfo,
     colors: WidgetColors,
     modifier: GlanceModifier
 ) {
@@ -132,7 +128,11 @@ private fun MediumLayout(
         horizontalAlignment = Alignment.Horizontal.CenterHorizontally
     ) {
         Text(
-            text = "${progress.completed} / ${progress.required}",
+            text = androidx.glance.LocalContext.current.getString(
+                R.string.widget_progress_format,
+                info.completed,
+                info.required
+            ),
             style = TextStyle(
                 color = colors.success,
                 fontSize = 22.sp,
@@ -142,11 +142,11 @@ private fun MediumLayout(
         )
         Spacer(modifier = GlanceModifier.height(4.dp))
         Text(
-            text = if (progress.remaining == 1) {
-                "Falta ${progress.remaining} dia"
-            } else {
-                "Faltam ${progress.remaining} dias"
-            },
+            text = androidx.glance.LocalContext.current.resources.getQuantityString(
+                R.plurals.widget_remaining_days,
+                info.remaining,
+                info.remaining
+            ),
             style = TextStyle(
                 color = colors.secondaryText,
                 fontSize = 13.sp,
@@ -158,27 +158,23 @@ private fun MediumLayout(
 
 @Composable
 private fun LargeLayout(
-    monthName: String,
-    progress: WidgetProgress,
+    info: WidgetInfo,
     colors: WidgetColors,
     modifier: GlanceModifier
 ) {
-    val progressFraction = if (progress.required > 0) {
-        (progress.completed.toFloat() / progress.required).coerceIn(0f, 1f)
-    } else {
-        0f
-    }
-
     Column(
         modifier = modifier,
         verticalAlignment = Alignment.Vertical.CenterVertically,
         horizontalAlignment = Alignment.Horizontal.CenterHorizontally
     ) {
         Text(
-            text = "PRESENÇA EM $monthName",
+            text = androidx.glance.LocalContext.current.getString(
+                R.string.widget_title_month,
+                info.monthName
+            ),
             style = TextStyle(
                 color = colors.secondaryText,
-                fontSize = 10.sp,
+                fontSize = 11.sp,
                 fontWeight = FontWeight.Medium
             )
         )
@@ -186,7 +182,11 @@ private fun LargeLayout(
         Spacer(modifier = GlanceModifier.height(8.dp))
         
         Text(
-            text = "${progress.completed} / ${progress.required}",
+            text = androidx.glance.LocalContext.current.getString(
+                R.string.widget_progress_format,
+                info.completed,
+                info.required
+            ),
             style = TextStyle(
                 color = colors.success,
                 fontSize = 30.sp,
@@ -197,7 +197,7 @@ private fun LargeLayout(
         Spacer(modifier = GlanceModifier.height(10.dp))
 
         LinearProgressIndicator(
-            progress = progressFraction,
+            progress = info.progressFraction,
             modifier = GlanceModifier.fillMaxWidth().height(6.dp),
             color = colors.success,
             backgroundColor = colors.secondaryText
@@ -206,11 +206,11 @@ private fun LargeLayout(
         Spacer(modifier = GlanceModifier.height(10.dp))
 
         Text(
-            text = if (progress.remaining == 1) {
-                "Falta ${progress.remaining} dia"
-            } else {
-                "Faltam ${progress.remaining} dias"
-            },
+            text = androidx.glance.LocalContext.current.resources.getQuantityString(
+                R.plurals.widget_remaining_days,
+                info.remaining,
+                info.remaining
+            ),
             style = TextStyle(
                 color = colors.secondaryText,
                 fontSize = 13.sp
@@ -218,12 +218,6 @@ private fun LargeLayout(
         )
     }
 }
-
-private data class WidgetProgress(
-    val completed: Int,
-    val required: Int,
-    val remaining: Int
-)
 
 private data class WidgetColors(
     val success: ColorProvider,

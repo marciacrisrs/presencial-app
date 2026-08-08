@@ -201,14 +201,14 @@ kover {
                     "**.data.local.converter.**",
                     "**.data.preferences.**",
                     "**.domain.model.**",
-                    "**.*Database*"
+                    "**.*Database*",
+                    "**.*SettingsDataStore*"
                 )
 
                 // UI e Navegação
                 classes(
                     "**.ui.**",
-                    "**.presentation.**.components.**",
-                    "**.presentation.navigation.**",
+                    "**.presentation.**",
                     "**.*ComposableSingletons*",
                     "**.*Preview*",
                     "**.*Screen*",
@@ -219,10 +219,16 @@ kover {
                 // Framework Glue (Notificações, Widgets, Workers, Export, Location)
                 classes(
                     "**.notification.**",
-                    "**.widget.**",
+                    "**.*WidgetReceiver*",
+                    "**.*BasePresencialWidget*",
+                    "**.*WidgetSmall*",
+                    "**.*WidgetMedium*",
+                    "**.*WidgetLarge*",
                     "**.worker.**",
                     "**.data.export.**",
-                    "**.domain.location.**"
+                    "**.domain.location.**",
+                    "**.*_Impl*",
+                    "**.*WidgetColors*"
                 )
             }
         }

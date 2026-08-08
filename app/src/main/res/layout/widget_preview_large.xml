@@ -1,42 +1,46 @@
 <?xml version="1.0" encoding="utf-8"?>
-<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:background="@color/widget_background"
+    android:gravity="center"
+    android:orientation="vertical"
     android:padding="12dp">
-    <LinearLayout
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textColor="@color/widget_text_secondary"
+        android:textSize="11sp"
+        android:text="@string/widget_title_month"
+        tools:text="PRESENÇA EM AGOSTO" />
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="4dp"
+        android:textColor="@color/widget_success"
+        android:textSize="28sp"
+        android:textStyle="bold"
+        android:text="@string/widget_progress_format"
+        tools:text="1 / 13" />
+
+    <ProgressBar
+        style="@android:style/Widget.ProgressBar.Horizontal"
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:background="@color/widget_background"
-        android:gravity="center"
-        android:orientation="vertical"
-        android:padding="12dp">
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="PRESENÇA EM AGOSTO"
-            android:textColor="@color/widget_text_secondary"
-            android:textSize="10sp" />
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="4dp"
-            android:text="1 / 13"
-            android:textColor="@color/widget_success"
-            android:textSize="28sp"
-            android:textStyle="bold" />
-        <ProgressBar
-            style="@android:style/Widget.ProgressBar.Horizontal"
-            android:layout_width="match_parent"
-            android:layout_height="6dp"
-            android:layout_marginTop="8dp"
-            android:progress="8"
-            android:progressTint="@color/widget_success" />
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="8dp"
-            android:text="Faltam 12 dias"
-            android:textColor="@color/widget_text_secondary"
-            android:textSize="13sp" />
-    </LinearLayout>
-</FrameLayout>
+        android:layout_height="6dp"
+        android:layout_marginTop="8dp"
+        android:progress="8"
+        android:progressTint="@color/widget_success"
+        tools:progress="60" />
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:textColor="@color/widget_text_secondary"
+        android:textSize="13sp"
+        tools:text="Faltam 12 dias" />
+
+</LinearLayout>

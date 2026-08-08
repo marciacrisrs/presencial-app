@@ -25,4 +25,12 @@ class TimeProviderTest {
         assertEquals(actualMonth, currentMonth)
         assertNotNull(now)
     }
+
+    @Test
+    fun `DefaultTimeProvider full cover`() {
+        val provider = DefaultTimeProvider()
+        assertNotNull(provider.now())
+        assertNotNull(provider.today())
+        assertNotNull(provider.currentMonth())
+    }
 }
