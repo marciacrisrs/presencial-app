@@ -3,6 +3,11 @@
     <style name="Theme.Presencial" parent="android:Theme.Material.Light.NoActionBar">
         <item name="android:statusBarColor">@android:color/transparent</item>
         <item name="android:navigationBarColor">@android:color/transparent</item>
+        <item name="android:windowBackground">@color/widget_background</item>
+    </style>
+
+    <style name="Theme.Presencial.Loading" parent="Theme.Presencial">
+        <item name="android:windowBackground">#1B873B</item>
     </style>
     <style name="Theme.Presencial.Splash" parent="Theme.SplashScreen">
         <item name="windowSplashScreenBackground">#0C0F0D</item>

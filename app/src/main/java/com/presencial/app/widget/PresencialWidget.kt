@@ -31,14 +31,32 @@ import com.presencial.app.domain.model.DayStatus
 import com.presencial.app.domain.util.GoalCalculator
 import com.presencial.app.domain.util.WorkdayCalculator
 import kotlinx.coroutines.flow.first
-import kotlinx.coroutines.runBlocking
 import java.time.YearMonth
 
 abstract class BasePresencialWidget(private val widgetSize: WidgetSize) : GlanceAppWidget() {
     override suspend fun provideGlance(context: Context, id: GlanceId) {
+        val db = PresencialDatabase.getInstance(context)
+        val prefs = context.getSharedPreferences(WIDGET_PREFS, Context.MODE_PRIVATE)
+        val percentage = prefs.getInt(PREF_REQUIRED_PERCENTAGE, DEFAULT_REQUIRED_PERCENTAGE)
+        val countSaturdays = prefs.getBoolean(PREF_COUNT_SATURDAYS, false)
+
+        val yearMonth = YearMonth.now()
+
+        val workdays = WorkdayCalculator.countWorkdaysInMonth(yearMonth, countSaturdays)
+        val required = GoalCalculator.calculateRequiredDays(workdays, percentage)
+
+        val start = yearMonth.atDay(1).toEpochDay()
+        val end = yearMonth.atEndOfMonth().toEpochDay()
+
+        val checkIns = db.checkInDao().observeBetween(start, end).first()
+        val completed = checkIns.count { it.status == DayStatus.PRESENCIAL.name }
+        val remaining = GoalCalculator.calculateRemainingDays(completed, required)
+
+        val info = WidgetInfo.create(completed, required, remaining, yearMonth)
+
         provideContent {
             GlanceTheme {
-                WidgetContent(context, widgetSize)
+                WidgetContent(context, widgetSize, info)
             }
         }
     }
@@ -49,27 +67,7 @@ class PresencialWidgetMedium : BasePresencialWidget(WidgetSize.MEDIUM)
 class PresencialWidgetLarge : BasePresencialWidget(WidgetSize.LARGE)
 
 @Composable
-private fun WidgetContent(context: Context, widgetSize: WidgetSize) {
-    val db = PresencialDatabase.getInstance(context)
-    val prefs = context.getSharedPreferences(WIDGET_PREFS, Context.MODE_PRIVATE)
-    val percentage = prefs.getInt(PREF_REQUIRED_PERCENTAGE, DEFAULT_REQUIRED_PERCENTAGE)
-    val countSaturdays = prefs.getBoolean(PREF_COUNT_SATURDAYS, false)
-
-    val yearMonth = YearMonth.now()
-    
-    val workdays = WorkdayCalculator.countWorkdaysInMonth(yearMonth, countSaturdays)
-    val required = GoalCalculator.calculateRequiredDays(workdays, percentage)
-
-    val start = yearMonth.atDay(1).toEpochDay()
-    val end = yearMonth.atEndOfMonth().toEpochDay()
-    val checkIns = runBlocking {
-        db.checkInDao().observeBetween(start, end).first()
-    }
-    val completed = checkIns.count { it.status == DayStatus.PRESENCIAL.name }
-    val remaining = GoalCalculator.calculateRemainingDays(completed, required)
-
-    val info = WidgetInfo.create(completed, required, remaining, yearMonth)
-
+private fun WidgetContent(context: Context, widgetSize: WidgetSize, info: WidgetInfo) {
     val successColor = androidx.compose.ui.graphics.Color(context.getColor(R.color.widget_success))
     val secondaryColor = androidx.compose.ui.graphics.Color(context.getColor(R.color.widget_text_secondary))
 

@@ -20,19 +20,19 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
         with:
           fetch-depth: 0
 
       - name: Setup JDK 17
-        uses: actions/setup-java@v5
+        uses: actions/setup-java@3a4f6e1af504cf6a31855fa899c6aa5301ba6726 # v4.5.0
         with:
           distribution: temurin
           java-version: 17
           cache: gradle
 
       - name: Cache SonarCloud packages
-        uses: actions/cache@v5
+        uses: actions/cache@d4323d4b9104a07357c8009bbff5276336a5435f # v4.2.2
         with:
           path: ~/.sonar/cache
           key: ${{ runner.os }}-sonar
@@ -61,14 +61,14 @@ jobs:
 
       - name: Upload Detekt Reports
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@b4b15b8c7c6ac21ea08fcf65892d2ee8f75cf882 # v4.4.3
         with:
           name: detekt-report
           path: app/build/reports/detekt/**
 
       - name: Upload Lint Reports
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@b4b15b8c7c6ac21ea08fcf65892d2ee8f75cf882 # v4.4.3
         with:
           name: lint-report
           path: |
@@ -78,14 +78,14 @@ jobs:
 
       - name: Upload Coverage Reports
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@b4b15b8c7c6ac21ea08fcf65892d2ee8f75cf882 # v4.4.3
         with:
           name: kover-report
           path: app/build/reports/kover/**
 
       - name: Upload Gradle Problems
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@b4b15b8c7c6ac21ea08fcf65892d2ee8f75cf882 # v4.4.3
         with:
           name: gradle-problems
           path: build/reports/problems/**
