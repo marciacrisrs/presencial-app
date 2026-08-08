@@ -36,20 +36,6 @@ sonar {
         property("sonar.host.url", "https://sonarcloud.io")
 
         property(
-            "sonar.sources",
-            rootProject.layout.projectDirectory
-                .dir("app/src/main/java")
-                .asFile.absolutePath
-        )
-
-        property(
-            "sonar.tests",
-            rootProject.layout.projectDirectory
-                .dir("app/src/test/java")
-                .asFile.absolutePath
-        )
-
-        property(
             "sonar.coverage.jacoco.xmlReportPaths",
             rootProject.layout.projectDirectory
                 .file("app/build/reports/kover/report.xml")
