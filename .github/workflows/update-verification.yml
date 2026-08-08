@@ -1,0 +1,38 @@
+name: Update Dependency Verification
+
+on:
+  workflow_dispatch:
+
+jobs:
+  update-verification:
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up JDK
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+
+      - name: Update verification metadata
+        run: ./gradlew --write-verification-metadata sha256 build
+
+      - name: Commit metadata
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+          git add gradle/verification-metadata.xml
+
+          if git diff --cached --quiet; then
+            echo "No changes to verification metadata"
+          else
+            git commit -m "chore: update dependency verification metadata"
+            git push
+          fi
