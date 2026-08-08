@@ -70,15 +70,17 @@ private fun WidgetContent(context: Context, widgetSize: WidgetSize) {
 
     val info = WidgetInfo.create(completed, required, remaining, yearMonth)
 
-    val backgroundProvider = ColorProvider(androidx.compose.ui.graphics.Color(context.getColor(R.color.widget_background)))
-    val successProvider = ColorProvider(androidx.compose.ui.graphics.Color(context.getColor(R.color.widget_success)))
-    val secondaryTextProvider = ColorProvider(androidx.compose.ui.graphics.Color(context.getColor(R.color.widget_text_secondary)))
+    val successColor = androidx.compose.ui.graphics.Color(context.getColor(R.color.widget_success))
+    val secondaryColor = androidx.compose.ui.graphics.Color(context.getColor(R.color.widget_text_secondary))
+
+    val successProvider = androidx.glance.color.ColorProvider(day = successColor, night = successColor)
+    val secondaryTextProvider = androidx.glance.color.ColorProvider(day = secondaryColor, night = secondaryColor)
 
     val colors = WidgetColors(successProvider, secondaryTextProvider)
 
     val modifier = GlanceModifier
         .fillMaxSize()
-        .background(backgroundProvider)
+        .background(R.color.widget_background)
         .cornerRadius(WIDGET_CORNER_RADIUS.dp)
         .padding(WIDGET_PADDING.dp)
 
