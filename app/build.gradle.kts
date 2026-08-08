@@ -10,7 +10,7 @@ val versionMinor = versionProperties.getProperty("VERSION_MINOR").toInt()
 val versionPatch = versionProperties.getProperty("VERSION_PATCH").toInt()
 
 val appVersionName = "$versionMajor.$versionMinor.$versionPatch"
-// Gera um versionCode único baseado na versão (ex: 1.0.4 -> 10004)
+// Gera um versionCode único baseado na versão (ex: 1.0.4 ≥ 10004)
 val appVersionCode = versionMajor * 10000 + versionMinor * 100 + versionPatch
 
 // Task para incrementar o patch automaticamente
@@ -155,13 +155,17 @@ dependencies {
     testImplementation(libs.kotlinx.coroutines.test)
     testImplementation(libs.mockk)
     testImplementation(libs.turbine)
+    testImplementation(libs.androidx.work.testing)
+    testImplementation(libs.androidx.test.core)
     testRuntimeOnly(libs.junit.jupiter.engine)
     testRuntimeOnly(libs.junit.platform.launcher)
 
     // Android Instrumentation Tests
     androidTestImplementation(libs.androidx.espresso.core)
     androidTestImplementation(libs.androidx.junit)
+    androidTestImplementation(libs.androidx.compose.ui.test.junit4)
     debugImplementation(libs.androidx.ui.tooling)
+    debugImplementation(libs.androidx.compose.ui.test.manifest)
 }
 
 tasks.withType<Test> {

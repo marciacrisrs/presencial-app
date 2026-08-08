@@ -80,6 +80,34 @@ class CalendarViewModelTest {
     }
 
     @Test
+    fun `calendarDays should update when month changes multiple times`() = runTest {
+        val month1 = YearMonth.now()
+        val month2 = month1.plusMonths(1)
+        val month3 = month2.plusMonths(1)
+        
+        val days1 = listOf(DayInfo(month1.atDay(1), DayStatus.PRESENCIAL, true, false))
+        val days2 = listOf(DayInfo(month2.atDay(1), DayStatus.PRESENCIAL, true, false))
+        val days3 = listOf(DayInfo(month3.atDay(1), DayStatus.PRESENCIAL, true, false))
+
+        every { getMonthCalendarUseCase(month1) } returns flowOf(days1)
+        every { getMonthCalendarUseCase(month2) } returns flowOf(days2)
+        every { getMonthCalendarUseCase(month3) } returns flowOf(days3)
+
+        viewModel.calendarDays.test {
+            assertEquals(days1, awaitItem())
+
+            viewModel.nextMonth()
+            assertEquals(days2, awaitItem())
+
+            viewModel.nextMonth()
+            assertEquals(days3, awaitItem())
+
+            viewModel.previousMonth()
+            assertEquals(days2, awaitItem())
+        }
+    }
+
+    @Test
     fun `selectDay should update selectedDay if editable`() = runTest {
         val day = DayInfo(
             date = LocalDate.now(),
@@ -117,6 +145,12 @@ class CalendarViewModelTest {
         viewModel.selectDay(day)
         viewModel.dismissDayEditor()
         assertNull(viewModel.selectedDay.value)
+    }
+
+    @Test
+    fun `updateDayStatus should return early when no day is selected`() = runTest {
+        viewModel.updateDayStatus(DayStatus.PRESENCIAL)
+        coVerify(exactly = 0) { updateDayStatusUseCase(any(), any()) }
     }
 
     @Test

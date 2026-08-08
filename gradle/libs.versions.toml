@@ -33,6 +33,8 @@ json = "20260719"
 sonar = "7.4.0.8496"
 
 [libraries]
+androidx-compose-ui-test-junit4 = { module = "androidx.compose.ui:ui-test-junit4" }
+androidx-compose-ui-test-manifest = { module = "androidx.compose.ui:ui-test-manifest" }
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
 androidx-junit = { group = "androidx.test.ext", name = "junit", version.ref = "junitVersion" }
 androidx-espresso-core = { group = "androidx.test.espresso", name = "espresso-core", version.ref = "espressoCore" }
@@ -53,6 +55,8 @@ androidx-room-runtime = { group = "androidx.room", name = "room-runtime", versio
 androidx-room-ktx = { group = "androidx.room", name = "room-ktx", version.ref = "room" }
 androidx-room-compiler = { group = "androidx.room", name = "room-compiler", version.ref = "room" }
 androidx-work-runtime-ktx = { group = "androidx.work", name = "work-runtime-ktx", version.ref = "work" }
+androidx-work-testing = { group = "androidx.work", name = "work-testing", version.ref = "work" }
+androidx-test-core = { group = "androidx.test", name = "core", version = "1.6.1" }
 androidx-glance-appwidget = { group = "androidx.glance", name = "glance-appwidget", version.ref = "glance" }
 androidx-glance-material3 = { group = "androidx.glance", name = "glance-material3", version.ref = "glance" }
 play-services-location = { group = "com.google.android.gms", name = "play-services-location", version.ref = "playServicesLocation" }
@@ -68,6 +72,8 @@ kotlinx-coroutines-android = { group = "org.jetbrains.kotlinx", name = "kotlinx-
 kotlinx-coroutines-test = { group = "org.jetbrains.kotlinx", name = "kotlinx-coroutines-test", version.ref = "coroutines" }
 androidx-compose-runtime = { group = "androidx.compose.runtime", name = "runtime", version.ref = "runtime" }
 androidx-compose-material3 = { group = "androidx.compose.material3", name = "material3", version.ref = "material3" }
+compose-ui-test-junit4 = { group = "androidx.compose.ui", name = "ui-test-junit4" }
+compose-ui-test-manifest = { group = "androidx.compose.ui", name = "ui-test-manifest" }
 junit-jupiter-api = { group = "org.junit.jupiter", name = "junit-jupiter-api", version.ref = "junit-jupiter" }
 junit-jupiter-engine = { group = "org.junit.jupiter", name = "junit-jupiter-engine", version.ref = "junit-jupiter" }
 junit-jupiter-params = { group = "org.junit.jupiter", name = "junit-jupiter-params", version.ref = "junit-jupiter" }

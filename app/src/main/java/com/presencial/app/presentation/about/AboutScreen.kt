@@ -35,6 +35,9 @@ import androidx.compose.ui.unit.dp
 import androidx.core.net.toUri
 import com.presencial.app.R
 
+import androidx.compose.ui.tooling.preview.Preview
+import com.presencial.app.ui.theme.PresencialTheme
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AboutScreen(onBack: () -> Unit) {
@@ -73,6 +76,14 @@ fun AboutScreen(onBack: () -> Unit) {
                 context.startActivity(intent)
             }
         }
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+fun AboutScreenPreview() {
+    PresencialTheme {
+        AboutScreen(onBack = {})
     }
 }
 
