@@ -14,7 +14,7 @@ object GoalCalculator {
 
     fun calculateAchievedPercentage(completedDays: Int, requiredDays: Int): Float {
         if (requiredDays <= 0) return HUNDRED_FLOAT
-        return (completedDays.toFloat() / requiredDays * HUNDRED_FLOAT).coerceAtMost(HUNDRED_FLOAT)
+        return (completedDays.toFloat() / requiredDays * HUNDRED_FLOAT).coerceIn(0f, HUNDRED_FLOAT)
     }
 
     fun calculateProgressFraction(completedDays: Int, requiredDays: Int): Float {

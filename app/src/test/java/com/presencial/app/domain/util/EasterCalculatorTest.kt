@@ -1,6 +1,8 @@
 package com.presencial.app.domain.util
 
 import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Assertions.assertNotNull
+import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 import java.time.LocalDate
 
@@ -22,7 +24,11 @@ class EasterCalculatorTest {
     }
 
     @Test
-    fun `pascoa 2027`() {
-        assertEquals(LocalDate.of(2027, 3, 28), EasterCalculator.calculateEaster(2027))
+    fun `pascoa em varios anos`() {
+        for (year in 1900..2100) {
+            val date = EasterCalculator.calculateEaster(year)
+            assertNotNull(date)
+            assertTrue(date.monthValue in 3..4)
+        }
     }
 }

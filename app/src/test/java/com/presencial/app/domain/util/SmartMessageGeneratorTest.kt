@@ -210,4 +210,49 @@ class SmartMessageGeneratorTest {
         // Currently, it returns the weekly distribution.
         assertEquals("Você precisará ir 9 vezes nas próximas 4 semanas.", result)
     }
+
+    @Test
+    fun `given plenty of workdays and few remaining, when generate, then return weekly distribution`() {
+        // Act
+        val result = SmartMessageGenerator.generate(
+            SmartMessageParams(
+                completedDays = 1,
+                requiredDays = 5,
+                remainingDays = 4,
+                achievedPercentage = 20f,
+                today = LocalDate.of(2026, 8, 3), // Mon
+                yearMonth = YearMonth.of(2026, 8),
+                countSaturdays = false
+            )
+        )
+        // remainingWorkdays in Aug 2026 from 3rd is 21.
+        // 21 >= 4. Returns weekly distribution.
+        assertEquals("Você precisará ir 4 vezes nas próximas 4 semanas.", result)
+    }
+
+    @Test
+    fun `given remaining is exactly two times workdays, when generate, then return weekly distribution`() {
+        // Act
+        val result = SmartMessageGenerator.generate(
+            SmartMessageParams(
+                completedDays = 0,
+                requiredDays = 10,
+                remainingDays = 10,
+                achievedPercentage = 0f,
+                today = LocalDate.of(2026, 8, 3), // Mon
+                yearMonth = YearMonth.of(2026, 8),
+                countSaturdays = false
+            )
+        )
+        // remainingWorkdays = 21. 21 >= 10.
+        assertEquals("Você precisará ir 10 vezes nas próximas 4 semanas.", result)
+    }
+
+    @Test
+    fun `given exactly 80 percent, when generate, then return percentage message`() {
+        val result = SmartMessageGenerator.generate(
+            SmartMessageParams(8, 10, 2, 80f, LocalDate.of(2026, 8, 6), YearMonth.of(2026, 8), false)
+        )
+        assertEquals("Você já cumpriu 80% da meta.", result)
+    }
 }

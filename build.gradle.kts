@@ -1,3 +1,4 @@
+import io.gitlab.arturbosch.detekt.Detekt
 import java.util.Properties
 
 
@@ -17,14 +18,12 @@ plugins {
     alias(libs.plugins.kotlin.compose) apply false
     alias(libs.plugins.hilt) apply false
     alias(libs.plugins.kover)
-    alias(libs.plugins.detekt)
+    alias(libs.plugins.detekt) apply false
     alias(libs.plugins.sonarqube)
 }
 
-allprojects {
-    apply(plugin = "io.gitlab.arturbosch.detekt")
-
-    tasks.withType<io.gitlab.arturbosch.detekt.Detekt>().configureEach {
+subprojects {
+    tasks.withType<Detekt>().configureEach {
         jvmTarget = "17"
         config.setFrom(files("$rootDir/config/detekt/detekt.yml"))
         buildUponDefaultConfig = true

@@ -123,9 +123,37 @@ class WorkdayCalculatorTest {
     }
 
     @Test
-    fun `feriado que cai no sabado nao e dia util mesmo se contar sabados`() {
-        // May 1st 2027 is a Saturday
-        val holidaySat = LocalDate.of(2027, 5, 1)
-        assertFalse(WorkdayCalculator.isWorkday(holidaySat, countSaturdaysAsWorkdays = true))
+    fun `countWorkdaysInMonth para todos os meses de 2026`() {
+        for (month in 1..12) {
+            val yearMonth = YearMonth.of(2026, month)
+            val workdays = WorkdayCalculator.countWorkdaysInMonth(yearMonth, false)
+            assertTrue(workdays in 18..23)
+        }
+    }
+
+    @Test
+    fun `isWorkday covers all branches`() {
+        val sunday = LocalDate.of(2026, 8, 2) // Sunday
+        val saturday = LocalDate.of(2026, 8, 1) // Saturday
+        val monday = LocalDate.of(2026, 8, 3) // Monday
+        val holidayMonday = LocalDate.of(2026, 9, 7) // Independência
+        
+        // Sunday
+        assertFalse(WorkdayCalculator.isWorkday(sunday, false))
+        assertFalse(WorkdayCalculator.isWorkday(sunday, true))
+        
+        // Saturday
+        assertFalse(WorkdayCalculator.isWorkday(saturday, false))
+        assertTrue(WorkdayCalculator.isWorkday(saturday, true))
+        
+        // Weekday
+        assertTrue(WorkdayCalculator.isWorkday(monday, false))
+        
+        // Holiday
+        assertFalse(WorkdayCalculator.isWorkday(holidayMonday, false))
+        
+        // Holiday on Saturday (May 1st 2027 is Saturday)
+        val holidaySat2027 = LocalDate.of(2027, 5, 1)
+        assertFalse(WorkdayCalculator.isWorkday(holidaySat2027, true))
     }
 }

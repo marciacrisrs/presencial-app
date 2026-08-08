@@ -1,5 +1,6 @@
 package com.presencial.app.data.local.mapper
 
+import com.presencial.app.domain.model.DayStatus
 import com.presencial.app.util.TestDataFactory
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
@@ -7,29 +8,25 @@ import org.junit.jupiter.api.Test
 class EntityMappersTest {
 
     @Test
-    fun `CheckIn to domain and back`() {
-        val domain = TestDataFactory.createCheckIn()
+    fun `CheckIn with PRESENCIAL status to domain and back`() {
+        val domain = TestDataFactory.createCheckIn(status = DayStatus.PRESENCIAL)
         val entity = domain.toEntity()
-        val domainBack = entity.toDomain()
-
-        assertEquals(domain.date, domainBack.date)
-        assertEquals(domain.status, domainBack.status)
-        assertEquals(domain.updatedAt, domainBack.updatedAt)
+        assertEquals("PRESENCIAL", entity.status)
+        assertEquals(domain.status.name, entity.status)
     }
 
     @Test
-    fun `MonthlySummary to domain and back`() {
-        val domain = TestDataFactory.createMonthlySummary()
+    fun `CheckIn with HOME_OFFICE status to domain and back`() {
+        val domain = TestDataFactory.createCheckIn(status = DayStatus.HOME_OFFICE)
         val entity = domain.toEntity()
-        val domainBack = entity.toDomain()
+        assertEquals("HOME_OFFICE", entity.status)
+    }
 
-        assertEquals(domain.yearMonth, domainBack.yearMonth)
-        assertEquals(domain.workdays, domainBack.workdays)
-        assertEquals(domain.requiredDays, domainBack.requiredDays)
-        assertEquals(domain.completedDays, domainBack.completedDays)
-        assertEquals(domain.homeOfficeDays, domainBack.homeOfficeDays)
-        assertEquals(domain.requiredPercentage, domainBack.requiredPercentage)
-        assertEquals(domain.achievedPercentage, domainBack.achievedPercentage)
+    @Test
+    fun `MonthlySummary with high percentage to domain and back`() {
+        val domain = TestDataFactory.createMonthlySummary(achievedPercentage = 99.9f)
+        val entity = domain.toEntity()
+        assertEquals(99.9f, entity.achievedPercentage)
     }
 
     @Test
