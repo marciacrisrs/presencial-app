@@ -25,12 +25,12 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@eef6142e184e90a55f2e9c303f90b1451e0ca2c3 # v4.2.1
+        uses: actions/checkout@v4
         with:
           persist-credentials: false
 
       - name: Setup JDK 17
-        uses: actions/setup-java@38af9b20f915cd28f96556e929740523a1d95cf2 # v4.4.0
+        uses: actions/setup-java@v4
         with:
           distribution: temurin
           java-version: 17
@@ -61,13 +61,13 @@ jobs:
             -Pandroid.injected.signing.key.password=$ANDROID_KEY_PASSWORD
 
       - name: Upload Release Artifact
-        uses: actions/upload-artifact@60a1915033c469e74ba91ea4e92f7b88825f42a6 # v4.4.2
+        uses: actions/upload-artifact@v4
         with:
           name: presencial-release-aab
           path: app/build/outputs/bundle/release/*.aab
 
       - name: Upload to Google Play Internal Testing
-        uses: r0adkll/upload-google-play@097b6933580574f8f48f65345758156689d7b40f # v1.1.3
+        uses: r0adkll/upload-google-play@v1
         with:
           serviceAccountJsonPlainText: ${{ secrets.PLAY_STORE_SERVICE_ACCOUNT_JSON }}
           packageName: com.presencial.app
