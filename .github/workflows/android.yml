@@ -19,12 +19,12 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@34e1148f4a5b6f6c7f2f6f2f9b9f6f6f4c4f4f4 # v4.3.1
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
         with:
           fetch-depth: 0
 
       - name: Setup JDK 17
-        uses: actions/setup-java@03ad4de4c0c9c1b2d7b7c1d0f7f0b8f3b5c5d6e7 # v5.6.0
+        uses: actions/setup-java@03ad4de0992f5dab5e18fcb136590ce7c4a0ac95 # v5.6.0
         with:
           distribution: temurin
           java-version: 17
