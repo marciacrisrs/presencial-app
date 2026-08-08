@@ -29,6 +29,9 @@ subprojects {
         buildUponDefaultConfig = true
     }
 }
+tasks.named("sonar") {
+    dependsOn(":app:koverXmlReport")
+}
 sonar {
     properties {
         property("sonar.projectKey", "marciacrisrs_presencial-app")
@@ -54,6 +57,53 @@ sonar {
             rootProject.layout.projectDirectory
                 .file("app/build/reports/lint-results-debug.xml")
                 .asFile.absolutePath
+        )
+
+        property(
+            "sonar.coverage.exclusions",
+            """
+            **/BuildConfig.*
+            **/Manifest.*
+            **/R.*
+            **/R$*.*
+            **/PresencialApp.*
+            **/MainActivity.*
+        
+            **/di/**
+            **/*Hilt_*.*
+            **/*_HiltModules*.*
+            **/*_Factory.*
+            **/*_MembersInjector*.*
+        
+            **/data/local/dao/**
+            **/data/local/entity/**
+            **/data/local/mapper/**
+            **/data/local/converter/**
+            **/data/preferences/**
+            **/domain/model/**
+            **/*Database*.*
+            **/*SettingsDataStore*.*
+        
+            **/ui/**
+            **/presentation/**
+            **/*ComposableSingletons*.*
+            **/*Preview*.*
+            **/*Screen*.*
+            **/*Activity*.*
+            **/*DialogState*.*
+        
+            **/notification/**
+            **/*WidgetReceiver*.*
+            **/*BasePresencialWidget*.*
+            **/*WidgetSmall*.*
+            **/*WidgetMedium*.*
+            **/*WidgetLarge*.*
+            **/worker/**
+            **/data/export/**
+            **/domain/location/**
+            **/*_Impl*.*
+            **/*WidgetColors*.*
+            """.trimIndent()
         )
 
         property("sonar.sourceEncoding", "UTF-8")
