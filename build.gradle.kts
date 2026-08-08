@@ -1,3 +1,4 @@
+import io.gitlab.arturbosch.detekt.Detekt
 import java.util.Properties
 
 
@@ -24,7 +25,7 @@ plugins {
 allprojects {
     apply(plugin = "io.gitlab.arturbosch.detekt")
 
-    tasks.withType<io.gitlab.arturbosch.detekt.Detekt>().configureEach {
+    tasks.withType<Detekt>().configureEach {
         jvmTarget = "17"
         config.setFrom(files("$rootDir/config/detekt/detekt.yml"))
         buildUponDefaultConfig = true

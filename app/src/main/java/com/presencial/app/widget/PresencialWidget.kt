@@ -9,19 +9,17 @@ import androidx.glance.GlanceModifier
 import androidx.glance.GlanceTheme
 import androidx.glance.appwidget.GlanceAppWidget
 import androidx.glance.appwidget.GlanceAppWidgetReceiver
+import androidx.glance.appwidget.LinearProgressIndicator
 import androidx.glance.appwidget.cornerRadius
 import androidx.glance.appwidget.provideContent
 import androidx.glance.background
-import androidx.glance.appwidget.LinearProgressIndicator
 import androidx.glance.layout.Alignment
 import androidx.glance.layout.Column
-import androidx.glance.layout.Row
 import androidx.glance.layout.Spacer
 import androidx.glance.layout.fillMaxSize
 import androidx.glance.layout.fillMaxWidth
 import androidx.glance.layout.height
 import androidx.glance.layout.padding
-import androidx.glance.layout.width
 import androidx.glance.text.FontWeight
 import androidx.glance.text.Text
 import androidx.glance.text.TextAlign
@@ -75,12 +73,16 @@ private fun WidgetContent(context: Context, widgetSize: WidgetSize) {
     val completed = checkIns.count { it.status == DayStatus.PRESENCIAL.name }
     val remaining = GoalCalculator.calculateRemainingDays(completed, required)
 
+    val progress = WidgetProgress(completed, required, remaining)
+
     @Suppress("RestrictedApi")
     val backgroundProvider = ColorProvider(R.color.widget_background)
     @Suppress("RestrictedApi")
     val successProvider = ColorProvider(R.color.widget_success)
     @Suppress("RestrictedApi")
     val secondaryTextProvider = ColorProvider(R.color.widget_text_secondary)
+
+    val colors = WidgetColors(successProvider, secondaryTextProvider)
 
     val modifier = GlanceModifier
         .fillMaxSize()
@@ -89,48 +91,83 @@ private fun WidgetContent(context: Context, widgetSize: WidgetSize) {
         .padding(WIDGET_PADDING.dp)
 
     when (widgetSize) {
-        WidgetSize.SMALL -> SmallLayout(completed, required, successProvider, modifier)
-        WidgetSize.MEDIUM -> MediumLayout(completed, required, remaining, successProvider, secondaryTextProvider, modifier)
-        WidgetSize.LARGE -> LargeLayout(monthName, completed, required, remaining, successProvider, secondaryTextProvider, modifier)
+        WidgetSize.SMALL -> SmallLayout(progress, colors, modifier)
+        WidgetSize.MEDIUM -> MediumLayout(progress, colors, modifier)
+        WidgetSize.LARGE -> LargeLayout(monthName, progress, colors, modifier)
     }
 }
 
 @Composable
-private fun SmallLayout(completed: Int, required: Int, successProvider: ColorProvider, modifier: GlanceModifier) {
+private fun SmallLayout(
+    progress: WidgetProgress,
+    colors: WidgetColors,
+    modifier: GlanceModifier
+) {
     Column(
         modifier = modifier,
         verticalAlignment = Alignment.Vertical.CenterVertically,
         horizontalAlignment = Alignment.Horizontal.CenterHorizontally
     ) {
         Text(
-            text = "$completed / $required",
-            style = TextStyle(color = successProvider, fontSize = 16.sp, fontWeight = FontWeight.Bold, textAlign = TextAlign.Center)
+            text = "${progress.completed} / ${progress.required}",
+            style = TextStyle(
+                color = colors.success,
+                fontSize = 16.sp,
+                fontWeight = FontWeight.Bold,
+                textAlign = TextAlign.Center
+            )
         )
     }
 }
 
 @Composable
-private fun MediumLayout(completed: Int, required: Int, remaining: Int, successProvider: ColorProvider, secondaryTextProvider: ColorProvider, modifier: GlanceModifier) {
+private fun MediumLayout(
+    progress: WidgetProgress,
+    colors: WidgetColors,
+    modifier: GlanceModifier
+) {
     Column(
         modifier = modifier,
         verticalAlignment = Alignment.Vertical.CenterVertically,
         horizontalAlignment = Alignment.Horizontal.CenterHorizontally
     ) {
         Text(
-            text = "$completed / $required",
-            style = TextStyle(color = successProvider, fontSize = 22.sp, fontWeight = FontWeight.Bold, textAlign = TextAlign.Center)
+            text = "${progress.completed} / ${progress.required}",
+            style = TextStyle(
+                color = colors.success,
+                fontSize = 22.sp,
+                fontWeight = FontWeight.Bold,
+                textAlign = TextAlign.Center
+            )
         )
         Spacer(modifier = GlanceModifier.height(4.dp))
         Text(
-            text = if (remaining == 1) "Falta $remaining dia" else "Faltam $remaining dias",
-            style = TextStyle(color = secondaryTextProvider, fontSize = 13.sp, textAlign = TextAlign.Center)
+            text = if (progress.remaining == 1) {
+                "Falta ${progress.remaining} dia"
+            } else {
+                "Faltam ${progress.remaining} dias"
+            },
+            style = TextStyle(
+                color = colors.secondaryText,
+                fontSize = 13.sp,
+                textAlign = TextAlign.Center
+            )
         )
     }
 }
 
 @Composable
-private fun LargeLayout(monthName: String, completed: Int, required: Int, remaining: Int, successProvider: ColorProvider, secondaryTextProvider: ColorProvider, modifier: GlanceModifier) {
-    val progress = if (required > 0) (completed.toFloat() / required).coerceIn(0f, 1f) else 0f
+private fun LargeLayout(
+    monthName: String,
+    progress: WidgetProgress,
+    colors: WidgetColors,
+    modifier: GlanceModifier
+) {
+    val progressFraction = if (progress.required > 0) {
+        (progress.completed.toFloat() / progress.required).coerceIn(0f, 1f)
+    } else {
+        0f
+    }
 
     Column(
         modifier = modifier,
@@ -139,38 +176,62 @@ private fun LargeLayout(monthName: String, completed: Int, required: Int, remain
     ) {
         Text(
             text = "PRESENÇA EM $monthName",
-            style = TextStyle(color = secondaryTextProvider, fontSize = 10.sp, fontWeight = FontWeight.Medium)
+            style = TextStyle(
+                color = colors.secondaryText,
+                fontSize = 10.sp,
+                fontWeight = FontWeight.Medium
+            )
         )
         
         Spacer(modifier = GlanceModifier.height(8.dp))
         
         Text(
-            text = "$completed / $required",
-            style = TextStyle(color = successProvider, fontSize = 30.sp, fontWeight = FontWeight.Bold)
+            text = "${progress.completed} / ${progress.required}",
+            style = TextStyle(
+                color = colors.success,
+                fontSize = 30.sp,
+                fontWeight = FontWeight.Bold
+            )
         )
 
         Spacer(modifier = GlanceModifier.height(10.dp))
 
         LinearProgressIndicator(
-            progress = progress,
+            progress = progressFraction,
             modifier = GlanceModifier.fillMaxWidth().height(6.dp),
-            color = successProvider,
-            backgroundColor = secondaryTextProvider
+            color = colors.success,
+            backgroundColor = colors.secondaryText
         )
 
         Spacer(modifier = GlanceModifier.height(10.dp))
 
         Text(
-            text = if (remaining == 1) "Falta $remaining dia" else "Faltam $remaining dias",
-            style = TextStyle(color = secondaryTextProvider, fontSize = 13.sp)
+            text = if (progress.remaining == 1) {
+                "Falta ${progress.remaining} dia"
+            } else {
+                "Faltam ${progress.remaining} dias"
+            },
+            style = TextStyle(
+                color = colors.secondaryText,
+                fontSize = 13.sp
+            )
         )
     }
 }
 
+private data class WidgetProgress(
+    val completed: Int,
+    val required: Int,
+    val remaining: Int
+)
+
+private data class WidgetColors(
+    val success: ColorProvider,
+    val secondaryText: ColorProvider
+)
+
 private const val WIDGET_CORNER_RADIUS = 24
 private const val WIDGET_PADDING = 12
-private const val WIDGET_FONT_SIZE_LABEL = 14
-private const val WIDGET_FONT_SIZE_MAIN = 42
 private const val WIDGET_PREFS = "presencial_settings"
 private const val PREF_REQUIRED_PERCENTAGE = "required_percentage"
 private const val PREF_COUNT_SATURDAYS = "count_saturdays_as_workdays"
