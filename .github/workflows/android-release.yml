@@ -38,6 +38,9 @@ jobs:
       - name: Grant execute permission
         run: chmod +x gradlew
 
+      - name: Incrementa o patch
+        run: ./gradlew incrementPatch
+
       - name: Decode Keystore
         env:
           ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}

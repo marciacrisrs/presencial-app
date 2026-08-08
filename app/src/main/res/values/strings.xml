@@ -2,6 +2,18 @@
 <resources>
     <string name="app_name">Presencial</string>
     <string name="widget_name">Dias presenciais</string>
+    <string name="widget_small_name">Presencial (Pequeno)</string>
+    <string name="widget_medium_name">Presencial (Médio)</string>
+    <string name="widget_large_name">Presencial (Grande)</string>
+    <string name="widget_small_desc">Contador compacto de dias presenciais.</string>
+    <string name="widget_medium_desc">Contador padrão de dias presenciais.</string>
+    <string name="widget_large_desc">Contador detalhado com progresso mensal.</string>
+    <string name="widget_title_month">PRESENÇA EM %s</string>
+    <string name="widget_progress_format">%1$d / %2$d</string>
+    <string name="widget_remaining_format">Faltam %d dias</string>
+    <string name="widget_remaining_singular">Falta %d dia</string>
+    <string name="widget_label_meta">Meta</string>
+    <string name="widget_label_done">Feito</string>
     <string name="notification_channel_name">Lembretes de presença</string>
     <string name="notification_channel_desc">Lembretes diários para registrar presença presencial</string>
     <string name="notification_title">18h</string>

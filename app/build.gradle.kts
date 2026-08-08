@@ -10,7 +10,23 @@ val versionMinor = versionProperties.getProperty("VERSION_MINOR").toInt()
 val versionPatch = versionProperties.getProperty("VERSION_PATCH").toInt()
 
 val appVersionName = "$versionMajor.$versionMinor.$versionPatch"
-val appVersionCode = System.getenv("GITHUB_RUN_NUMBER")?.toInt() ?: 1
+// Gera um versionCode único baseado na versão (ex: 1.0.4 -> 10004)
+val appVersionCode = versionMajor * 10000 + versionMinor * 100 + versionPatch
+
+// Task para incrementar o patch automaticamente
+tasks.register("incrementPatch") {
+    group = "versioning"
+    description = "Incrementa a versão patch no arquivo version.properties"
+    doLast {
+        val props = Properties()
+        val file = rootProject.file("version.properties")
+        props.load(file.inputStream())
+        val currentPatch = props.getProperty("VERSION_PATCH").toInt()
+        props.setProperty("VERSION_PATCH", (currentPatch + 1).toString())
+        props.store(file.writer(), "Gerado automaticamente")
+        println("Versão atualizada para Patch: ${currentPatch + 1}")
+    }
+}
 
 plugins {
     alias(libs.plugins.android.application)

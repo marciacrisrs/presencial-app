@@ -32,15 +32,39 @@
         </activity>
 
         <receiver
-            android:name=".widget.PresencialWidgetReceiver"
+            android:name=".widget.PresencialWidgetReceiverSmall"
             android:exported="false"
-            android:label="@string/widget_name">
+            android:label="@string/widget_small_name">
             <intent-filter>
                 <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
             </intent-filter>
             <meta-data
                 android:name="android.appwidget.provider"
-                android:resource="@xml/presencial_widget_info" />
+                android:resource="@xml/presencial_widget_info_small" />
+        </receiver>
+
+        <receiver
+            android:name=".widget.PresencialWidgetReceiverMedium"
+            android:exported="false"
+            android:label="@string/widget_medium_name">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/presencial_widget_info_medium" />
+        </receiver>
+
+        <receiver
+            android:name=".widget.PresencialWidgetReceiverLarge"
+            android:exported="false"
+            android:label="@string/widget_large_name">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/presencial_widget_info_large" />
         </receiver>
 
         <receiver
