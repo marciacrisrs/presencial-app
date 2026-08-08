@@ -31,7 +31,6 @@ subprojects {
 }
 sonar {
     properties {
-
         property("sonar.projectKey", "marciacrisrs_presencial-app")
         property("sonar.organization", "marciacrisrs")
         property("sonar.host.url", "https://sonarcloud.io")
@@ -46,7 +45,7 @@ sonar {
         property(
             "sonar.tests",
             rootProject.layout.projectDirectory
-                .dir("app/src/test")
+                .dir("app/src/test/java")
                 .asFile.absolutePath
         )
 

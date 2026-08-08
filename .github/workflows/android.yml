@@ -41,16 +41,16 @@ jobs:
         run: chmod +x gradlew
 
       - name: Run Detekt
-        run: ./gradlew detekt --stacktrace
+        run: ./gradlew detekt
 
       - name: Run Android Lint
-        run: ./gradlew lintDebug --stacktrace
+        run: ./gradlew lintDebug
 
       - name: Run Unit Tests
-        run: ./gradlew testDebugUnitTest --stacktrace
+        run: ./gradlew testDebugUnitTest
 
       - name: Generate Coverage Report
-        run: ./gradlew koverXmlReport --stacktrace
+        run: ./gradlew koverXmlReport
 
       - name: SonarCloud
         env:
