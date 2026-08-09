@@ -179,7 +179,7 @@ private fun DashboardSuccessAnimation() {
 }
 
 @Composable
-private fun YesterdayCheckInCard(onConfirm: () -> Unit) {
+internal fun YesterdayCheckInCard(onConfirm: () -> Unit) {
     Card(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(CORNER_RADIUS_LARGE),
@@ -204,7 +204,7 @@ private fun YesterdayCheckInCard(onConfirm: () -> Unit) {
 }
 
 @Composable
-private fun CheckInButton(
+internal fun CheckInButton(
     isPresencial: Boolean,
     onConfirm: () -> Unit
 ) {

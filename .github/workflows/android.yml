@@ -40,11 +40,14 @@ jobs:
       - name: Grant execute permission
         run: chmod +x gradlew
 
-      - name: Run Detekt
-        run: ./gradlew detekt
+      - name: Build
+        run: ./gradlew assembleDebug
 
       - name: Run Android Lint
         run: ./gradlew lintDebug
+
+      - name: Run Detekt
+        run: ./gradlew detekt
 
       - name: Run Unit Tests
         run: ./gradlew testDebugUnitTest
@@ -70,10 +73,7 @@ jobs:
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
           name: lint-report
-          path: |
-            app/build/reports/lint-results-debug.html
-            app/build/reports/lint-results-debug.xml
-            app/build/reports/lint-results-debug.sarif
+          path: app/build/reports/lint-results-debug.*
 
       - name: Upload Coverage Reports
         if: always()

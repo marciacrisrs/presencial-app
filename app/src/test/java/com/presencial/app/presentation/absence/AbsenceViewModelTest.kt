@@ -66,7 +66,58 @@ class AbsenceViewModelTest {
         viewModel.addAbsence(AbsenceType.VACATION, start, end)
 
         coVerify { repository.insertAbsence(match { 
-            it.type == AbsenceType.VACATION && it.startDate == start && it.endDate == end 
+            it.type == AbsenceType.VACATION && 
+            it.startDate == start && 
+            it.endDate == end &&
+            it.isFullDay &&
+            it.hours == 8f &&
+            it.notes == null &&
+            !it.isCounted
+        }) }
+        assertEquals("Registro adicionado com sucesso", viewModel.message.value)
+    }
+
+    @Test
+    fun `addAbsence should succeed when startDate equals endDate`() = runTest {
+        val date = LocalDate.of(2026, 8, 1)
+        
+        coEvery { repository.insertAbsence(any()) } returns Unit
+
+        viewModel.addAbsence(AbsenceType.ABSENCE, date, date)
+
+        coVerify { repository.insertAbsence(match { 
+            it.startDate == date && it.endDate == date 
+        }) }
+        assertEquals("Registro adicionado com sucesso", viewModel.message.value)
+    }
+
+    @Test
+    fun `addAbsence should correctly pass optional notes and other parameters`() = runTest {
+        val start = LocalDate.of(2026, 8, 1)
+        val end = LocalDate.of(2026, 8, 2)
+        val notes = "Some important note"
+        val hours = 4.5f
+        val isFullDay = false
+        
+        coEvery { repository.insertAbsence(any()) } returns Unit
+
+        viewModel.addAbsence(
+            type = AbsenceType.DAY_OFF,
+            startDate = start,
+            endDate = end,
+            isFullDay = isFullDay,
+            hours = hours,
+            notes = notes
+        )
+
+        coVerify { repository.insertAbsence(match { 
+            it.type == AbsenceType.DAY_OFF && 
+            it.startDate == start && 
+            it.endDate == end &&
+            it.isFullDay == isFullDay &&
+            it.hours == hours &&
+            it.notes == notes &&
+            !it.isCounted
         }) }
         assertEquals("Registro adicionado com sucesso", viewModel.message.value)
     }

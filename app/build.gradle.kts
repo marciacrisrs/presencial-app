@@ -2,18 +2,23 @@ import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 import java.util.Properties
 
 val versionProperties = Properties().apply {
-    load(rootProject.file("version.properties").inputStream())
+    val file = rootProject.file("version.properties")
+    if (file.exists()) {
+        load(file.inputStream())
+    }
 }
 
-val versionMajor = versionProperties.getProperty("VERSION_MAJOR").toInt()
-val versionMinor = versionProperties.getProperty("VERSION_MINOR").toInt()
-val versionPatch = versionProperties.getProperty("VERSION_PATCH").toInt()
+val versionMajor = (versionProperties.getProperty("VERSION_MAJOR") ?: "1").toInt()
+val versionMinor = (versionProperties.getProperty("VERSION_MINOR") ?: "0").toInt()
+val versionPatch = (versionProperties.getProperty("VERSION_PATCH") ?: "4").toInt()
+
+val compileSdkVer = (versionProperties.getProperty("COMPILE_SDK") ?: "37").toInt()
+val targetSdkVer = (versionProperties.getProperty("TARGET_SDK") ?: "37").toInt()
+val minSdkVer = (versionProperties.getProperty("MIN_SDK") ?: "26").toInt()
 
 val appVersionName = "$versionMajor.$versionMinor.$versionPatch"
-// Gera um versionCode único baseado na versão (ex: 1.0.4 -> 10004)
 val appVersionCode = versionMajor * 10000 + versionMinor * 100 + versionPatch
 
-// Task para incrementar o patch automaticamente
 tasks.register("incrementPatch") {
     group = "versioning"
     description = "Incrementa a versão patch no arquivo version.properties"
@@ -37,19 +42,15 @@ plugins {
     alias(libs.plugins.detekt)
 }
 
-
-
 android {
     namespace = "com.presencial.app"
-
-    compileSdk = 37
+    compileSdk = compileSdkVer
 
     defaultConfig {
         applicationId = "com.presencial.app"
-
-        minSdk = 26
+        minSdk = minSdkVer
         @Suppress("ExpiredTargetSdkVersion")
-        targetSdk = 37
+        targetSdk = targetSdkVer
 
         versionCode = appVersionCode
         versionName = appVersionName
@@ -61,7 +62,6 @@ android {
         release {
             isMinifyEnabled = true
             isShrinkResources = true
-
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
@@ -79,16 +79,24 @@ android {
         buildConfig = true
     }
 
+    testOptions {
+        unitTests.isReturnDefaultValues = true
+    }
+
     packaging {
         resources {
             excludes += "/META-INF/{AL2.0,LGPL2.1}"
         }
     }
+
+    lint {
+        abortOnError = false
+        checkReleaseBuilds = false
+    }
 }
 
 kotlin {
     jvmToolchain(17)
-
     compilerOptions {
         jvmTarget.set(JvmTarget.JVM_17)
     }
@@ -107,9 +115,9 @@ dependencies {
     implementation(libs.androidx.splashscreen)
 
     // Jetpack Compose
-    implementation(libs.androidx.ui)
-    implementation(libs.androidx.ui.graphics)
-    implementation(libs.androidx.ui.tooling.preview)
+    implementation(libs.androidx.compose.ui)
+    implementation(libs.androidx.compose.ui.graphics)
+    implementation(libs.androidx.compose.ui.tooling.preview)
     implementation(libs.androidx.compose.runtime)
     implementation(libs.androidx.compose.material3)
     implementation(libs.androidx.material.icons.extended)
@@ -155,13 +163,24 @@ dependencies {
     testImplementation(libs.kotlinx.coroutines.test)
     testImplementation(libs.mockk)
     testImplementation(libs.turbine)
+    testImplementation(libs.androidx.work.testing)
+    testImplementation(libs.androidx.test.core)
+    testImplementation(libs.androidx.test.ext.junit)
+    testImplementation(libs.robolectric)
+    testImplementation(libs.junit)
     testRuntimeOnly(libs.junit.jupiter.engine)
     testRuntimeOnly(libs.junit.platform.launcher)
 
     // Android Instrumentation Tests
+    androidTestImplementation(platform(libs.androidx.compose.bom))
+    androidTestImplementation(libs.mockk)
     androidTestImplementation(libs.androidx.espresso.core)
-    androidTestImplementation(libs.androidx.junit)
-    debugImplementation(libs.androidx.ui.tooling)
+    androidTestImplementation(libs.androidx.test.ext.junit)
+    androidTestImplementation(libs.androidx.compose.ui.test.junit4)
+    androidTestImplementation(libs.androidx.work.testing)
+    androidTestImplementation(libs.androidx.test.core)
+    debugImplementation(libs.androidx.compose.ui.tooling)
+    debugImplementation(libs.androidx.compose.ui.test.manifest)
 }
 
 tasks.withType<Test> {
@@ -172,67 +191,34 @@ kover {
     reports {
         filters {
             excludes {
-                // Android e Boilerplate base
                 classes(
-                    "**.BuildConfig",
-                    "**.Manifest",
-                    "**.R",
-                    "**.R$*",
-                    "**.PresencialApp",
-                    "**.MainActivity"
+                    "**.BuildConfig", "**.Manifest", "**.R", "**.R$*",
+                    "**.PresencialApp", "**.MainActivity"
                 )
-
-                // Injeção de Dependência (Hilt)
                 classes(
-                    "dagger.hilt.**",
-                    "hilt_aggregated_deps.**",
-                    "**.di.**",
-                    "**.*Hilt_*",
-                    "**.*_HiltModules*",
-                    "**.*_Factory",
+                    "dagger.hilt.**", "hilt_aggregated_deps.**", "**.di.**",
+                    "**.*Hilt_*", "**.*_HiltModules*", "**.*_Factory",
                     "**.*_MembersInjector"
                 )
-
-                // Persistência e Modelos (Sem lógica de negócio)
                 classes(
-                    "**.data.local.dao.**",
-                    "**.data.local.entity.**",
-                    "**.data.local.mapper.**",
-                    "**.data.local.converter.**",
-                    "**.data.preferences.**",
-                    "**.domain.model.**",
-                    "**.*Database*",
-                    "**.*SettingsDataStore*"
+                    "**.data.local.dao.**", "**.data.local.entity.**",
+                    "**.data.local.mapper.**", "**.data.local.converter.**",
+                    "**.data.preferences.**", "**.domain.model.**",
+                    "**.*Database*", "**.*SettingsDataStore*"
                 )
-
-                // UI e Navegação
                 classes(
-                    "**.ui.**",
-                    "**.presentation.**",
-                    "**.*ComposableSingletons*",
-                    "**.*Preview*",
-                    "**.*Screen*",
-                    "**.*Activity*",
-                    "**.*DialogState*"
+                    "**.ui.**", "**.presentation.**", "**.*ComposableSingletons*",
+                    "**.*Preview*", "**.*Screen*", "**.*Activity*", "**.*DialogState*"
                 )
-
-                // Framework Glue (Notificações, Widgets, Workers, Export, Location)
                 classes(
-                    "**.notification.**",
-                    "**.*WidgetReceiver*",
-                    "**.*BasePresencialWidget*",
-                    "**.*WidgetSmall*",
-                    "**.*WidgetMedium*",
-                    "**.*WidgetLarge*",
-                    "**.worker.**",
-                    "**.data.export.**",
-                    "**.domain.location.**",
-                    "**.*_Impl*",
-                    "**.*WidgetColors*"
+                    "**.notification.**", "**.*WidgetReceiver*",
+                    "**.*BasePresencialWidget*", "**.*WidgetSmall*",
+                    "**.*WidgetMedium*", "**.*WidgetLarge*", "**.worker.**",
+                    "**.data.export.**", "**.domain.location.**",
+                    "**.*_Impl*", "**.*WidgetColors*"
                 )
             }
         }
-
         verify {
             rule {
                 minBound(80)

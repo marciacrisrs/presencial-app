@@ -1,4 +1,5 @@
 # Presencial
+Presencial nasceu de um problema real: acompanhar uma meta mensal de presença sem precisar fazer contas manualmente.
 
 Aplicativo Android para controle de comparecimento presencial no trabalho. Calcula automaticamente dias úteis, feriados nacionais brasileiros e a meta mensal de presença com base no percentual configurado.
 
