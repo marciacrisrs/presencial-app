@@ -9,6 +9,12 @@
     <string name="widget_large_desc">Contador detalhado com progresso mensal.</string>
     <string name="widget_title_month">PRESENÇA EM %s</string>
     <string name="widget_progress_format">%1$d / %2$d</string>
+    <string name="widget_compact_progress">%1$d / %2$d presenciais</string>
+    <string name="widget_percentage_format">%d%% da meta</string>
+    <string name="widget_goal_met">Meta atingida! 🎉</string>
+    <string name="widget_configure_goal">Configure sua meta</string>
+    <string name="widget_today_presencial">Hoje: presencial ✓</string>
+    <string name="widget_today_pending">Hoje: pendente</string>
     <string name="notification_channel_name">Lembretes de presença</string>
     <string name="notification_channel_desc">Lembretes diários para registrar presença presencial</string>
     <string name="notification_title">18h</string>

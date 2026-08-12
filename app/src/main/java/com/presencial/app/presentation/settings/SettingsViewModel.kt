@@ -7,6 +7,7 @@ import com.presencial.app.domain.model.AppSettings
 import com.presencial.app.domain.model.WorkAddress
 import com.presencial.app.domain.repository.SettingsRepository
 import com.presencial.app.domain.repository.WorkAddressRepository
+import com.presencial.app.domain.widget.WidgetRefresher
 import com.presencial.app.domain.usecase.SyncGeofencesUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.SharingStarted
@@ -22,7 +23,8 @@ class SettingsViewModel @Inject constructor(
     private val settingsRepository: SettingsRepository,
     private val backupManager: BackupManager,
     private val syncGeofencesUseCase: SyncGeofencesUseCase,
-    workAddressRepository: WorkAddressRepository
+    workAddressRepository: WorkAddressRepository,
+    private val widgetRefresher: WidgetRefresher
 ) : ViewModel() {
 
     val settings: StateFlow<AppSettings> = settingsRepository.settings
@@ -37,12 +39,14 @@ class SettingsViewModel @Inject constructor(
     fun updatePercentage(percentage: Int) {
         viewModelScope.launch {
             settingsRepository.updateRequiredPercentage(percentage)
+            widgetRefresher.refresh()
         }
     }
 
     fun updateSaturdays(count: Boolean) {
         viewModelScope.launch {
             settingsRepository.updateCountSaturdaysAsWorkdays(count)
+            widgetRefresher.refresh()
         }
     }
 

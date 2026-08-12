@@ -13,7 +13,7 @@ Aplicativo Android para controle de comparecimento presencial no trabalho. Calcu
 - **Configurações** — percentual de presença, sábados como dias úteis, backup/restauração JSON
 - **Ausências** — registro de férias, day off, licenças e ausências com desconto automático na meta mensal
 - **Notificações** — lembrete às 18h em dias úteis (se ainda não confirmou presença) e aviso de check-in automático
-- **Widget** — exibe "Faltam X dias presenciais" diretamente na tela inicial
+- **Widget** — progresso mensal, status do dia, alerta quando a meta exige atenção e toque para abrir o app
 - **Sobre** — versão do app, política de privacidade (dados locais) e link para o desenvolvedor
 - **Tema claro/escuro** — Material Design 3 com suporte a Dynamic Color (Material You)
 

@@ -1,0 +1,70 @@
+package com.presencial.app.widget
+
+import android.content.Context
+import com.presencial.app.data.local.PresencialDatabase
+import com.presencial.app.data.local.mapper.toDomain
+import com.presencial.app.domain.model.DayStatus
+import com.presencial.app.domain.util.GoalCalculator
+import com.presencial.app.domain.util.WorkdayCalculator
+import kotlinx.coroutines.flow.first
+import java.time.LocalDate
+import java.time.YearMonth
+
+object WidgetInfoLoader {
+
+    suspend fun load(context: Context): WidgetInfo {
+        val db = PresencialDatabase.getInstance(context)
+        val prefs = context.getSharedPreferences(WIDGET_PREFS, Context.MODE_PRIVATE)
+        val percentage = prefs.getInt(PREF_REQUIRED_PERCENTAGE, DEFAULT_REQUIRED_PERCENTAGE)
+        val countSaturdays = prefs.getBoolean(PREF_COUNT_SATURDAYS, false)
+
+        val today = LocalDate.now()
+        val yearMonth = YearMonth.from(today)
+        val start = yearMonth.atDay(1).toEpochDay()
+        val end = yearMonth.atEndOfMonth().toEpochDay()
+
+        val absences = db.absenceDao()
+            .getAbsencesInRange(start, end)
+            .first()
+            .map { it.toDomain() }
+
+        val workdays = WorkdayCalculator.countLiquidWorkdaysInMonth(
+            yearMonth,
+            countSaturdays,
+            absences
+        )
+        val required = GoalCalculator.calculateRequiredDays(workdays, percentage)
+
+        val checkIns = db.checkInDao().observeBetween(start, end).first()
+        val completed = checkIns.count { it.status == DayStatus.PRESENCIAL.name }
+        val remaining = GoalCalculator.calculateRemainingDays(completed, required)
+        val remainingWorkdays = WorkdayCalculator.countRemainingWorkdays(
+            today,
+            yearMonth,
+            countSaturdays
+        )
+        val achievedPercentage = GoalCalculator
+            .calculateAchievedPercentage(completed, required)
+            .toInt()
+
+        val todayCheckIn = checkIns.find { it.dateEpochDay == today.toEpochDay() }
+        val todayIsPresencial = todayCheckIn?.status == DayStatus.PRESENCIAL.name
+        val todayIsWorkday = WorkdayCalculator.isWorkday(today, countSaturdays)
+
+        return WidgetInfo.create(
+            completed = completed,
+            required = required,
+            remaining = remaining,
+            remainingWorkdays = remainingWorkdays,
+            achievedPercentage = achievedPercentage,
+            todayIsPresencial = todayIsPresencial,
+            todayIsWorkday = todayIsWorkday,
+            yearMonth = yearMonth
+        )
+    }
+
+    private const val WIDGET_PREFS = "presencial_settings"
+    private const val PREF_REQUIRED_PERCENTAGE = "required_percentage"
+    private const val PREF_COUNT_SATURDAYS = "count_saturdays_as_workdays"
+    private const val DEFAULT_REQUIRED_PERCENTAGE = 40
+}

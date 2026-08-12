@@ -6,6 +6,7 @@ import com.presencial.app.domain.model.AppSettings
 import com.presencial.app.domain.repository.SettingsRepository
 import com.presencial.app.domain.repository.WorkAddressRepository
 import com.presencial.app.domain.usecase.SyncGeofencesUseCase
+import com.presencial.app.domain.widget.WidgetRefresher
 import com.presencial.app.util.MainDispatcherExtension
 import io.mockk.coEvery
 import io.mockk.coVerify
@@ -31,6 +32,7 @@ class SettingsViewModelTest {
     private val backupManager = mockk<BackupManager>()
     private val syncGeofencesUseCase = mockk<SyncGeofencesUseCase>()
     private val workAddressRepository = mockk<WorkAddressRepository>()
+    private val widgetRefresher = mockk<WidgetRefresher>()
     private lateinit var viewModel: SettingsViewModel
 
     @BeforeEach
@@ -38,11 +40,13 @@ class SettingsViewModelTest {
         every { settingsRepository.settings } returns flowOf(AppSettings())
         every { workAddressRepository.getAllAddresses() } returns flowOf(emptyList())
         coEvery { syncGeofencesUseCase() } returns Unit
+        coEvery { widgetRefresher.refresh() } returns Unit
         viewModel = SettingsViewModel(
             settingsRepository,
             backupManager,
             syncGeofencesUseCase,
-            workAddressRepository
+            workAddressRepository,
+            widgetRefresher
         )
     }
 
@@ -64,7 +68,8 @@ class SettingsViewModelTest {
             settingsRepository,
             backupManager,
             syncGeofencesUseCase,
-            workAddressRepository
+            workAddressRepository,
+            widgetRefresher
         )
 
         viewModel.settings.test {

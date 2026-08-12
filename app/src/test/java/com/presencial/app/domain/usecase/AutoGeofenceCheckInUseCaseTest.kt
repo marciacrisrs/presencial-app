@@ -7,6 +7,7 @@ import com.presencial.app.domain.repository.CheckInRepository
 import com.presencial.app.domain.repository.MonthlySummaryRepository
 import com.presencial.app.domain.repository.SettingsRepository
 import com.presencial.app.domain.util.TimeProvider
+import com.presencial.app.domain.widget.WidgetRefresher
 import com.presencial.app.util.TestDataFactory
 import io.mockk.coEvery
 import io.mockk.coVerify
@@ -26,6 +27,7 @@ class AutoGeofenceCheckInUseCaseTest {
     private val monthlySummaryRepository = mockk<MonthlySummaryRepository>()
     private val settingsRepository = mockk<SettingsRepository>()
     private val timeProvider = mockk<TimeProvider>()
+    private val widgetRefresher = mockk<WidgetRefresher>()
     private lateinit var useCase: AutoGeofenceCheckInUseCase
 
     private val today = LocalDate.of(2026, 8, 12)
@@ -39,11 +41,13 @@ class AutoGeofenceCheckInUseCaseTest {
             checkInRepository.saveCheckIn(any(), any(), any(), any())
         } returns Unit
         coEvery { monthlySummaryRepository.refreshSummary(any()) } returns Unit
+        coEvery { widgetRefresher.refresh() } returns Unit
         useCase = AutoGeofenceCheckInUseCase(
             checkInRepository,
             monthlySummaryRepository,
             settingsRepository,
-            timeProvider
+            timeProvider,
+            widgetRefresher
         )
     }
 
@@ -61,6 +65,7 @@ class AutoGeofenceCheckInUseCaseTest {
             )
         }
         coVerify { monthlySummaryRepository.refreshSummary(YearMonth.from(today)) }
+        coVerify { widgetRefresher.refresh() }
     }
 
     @Test

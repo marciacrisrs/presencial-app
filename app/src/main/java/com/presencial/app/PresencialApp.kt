@@ -18,6 +18,7 @@ class PresencialApp : Application(), Configuration.Provider {
     @Inject lateinit var workerFactory: HiltWorkerFactory
     @Inject lateinit var notificationScheduler: NotificationScheduler
     @Inject lateinit var syncGeofencesUseCase: SyncGeofencesUseCase
+    @Inject lateinit var widgetRefresher: com.presencial.app.domain.widget.WidgetRefresher
 
     private val appScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
 
@@ -31,6 +32,7 @@ class PresencialApp : Application(), Configuration.Provider {
         notificationScheduler.scheduleDailyReminder()
         appScope.launch {
             syncGeofencesUseCase()
+            widgetRefresher.refresh()
         }
     }
 }

@@ -5,13 +5,15 @@ import com.presencial.app.domain.model.DayStatus
 import com.presencial.app.domain.repository.CheckInRepository
 import com.presencial.app.domain.repository.MonthlySummaryRepository
 import com.presencial.app.domain.util.TimeProvider
+import com.presencial.app.domain.widget.WidgetRefresher
 import java.time.LocalDate
 import javax.inject.Inject
 
 class ToggleTodayCheckInUseCase @Inject constructor(
     private val checkInRepository: CheckInRepository,
     private val monthlySummaryRepository: MonthlySummaryRepository,
-    private val timeProvider: TimeProvider
+    private val timeProvider: TimeProvider,
+    private val widgetRefresher: WidgetRefresher
 ) {
     suspend operator fun invoke(
         date: LocalDate? = null,
@@ -33,5 +35,6 @@ class ToggleTodayCheckInUseCase @Inject constructor(
         monthlySummaryRepository.refreshSummary(
             java.time.YearMonth.from(targetDate)
         )
+        widgetRefresher.refresh()
     }
 }

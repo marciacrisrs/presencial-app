@@ -3,5 +3,7 @@
     <color name="ic_launcher_background">#1B873B</color>
     <color name="widget_background">#1E1E1E</color>
     <color name="widget_success">#81C995</color>
+    <color name="widget_warning">#FFB74D</color>
+    <color name="widget_primary_text">#FFFFFF</color>
     <color name="widget_text_secondary">#B3FFFFFF</color>
 </resources>
