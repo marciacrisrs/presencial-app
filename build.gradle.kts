@@ -106,6 +106,16 @@ sonar {
         )
 
         property("sonar.sourceEncoding", "UTF-8")
+        property(
+            "sonar.exclusions",
+            listOf(
+                "**/*.jpg",
+                "**/*.jpeg",
+                "**/*.png",
+                "**/*.webp",
+                "**/assets/**"
+            ).joinToString(",")
+        )
         property("sonar.qualitygate.wait", "true")
     }
 }
