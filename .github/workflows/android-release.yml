@@ -38,11 +38,26 @@ jobs:
           java-version: 17
           cache: gradle
 
+      - name: Setup Node.js
+        uses: actions/setup-node@03ad4de0992f5dab5e18fcb136590ce7c4a0ac95
+        with:
+          node-version: 20
+
       - name: Grant execute permission
         run: chmod +x gradlew
 
-      - name: Incrementa o patch
-        run: ./gradlew incrementPatch
+      - name: Resolve version code from Play Store
+        env:
+          PLAY_STORE_SERVICE_ACCOUNT_JSON: ${{ secrets.PLAY_STORE_SERVICE_ACCOUNT_JSON }}
+        run: |
+          npm install --no-save google-auth-library googleapis
+          PLAY_MAX_CODE=$(node scripts/get-play-version-code.mjs com.presencial.app)
+          LOCAL_CODE=$(./gradlew -q printVersionCode)
+          TARGET_CODE=$(( PLAY_MAX_CODE > LOCAL_CODE ? PLAY_MAX_CODE + 1 : LOCAL_CODE + 1 ))
+          echo "Play max versionCode: $PLAY_MAX_CODE"
+          echo "Local versionCode: $LOCAL_CODE"
+          echo "Target versionCode: $TARGET_CODE"
+          ./gradlew syncReleaseVersion -PtargetVersionCode=$TARGET_CODE
 
       - name: Ler versão gerada
         id: version
@@ -80,15 +95,17 @@ jobs:
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
           name: presencial-release-aab
-          path: app/build/outputs/bundle/release/*.aab
+          path: app/build/outputs/bundle/release/app-release.aab
 
       - name: Upload to Google Play Internal Testing
         uses: r0adkll/upload-google-play@e738b9dd8f2476ea806d921b64aacd24f34515a5
         with:
           serviceAccountJsonPlainText: ${{ secrets.PLAY_STORE_SERVICE_ACCOUNT_JSON }}
           packageName: com.presencial.app
-          releaseFiles: app/build/outputs/bundle/release/*.aab
+          releaseFiles: app/build/outputs/bundle/release/app-release.aab
+          releaseName: v${{ steps.version.outputs.name }}
           tracks: internal
+          status: completed
 
       - name: Tag release
         run: |

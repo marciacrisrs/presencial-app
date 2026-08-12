@@ -75,6 +75,29 @@ tasks.register("incrementPatch") {
     }
 }
 
+tasks.register("syncReleaseVersion") {
+    group = "versioning"
+    description = "Sincroniza version.properties com um versionCode alvo (CI/Play Store)"
+    doLast {
+        val targetCode = project.findProperty("targetVersionCode")?.toString()?.toInt()
+            ?: System.getenv("TARGET_VERSION_CODE")?.toInt()
+            ?: error("Defina targetVersionCode ou TARGET_VERSION_CODE")
+
+        val props = readVersionProperties()
+        val major = props.getProperty("VERSION_MAJOR").toInt()
+        val minor = props.getProperty("VERSION_MINOR").toInt()
+        val patch = targetCode - (major * 10000 + minor * 100)
+        require(patch > 0) {
+            "versionCode $targetCode invalido para $major.$minor.x"
+        }
+
+        props.setProperty("VERSION_PATCH", patch.toString())
+        writeVersionProperties(props)
+        println("VERSION_NAME=${formatVersionName(props)}")
+        println("VERSION_CODE=$targetCode")
+    }
+}
+
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.ksp)
