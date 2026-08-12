@@ -9,8 +9,10 @@ import com.presencial.app.domain.usecase.GetDashboardDataUseCase
 import com.presencial.app.domain.usecase.ToggleTodayCheckInUseCase
 import com.presencial.app.domain.util.TimeProvider
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -29,9 +31,15 @@ class DashboardViewModel @Inject constructor(
     val workAddresses: StateFlow<List<WorkAddress>> = workAddressRepository.getAllAddresses()
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(STOP_TIMEOUT_MS), emptyList())
 
+    private val uiEventChannel = Channel<DashboardUiEvent>(Channel.BUFFERED)
+    val uiEvents = uiEventChannel.receiveAsFlow()
+
     fun toggleTodayCheckIn(markPresencial: Boolean) {
         viewModelScope.launch {
             toggleTodayCheckInUseCase(markPresencial = markPresencial)
+            if (markPresencial) {
+                uiEventChannel.send(DashboardUiEvent.CheckInRegistered)
+            }
         }
     }
 
@@ -41,6 +49,7 @@ class DashboardViewModel @Inject constructor(
                 date = timeProvider.today().minusDays(1),
                 markPresencial = true
             )
+            uiEventChannel.send(DashboardUiEvent.YesterdayCheckInRegistered)
         }
     }
 }

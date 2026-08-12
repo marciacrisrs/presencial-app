@@ -68,6 +68,29 @@ class DashboardViewModelTest {
     }
 
     @Test
+    fun `toggleTodayCheckIn emits success event`() = runTest {
+        coEvery { toggleTodayCheckInUseCase(markPresencial = true) } returns Unit
+
+        viewModel.uiEvents.test {
+            viewModel.toggleTodayCheckIn(true)
+            assertEquals(DashboardUiEvent.CheckInRegistered, awaitItem())
+        }
+
+        coVerify { toggleTodayCheckInUseCase(markPresencial = true) }
+    }
+
+    @Test
+    fun `markYesterdayPresencial emits success event`() = runTest {
+        val yesterday = today.minusDays(1)
+        coEvery { toggleTodayCheckInUseCase(date = yesterday, markPresencial = true) } returns Unit
+
+        viewModel.uiEvents.test {
+            viewModel.markYesterdayPresencial()
+            assertEquals(DashboardUiEvent.YesterdayCheckInRegistered, awaitItem())
+        }
+    }
+
+    @Test
     fun `toggleTodayCheckIn should call use case`() = runTest {
         coEvery { toggleTodayCheckInUseCase(markPresencial = true) } returns Unit
 

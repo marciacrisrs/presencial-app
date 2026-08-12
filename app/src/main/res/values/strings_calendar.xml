@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="calendar_day_content_description">Dia %1$d, %2$s%3$s%4$s</string>
+    <string name="calendar_status_presencial">presencial</string>
+    <string name="calendar_status_home_office">home office</string>
+    <string name="calendar_status_faltou">faltou</string>
+    <string name="calendar_status_feriado">feriado</string>
+    <string name="calendar_status_fim_de_semana">fim de semana</string>
+    <string name="calendar_status_futuro">futuro</string>
+    <string name="calendar_status_ausencia">ausência</string>
+    <string name="calendar_holiday_suffix">, %1$s</string>
+    <string name="calendar_today_suffix">, hoje</string>
+    <string name="calendar_required_suffix">, dia obrigatório</string>
+</resources>
