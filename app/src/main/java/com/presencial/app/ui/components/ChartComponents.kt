@@ -17,7 +17,11 @@ import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
+import com.presencial.app.R
 import com.presencial.app.domain.model.MonthlySummary
 import java.time.format.TextStyle
 import java.util.Locale
@@ -28,9 +32,28 @@ fun MonthlyBarChart(
     modifier: Modifier = Modifier
 ) {
     if (summaries.isEmpty()) {
-        Text("Sem dados para exibir", modifier = modifier.padding(16.dp))
+        Text(
+            text = stringResource(R.string.chart_no_data),
+            modifier = modifier.padding(16.dp)
+        )
         return
     }
+
+    val locale = Locale.getDefault()
+    val monthSummaries = summaries.takeLast(MAX_VISIBLE_MONTHS).map { summary ->
+        val month = summary.yearMonth.month.getDisplayName(TextStyle.SHORT, locale)
+        stringResource(
+            R.string.chart_month_summary,
+            month,
+            summary.achievedPercentage,
+            summary.completedDays,
+            summary.requiredDays
+        )
+    }
+    val chartDescription = stringResource(
+        R.string.chart_accessibility_summary,
+        monthSummaries.joinToString(separator = ", ")
+    )
 
     Card(
         modifier = modifier.fillMaxWidth(),
@@ -43,13 +66,21 @@ fun MonthlyBarChart(
             modifier = Modifier.padding(PADDING_EXTRA_LARGE),
             verticalArrangement = Arrangement.spacedBy(PADDING_MEDIUM)
         ) {
-            Text("Comparecimento por mês", style = MaterialTheme.typography.titleLarge)
-            Canvas(modifier = Modifier.fillMaxWidth().height(CHART_HEIGHT_DP)) {
+            Text(
+                text = stringResource(R.string.chart_monthly_attendance_title),
+                style = MaterialTheme.typography.titleLarge
+            )
+            Canvas(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(CHART_HEIGHT_DP)
+                    .semantics { contentDescription = chartDescription }
+            ) {
                 val barWidth = size.width / (summaries.size * BAR_WIDTH_DIVISOR)
                 val maxValue = summaries.maxOf { it.achievedPercentage }.coerceAtLeast(MAX_VALUE_DEFAULT)
                 summaries.forEachIndexed { index, summary ->
-                    val barHeight = (summary.achievedPercentage / maxValue) * 
-                                    size.height * BAR_HEIGHT_FRACTION
+                    val barHeight = (summary.achievedPercentage / maxValue) *
+                        size.height * BAR_HEIGHT_FRACTION
                     val x = index * (barWidth * BAR_WIDTH_DIVISOR) + barWidth * BAR_WIDTH_OFFSET_FRACTION
                     val y = size.height - barHeight
                     drawRoundRect(
@@ -60,17 +91,8 @@ fun MonthlyBarChart(
                     )
                 }
             }
-            summaries.takeLast(MAX_VISIBLE_MONTHS).forEach { summary ->
-                val month = summary.yearMonth.month.getDisplayName(
-                    TextStyle.SHORT,
-                    Locale.forLanguageTag("pt-BR")
-                )
-                val text = "$month: ${"%.0f".format(summary.achievedPercentage)}% " +
-                           "(${summary.completedDays}/${summary.requiredDays})"
-                Text(
-                    text = text,
-                    style = MaterialTheme.typography.bodySmall
-                )
+            monthSummaries.forEach { text ->
+                Text(text = text, style = MaterialTheme.typography.bodySmall)
             }
         }
     }
@@ -87,8 +109,8 @@ fun StatSummaryRow(label: String, value: String, modifier: Modifier = Modifier) 
     ) {
         Column(modifier = Modifier.padding(PADDING_LARGE)) {
             Text(
-                text = label, 
-                style = MaterialTheme.typography.bodyMedium, 
+                text = label,
+                style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurface.copy(alpha = ALPHA_ON_SURFACE_MEDIUM)
             )
             Text(value, style = MaterialTheme.typography.headlineMedium)

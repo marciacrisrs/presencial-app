@@ -27,9 +27,11 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.presencial.app.R
 import com.presencial.app.domain.usecase.StatisticsData
 import com.presencial.app.ui.components.MonthlyBarChart
 import com.presencial.app.ui.components.StatSummaryRow
@@ -131,7 +133,10 @@ private fun StatisticsContent(
             onClick = onExportClick,
             modifier = Modifier.fillMaxWidth()
         ) {
-            Icon(Icons.Default.PictureAsPdf, contentDescription = null)
+            Icon(
+                Icons.Default.PictureAsPdf,
+                contentDescription = stringResource(R.string.statistics_export_pdf_content_description)
+            )
             Text("  Exportar PDF")
         }
     }
