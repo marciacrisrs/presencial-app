@@ -25,13 +25,12 @@ class SettingsDataStore @Inject constructor(
 ) : SettingsRepository {
 
     init {
-        runBlocking { cleanupLegacyOpenAiKey() }
+        runBlocking { cleanupLegacyPreferences() }
     }
 
     private object Keys {
         val REQUIRED_PERCENTAGE = intPreferencesKey("required_percentage")
         val COUNT_SATURDAYS = booleanPreferencesKey("count_saturdays_as_workdays")
-        val OPENAI_API_KEY = stringPreferencesKey("openai_api_key")
         val PRESENCE_POLICY = stringPreferencesKey("presence_policy_json")
     }
 
@@ -78,8 +77,8 @@ class SettingsDataStore @Inject constructor(
         syncToSharedPreferences(percentage, countSaturdays, policy)
     }
 
-    private suspend fun cleanupLegacyOpenAiKey() {
-        dataStore.edit { it.remove(Keys.OPENAI_API_KEY) }
+    private suspend fun cleanupLegacyPreferences() {
+        dataStore.edit { it.remove(LEGACY_OPENAI_API_KEY) }
     }
 
     private fun syncToSharedPreferences(
@@ -98,5 +97,6 @@ class SettingsDataStore @Inject constructor(
     companion object {
         private const val WIDGET_PREFS = "presencial_settings"
         private const val DEFAULT_PERCENTAGE = 40
+        private val LEGACY_OPENAI_API_KEY = stringPreferencesKey("openai_api_key")
     }
 }
