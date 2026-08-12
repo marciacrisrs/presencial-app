@@ -11,6 +11,11 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Check
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -18,9 +23,13 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import com.presencial.app.R
 import com.presencial.app.domain.model.DayInfo
 import com.presencial.app.domain.model.DayStatus
 import java.time.LocalDate
@@ -100,11 +109,14 @@ private fun CalendarDayCell(
         else -> Color.White
     }
 
+    val cellDescription = calendarDayContentDescription(dayInfo, isToday)
+
     Box(
         modifier = Modifier
             .aspectRatio(1f)
             .clip(CircleShape)
             .background(backgroundColor)
+            .semantics { contentDescription = cellDescription }
             .then(
                 if (dayInfo.isPolicyRequired && dayInfo.isWorkday) {
                     Modifier.border(1.5.dp, MaterialTheme.colorScheme.primary, CircleShape)
@@ -135,7 +147,47 @@ private fun CalendarDayCell(
                 MaterialTheme.colorScheme.onSurface
             else textColor
         )
+        if (dayInfo.status == DayStatus.PRESENCIAL) {
+            Icon(
+                imageVector = Icons.Default.Check,
+                contentDescription = null,
+                modifier = Modifier
+                    .align(Alignment.TopEnd)
+                    .padding(2.dp)
+                    .size(10.dp),
+                tint = Color.White.copy(alpha = 0.9f)
+            )
+        }
     }
+}
+
+@Composable
+private fun calendarDayContentDescription(dayInfo: DayInfo, isToday: Boolean): String {
+    val statusLabel = when (dayInfo.status) {
+        DayStatus.PRESENCIAL -> stringResource(R.string.calendar_status_presencial)
+        DayStatus.HOME_OFFICE -> stringResource(R.string.calendar_status_home_office)
+        DayStatus.FALTOU -> stringResource(R.string.calendar_status_faltou)
+        DayStatus.FERIADO -> stringResource(R.string.calendar_status_feriado)
+        DayStatus.FIM_DE_SEMANA -> stringResource(R.string.calendar_status_fim_de_semana)
+        DayStatus.FUTURO -> stringResource(R.string.calendar_status_futuro)
+        DayStatus.ABSENCE -> stringResource(R.string.calendar_status_ausencia)
+    }
+    val holidaySuffix = dayInfo.holidayName?.let {
+        stringResource(R.string.calendar_holiday_suffix, it)
+    }.orEmpty()
+    val todaySuffix = if (isToday) stringResource(R.string.calendar_today_suffix) else ""
+    val requiredSuffix = if (dayInfo.isPolicyRequired && dayInfo.isWorkday) {
+        stringResource(R.string.calendar_required_suffix)
+    } else {
+        ""
+    }
+    return stringResource(
+        R.string.calendar_day_content_description,
+        dayInfo.date.dayOfMonth,
+        statusLabel,
+        holidaySuffix,
+        todaySuffix + requiredSuffix
+    )
 }
 
 @Composable

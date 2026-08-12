@@ -19,8 +19,11 @@ class ResolveWorkAddressLocationUseCase @Inject constructor(
     }
 
     suspend fun backfillMissingLocations() {
-        workAddressRepository.getAllAddressesSnapshot().forEach { address ->
-            if (!address.needsLocationBackfill()) return@forEach
+        val pending = workAddressRepository.getAllAddressesSnapshot()
+            .filter { it.needsLocationBackfill() }
+        if (pending.isEmpty()) return
+
+        pending.forEach { address ->
             val (stateCode, cityName) = resolve(address.latitude, address.longitude)
             if (stateCode != null && cityName != null) {
                 workAddressRepository.updateAddress(

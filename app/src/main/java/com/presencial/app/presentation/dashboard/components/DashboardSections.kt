@@ -1,8 +1,11 @@
 package com.presencial.app.presentation.dashboard.components
 
+import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -33,6 +36,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.hapticfeedback.HapticFeedback
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import com.airbnb.lottie.compose.LottieAnimation
 import com.airbnb.lottie.compose.LottieCompositionSpec
@@ -111,7 +116,7 @@ fun DashboardHeader(dashboard: DashboardData) {
         ) {
             Image(
                 painter = painterResource(id = R.drawable.logo_splash),
-                contentDescription = null,
+                contentDescription = stringResource(R.string.dashboard_logo_content_description),
                 modifier = Modifier.size(LOGO_SIZE)
             )
             Text(
@@ -218,49 +223,64 @@ internal fun CheckInButton(
     isPresencial: Boolean,
     onConfirm: () -> Unit
 ) {
+    val registerLabel = stringResource(R.string.dashboard_check_in_register)
+    val registeredLabel = stringResource(R.string.dashboard_check_in_registered)
+
     Column(
         modifier = Modifier.fillMaxWidth().padding(vertical = BUTTON_VERTICAL_PADDING),
         verticalArrangement = Arrangement.spacedBy(CONTENT_SPACING)
     ) {
-        if (!isPresencial) {
-            ElevatedButton(
-                onClick = onConfirm,
-                modifier = Modifier.fillMaxWidth().height(BUTTON_HEIGHT),
-                shape = RoundedCornerShape(CORNER_RADIUS_LARGE),
-                colors = ButtonDefaults.elevatedButtonColors(
-                    containerColor = MaterialTheme.colorScheme.primary,
-                    contentColor = MaterialTheme.colorScheme.onPrimary
-                ),
-                elevation = ButtonDefaults.elevatedButtonElevation(defaultElevation = BUTTON_ELEVATION)
-            ) {
-                Icon(
-                    Icons.Default.Check,
-                    contentDescription = null,
-                    modifier = Modifier.size(ICON_SIZE)
-                )
-                Spacer(Modifier.width(ICON_SPACING))
-                Text(
-                    text = "Registrar Presença Hoje",
-                    style = MaterialTheme.typography.titleMedium
-                )
-            }
-        } else {
-            Button(
-                onClick = { },
-                enabled = false,
-                modifier = Modifier.fillMaxWidth().height(BUTTON_HEIGHT),
-                shape = RoundedCornerShape(CORNER_RADIUS_LARGE),
-                colors = ButtonDefaults.buttonColors(
-                    disabledContainerColor = MaterialTheme.colorScheme.primary.copy(alpha = DISABLED_BUTTON_ALPHA),
-                    disabledContentColor = MaterialTheme.colorScheme.onPrimary
-                )
-            ) {
-                Icon(Icons.Default.CheckCircle, contentDescription = null)
-                Spacer(Modifier.width(ICON_SPACING))
-                Text(
-                    text = "Presença Registrada",
-                    style = MaterialTheme.typography.titleMedium
-                )
+        AnimatedContent(
+            targetState = isPresencial,
+            transitionSpec = { fadeIn() togetherWith fadeOut() },
+            label = "checkInButton"
+        ) { registered ->
+            if (!registered) {
+                ElevatedButton(
+                    onClick = onConfirm,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(BUTTON_HEIGHT)
+                        .semantics { contentDescription = registerLabel },
+                    shape = RoundedCornerShape(CORNER_RADIUS_LARGE),
+                    colors = ButtonDefaults.elevatedButtonColors(
+                        containerColor = MaterialTheme.colorScheme.primary,
+                        contentColor = MaterialTheme.colorScheme.onPrimary
+                    ),
+                    elevation = ButtonDefaults.elevatedButtonElevation(defaultElevation = BUTTON_ELEVATION)
+                ) {
+                    Icon(
+                        Icons.Default.Check,
+                        contentDescription = null,
+                        modifier = Modifier.size(ICON_SIZE)
+                    )
+                    Spacer(Modifier.width(ICON_SPACING))
+                    Text(
+                        text = registerLabel,
+                        style = MaterialTheme.typography.titleMedium
+                    )
+                }
+            } else {
+                Button(
+                    onClick = { },
+                    enabled = false,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(BUTTON_HEIGHT)
+                        .semantics { contentDescription = registeredLabel },
+                    shape = RoundedCornerShape(CORNER_RADIUS_LARGE),
+                    colors = ButtonDefaults.buttonColors(
+                        disabledContainerColor = MaterialTheme.colorScheme.primary.copy(alpha = DISABLED_BUTTON_ALPHA),
+                        disabledContentColor = MaterialTheme.colorScheme.onPrimary
+                    )
+                ) {
+                    Icon(Icons.Default.CheckCircle, contentDescription = null)
+                    Spacer(Modifier.width(ICON_SPACING))
+                    Text(
+                        text = registeredLabel,
+                        style = MaterialTheme.typography.titleMedium
+                    )
+                }
             }
         }
     }

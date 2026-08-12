@@ -8,8 +8,15 @@ All notable changes to Presencial are documented in this file.
 - Feriados estaduais e municipais com base no local de trabalho (issue #7)
 - Geocoding reverso para persistir UF e cidade ao salvar endereço
 - Catálogo offline `regional_holidays.json` para feriados regionais
+- Snackbar e animação no check-in da home (issue #16)
+- Acessibilidade no calendário: descrição por dia e ícone de presencial
 
 ### Changed
+- Home com scroll vertical para evitar clipping em telas pequenas
+- Botão de check-in com labels e contentDescription para TalkBack
+- CI executa `koverVerify` após testes unitários
+- Backfill de geocoding só roda quando há endereços pendentes
+- Regras ProGuard para Hilt, Room, workers e receivers
 - Políticas de presença configuráveis (issue #5): percentual livre, dias fixos, semanas alternadas
 - Check-in automático por geofence com sync após boot e restore de backup
 - Mapa OSM (Leaflet) para seleção de endereço de trabalho

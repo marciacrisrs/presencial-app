@@ -65,7 +65,7 @@ jobs:
         run: ./gradlew testDebugUnitTest
 
       - name: Generate Coverage Report
-        run: ./gradlew testDebugUnitTest koverXmlReport koverLog
+        run: ./gradlew testDebugUnitTest koverXmlReport koverLog koverVerify
 
       - name: SonarCloud
         env:

@@ -1,4 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="dashboard_message_content_description">Mensagem de presença</string>
+    <string name="dashboard_logo_content_description">Logotipo Presencial</string>
+    <string name="dashboard_check_in_register">Registrar presença hoje</string>
+    <string name="dashboard_check_in_registered">Presença registrada</string>
+    <string name="dashboard_check_in_success">Presença registrada com sucesso</string>
+    <string name="dashboard_yesterday_check_in_success">Presença de ontem registrada</string>
 </resources>
