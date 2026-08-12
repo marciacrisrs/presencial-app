@@ -4,9 +4,10 @@ import android.annotation.SuppressLint
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.google.android.gms.location.FusedLocationProviderClient
-import com.presencial.app.domain.location.GeofenceManager
+import com.presencial.app.domain.location.GeocodingHelper
 import com.presencial.app.domain.model.WorkAddress
 import com.presencial.app.domain.repository.WorkAddressRepository
+import com.presencial.app.domain.usecase.SyncGeofencesUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -19,7 +20,8 @@ import javax.inject.Inject
 @HiltViewModel
 class WorkAddressViewModel @Inject constructor(
     private val repository: WorkAddressRepository,
-    private val geofenceManager: GeofenceManager,
+    private val syncGeofencesUseCase: SyncGeofencesUseCase,
+    private val geocodingHelper: GeocodingHelper,
     private val fusedLocationProviderClient: FusedLocationProviderClient
 ) : ViewModel() {
 
@@ -32,53 +34,80 @@ class WorkAddressViewModel @Inject constructor(
     private val _message = MutableStateFlow<String?>(null)
     val message: StateFlow<String?> = _message
 
-    @SuppressLint("MissingPermission")
-    fun saveCurrentLocationAsWorkAddress(name: String, addressText: String, radius: Float) {
-        viewModelScope.launch {
-            val result = runCatching {
-                fusedLocationProviderClient.lastLocation.await()
-            }
-            
-            result.onSuccess { location ->
-                if (location != null) {
-                    val addressToSave = _editingAddress.value?.copy(
-                        name = name,
-                        addressText = addressText,
-                        latitude = location.latitude,
-                        longitude = location.longitude,
-                        radius = radius
-                    ) ?: WorkAddress(
-                        name = name,
-                        addressText = addressText,
-                        latitude = location.latitude,
-                        longitude = location.longitude,
-                        radius = radius
-                    )
-                    saveAddress(addressToSave)
-                    _editingAddress.value = null
-                } else {
-                    _message.value = "Não foi possível obter a localização atual"
-                }
-            }.onFailure { e ->
-                _message.value = "Erro ao obter localização: ${e.message}"
-            }
-        }
-    }
+    private val _isGeocoding = MutableStateFlow(false)
+    val isGeocoding: StateFlow<Boolean> = _isGeocoding
 
-    fun saveAddress(address: WorkAddress) {
+    private val _geocodedLocation = MutableStateFlow<Pair<Double, Double>?>(null)
+    val geocodedLocation: StateFlow<Pair<Double, Double>?> = _geocodedLocation
+
+    private val _currentGpsLocation = MutableStateFlow<Pair<Double, Double>?>(null)
+    val currentGpsLocation: StateFlow<Pair<Double, Double>?> = _currentGpsLocation
+
+    fun saveWorkAddress(
+        id: Long,
+        name: String,
+        addressText: String,
+        latitude: Double,
+        longitude: Double,
+        radius: Float,
+        isActive: Boolean
+    ) {
         viewModelScope.launch {
-            if (address.id == 0L) {
+            val address = WorkAddress(
+                id = id,
+                name = name,
+                addressText = addressText,
+                latitude = latitude,
+                longitude = longitude,
+                radius = radius,
+                isActive = isActive
+            )
+            if (id == 0L) {
                 repository.insertAddress(address)
             } else {
                 repository.updateAddress(address)
             }
-            updateGeofences()
+            syncGeofencesUseCase()
             _message.value = "Local salvo com sucesso"
-            _editingAddress.value = null
+            clearDialogState()
+        }
+    }
+
+    fun geocodeAddress(addressText: String) {
+        if (addressText.isBlank()) return
+        viewModelScope.launch {
+            _isGeocoding.value = true
+            geocodingHelper.geocodeAddress(addressText)
+                .onSuccess { coords ->
+                    _geocodedLocation.value = coords.latitude to coords.longitude
+                    _message.value = "Endereço localizado no mapa"
+                }
+                .onFailure { e ->
+                    _message.value = "Não foi possível localizar o endereço: ${e.message}"
+                }
+            _isGeocoding.value = false
+        }
+    }
+
+    @SuppressLint("MissingPermission")
+    fun fetchCurrentLocation() {
+        viewModelScope.launch {
+            runCatching { fusedLocationProviderClient.lastLocation.await() }
+                .onSuccess { location ->
+                    if (location != null) {
+                        _currentGpsLocation.value = location.latitude to location.longitude
+                    } else {
+                        _message.value = "Não foi possível obter a localização atual"
+                    }
+                }
+                .onFailure { e ->
+                    _message.value = "Erro ao obter localização: ${e.message}"
+                }
         }
     }
 
     fun startEditing(address: WorkAddress?) {
+        clearDialogState()
         _editingAddress.value = address ?: WorkAddress(
             name = "",
             addressText = "",
@@ -89,13 +118,13 @@ class WorkAddressViewModel @Inject constructor(
     }
 
     fun stopEditing() {
-        _editingAddress.value = null
+        clearDialogState()
     }
 
     fun deleteAddress(address: WorkAddress) {
         viewModelScope.launch {
             repository.deleteAddress(address)
-            updateGeofences()
+            syncGeofencesUseCase()
             _message.value = "Local removido"
         }
     }
@@ -103,21 +132,26 @@ class WorkAddressViewModel @Inject constructor(
     fun toggleActive(address: WorkAddress) {
         viewModelScope.launch {
             repository.updateAddress(address.copy(isActive = !address.isActive))
-            updateGeofences()
-        }
-    }
-
-    private suspend fun updateGeofences() {
-        val activeAddresses = repository.getActiveAddresses()
-        if (activeAddresses.isEmpty()) {
-            geofenceManager.removeGeofences()
-        } else {
-            geofenceManager.registerGeofences(activeAddresses)
+            syncGeofencesUseCase()
         }
     }
 
     fun clearMessage() {
         _message.value = null
+    }
+
+    fun consumeGeocodedLocation() {
+        _geocodedLocation.value = null
+    }
+
+    fun consumeCurrentGpsLocation() {
+        _currentGpsLocation.value = null
+    }
+
+    private fun clearDialogState() {
+        _editingAddress.value = null
+        _geocodedLocation.value = null
+        _currentGpsLocation.value = null
     }
 }
 

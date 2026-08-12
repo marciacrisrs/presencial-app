@@ -9,16 +9,16 @@ fun AddressMessage(
     state: com.presencial.app.presentation.location.WorkAddressDialogState
 ) {
     when {
-        state.canUseCurrentLocation && state.permissionsGranted -> {
+        !state.hasValidCoordinates && state.permissionsGranted -> {
             Text(
-                text = "O local será definido com base na sua posição atual.",
+                text = "Toque no mapa, busque o endereço ou use sua localização atual.",
                 style = MaterialTheme.typography.bodySmall
             )
         }
 
-        state.canUseCurrentLocation && !state.permissionsGranted -> {
+        !state.hasValidCoordinates && !state.permissionsGranted -> {
             Text(
-                text = "Conceda permissão de localização para salvar este local.",
+                text = "Conceda permissão de localização ou busque o endereço no mapa.",
                 color = MaterialTheme.colorScheme.error,
                 style = MaterialTheme.typography.bodySmall
             )
@@ -26,8 +26,9 @@ fun AddressMessage(
 
         else -> {
             Text(
-                text = "Localização atualizada automaticamente se salvar agora.",
-                style = MaterialTheme.typography.bodySmall
+                text = "Coordenadas: ${"%.5f".format(state.latitude)}, ${"%.5f".format(state.longitude)}",
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
             )
         }
     }

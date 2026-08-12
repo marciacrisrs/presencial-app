@@ -41,10 +41,16 @@ data class WorkAddressDialogParams(
     val showBackgroundDialog: Boolean,
     val editingAddress: WorkAddress?,
     val foregroundPermissions: MultiplePermissionsState,
+    val isGeocoding: Boolean,
+    val geocodedLocation: Pair<Double, Double>?,
+    val currentGpsLocation: Pair<Double, Double>?,
     val onDismissBackground: () -> Unit,
     val onConfirmBackground: () -> Unit,
     val onStopEditing: () -> Unit,
-    val onSaveAddress: (WorkAddressDialogResult) -> Unit
+    val onSaveAddress: (WorkAddressDialogResult) -> Unit,
+    val onGeocodeRequest: (String) -> Unit,
+    val onUseCurrentLocation: () -> Unit,
+    val onLocationConsumed: () -> Unit
 )
 
 @OptIn(ExperimentalPermissionsApi::class)
@@ -61,8 +67,14 @@ fun WorkAddressDialogs(params: WorkAddressDialogParams) {
         WorkAddressDialog(
             address = address,
             permissionsGranted = params.foregroundPermissions.allPermissionsGranted,
+            isGeocoding = params.isGeocoding,
             onDismiss = params.onStopEditing,
-            onConfirm = params.onSaveAddress
+            onConfirm = params.onSaveAddress,
+            onGeocodeRequest = params.onGeocodeRequest,
+            onUseCurrentLocation = params.onUseCurrentLocation,
+            geocodedLocation = params.geocodedLocation,
+            currentGpsLocation = params.currentGpsLocation,
+            onLocationConsumed = params.onLocationConsumed
         )
     }
 }

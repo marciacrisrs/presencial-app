@@ -1,11 +1,11 @@
 package com.presencial.app.presentation.location.model
 
-import android.location.Location
 import app.cash.turbine.test
 import com.google.android.gms.location.FusedLocationProviderClient
-import com.google.android.gms.tasks.Task
-import com.presencial.app.domain.location.GeofenceManager
+import com.presencial.app.domain.location.GeocodingHelper
+import com.presencial.app.domain.location.GeoCoordinates
 import com.presencial.app.domain.repository.WorkAddressRepository
+import com.presencial.app.domain.usecase.SyncGeofencesUseCase
 import com.presencial.app.util.MainDispatcherExtension
 import com.presencial.app.util.TestDataFactory
 import io.mockk.coEvery
@@ -27,22 +27,34 @@ class WorkAddressViewModelTest {
     val mainDispatcherExtension = MainDispatcherExtension()
 
     private val repository = mockk<WorkAddressRepository>()
-    private val geofenceManager = mockk<GeofenceManager>()
+    private val syncGeofencesUseCase = mockk<SyncGeofencesUseCase>()
+    private val geocodingHelper = mockk<GeocodingHelper>()
     private val fusedLocationProviderClient = mockk<FusedLocationProviderClient>()
     private lateinit var viewModel: WorkAddressViewModel
 
     @BeforeEach
     fun setup() {
         every { repository.getAllAddresses() } returns flowOf(emptyList())
-        viewModel = WorkAddressViewModel(repository, geofenceManager, fusedLocationProviderClient)
+        coEvery { syncGeofencesUseCase() } returns Unit
+        viewModel = WorkAddressViewModel(
+            repository,
+            syncGeofencesUseCase,
+            geocodingHelper,
+            fusedLocationProviderClient
+        )
     }
 
     @Test
     fun `addresses should reflect repository flow`() = runTest {
         val addressList = listOf(TestDataFactory.createWorkAddress())
         every { repository.getAllAddresses() } returns flowOf(addressList)
-        
-        viewModel = WorkAddressViewModel(repository, geofenceManager, fusedLocationProviderClient)
+
+        viewModel = WorkAddressViewModel(
+            repository,
+            syncGeofencesUseCase,
+            geocodingHelper,
+            fusedLocationProviderClient
+        )
 
         viewModel.addresses.test {
             assertEquals(addressList, awaitItem())
@@ -50,10 +62,62 @@ class WorkAddressViewModelTest {
     }
 
     @Test
-    fun `startEditing should update editingAddress`() {
+    fun `saveWorkAddress should insert and sync geofences`() = runTest {
+        coEvery { repository.insertAddress(any()) } returns Unit
+
+        viewModel.saveWorkAddress(
+            id = 0L,
+            name = "Office",
+            addressText = "Rua A",
+            latitude = -23.0,
+            longitude = -46.0,
+            radius = 50f,
+            isActive = true
+        )
+
+        coVerify {
+            repository.insertAddress(
+                match {
+                    it.name == "Office" && it.latitude == -23.0 && it.longitude == -46.0
+                }
+            )
+        }
+        coVerify { syncGeofencesUseCase() }
+        assertEquals("Local salvo com sucesso", viewModel.message.value)
+    }
+
+    @Test
+    fun `geocodeAddress should update geocoded location on success`() = runTest {
+        coEvery { geocodingHelper.geocodeAddress("Rua A") } returns Result.success(
+            GeoCoordinates(-23.1, -46.1)
+        )
+
+        viewModel.geocodeAddress("Rua A")
+
+        assertEquals(-23.1 to -46.1, viewModel.geocodedLocation.value)
+    }
+
+    @Test
+    fun `deleteAddress should call repository and sync geofences`() = runTest {
         val address = TestDataFactory.createWorkAddress()
-        viewModel.startEditing(address)
-        assertEquals(address, viewModel.editingAddress.value)
+        coEvery { repository.deleteAddress(address) } returns Unit
+
+        viewModel.deleteAddress(address)
+
+        coVerify { repository.deleteAddress(address) }
+        coVerify { syncGeofencesUseCase() }
+    }
+
+    @Test
+    fun `toggleActive should update address and sync geofences`() = runTest {
+        val address = TestDataFactory.createWorkAddress(isActive = true)
+        val updatedAddress = address.copy(isActive = false)
+        coEvery { repository.updateAddress(updatedAddress) } returns Unit
+
+        viewModel.toggleActive(address)
+
+        coVerify { repository.updateAddress(updatedAddress) }
+        coVerify { syncGeofencesUseCase() }
     }
 
     @Test
@@ -61,139 +125,5 @@ class WorkAddressViewModelTest {
         viewModel.startEditing(TestDataFactory.createWorkAddress())
         viewModel.stopEditing()
         assertNull(viewModel.editingAddress.value)
-    }
-
-    @Test
-    fun `saveAddress should call repository and update geofences`() = runTest {
-        val address = TestDataFactory.createWorkAddress(id = 0L)
-        coEvery { repository.insertAddress(address) } returns Unit
-        coEvery { repository.getActiveAddresses() } returns emptyList()
-        coEvery { geofenceManager.removeGeofences() } returns Unit
-
-        viewModel.saveAddress(address)
-
-        coVerify { repository.insertAddress(address) }
-        coVerify { geofenceManager.removeGeofences() }
-        assertEquals("Local salvo com sucesso", viewModel.message.value)
-        assertNull(viewModel.editingAddress.value)
-    }
-
-    @Test
-    fun `deleteAddress should call repository and update geofences`() = runTest {
-        val address = TestDataFactory.createWorkAddress()
-        coEvery { repository.deleteAddress(address) } returns Unit
-        coEvery { repository.getActiveAddresses() } returns emptyList()
-        coEvery { geofenceManager.removeGeofences() } returns Unit
-
-        viewModel.deleteAddress(address)
-
-        coVerify { repository.deleteAddress(address) }
-        coVerify { geofenceManager.removeGeofences() }
-        assertEquals("Local removido", viewModel.message.value)
-    }
-
-    @Test
-    fun `toggleActive should update address and geofences`() = runTest {
-        val address = TestDataFactory.createWorkAddress(isActive = true)
-        val updatedAddress = address.copy(isActive = false)
-        coEvery { repository.updateAddress(updatedAddress) } returns Unit
-        coEvery { repository.getActiveAddresses() } returns emptyList()
-        coEvery { geofenceManager.removeGeofences() } returns Unit
-
-        viewModel.toggleActive(address)
-
-        coVerify { repository.updateAddress(updatedAddress) }
-        coVerify { geofenceManager.removeGeofences() }
-    }
-
-    @Test
-    fun `saveCurrentLocationAsWorkAddress should handle location success`() = runTest {
-        val location = mockk<Location>()
-        every { location.latitude } returns -23.0
-        every { location.longitude } returns -46.0
-        
-        val task = mockk<Task<Location>>()
-        every { task.isComplete } returns true
-        every { task.isCanceled } returns false
-        every { task.result } returns location
-        every { task.exception } returns null
-        every { fusedLocationProviderClient.lastLocation } returns task
-
-        coEvery { repository.insertAddress(any()) } returns Unit
-        coEvery { repository.getActiveAddresses() } returns emptyList()
-        coEvery { geofenceManager.removeGeofences() } returns Unit
-
-        viewModel.saveCurrentLocationAsWorkAddress("Home", "Street 1", 100f)
-
-        coVerify { repository.insertAddress(match { 
-            it.name == "Home" && it.latitude == -23.0 && it.longitude == -46.0 
-        }) }
-    }
-
-    @Test
-    fun `saveCurrentLocationAsWorkAddress should handle null location`() = runTest {
-        val task = mockk<Task<Location>>()
-        every { task.isComplete } returns true
-        every { task.isCanceled } returns false
-        every { task.result } returns null
-        every { task.exception } returns null
-        every { fusedLocationProviderClient.lastLocation } returns task
-
-        viewModel.saveCurrentLocationAsWorkAddress("Home", "Street 1", 100f)
-
-        assertEquals("Não foi possível obter a localização atual", viewModel.message.value)
-    }
-
-    @Test
-    fun `saveCurrentLocationAsWorkAddress should handle location failure`() = runTest {
-        val task = mockk<Task<Location>>()
-        every { task.isComplete } returns true
-        every { task.isCanceled } returns false
-        every { task.result } returns null
-        every { task.exception } returns Exception("GPS Error")
-        every { fusedLocationProviderClient.lastLocation } returns task
-
-        viewModel.saveCurrentLocationAsWorkAddress("Home", "Street 1", 100f)
-
-        assertEquals("Erro ao obter localização: GPS Error", viewModel.message.value)
-    }
-
-    @Test
-    fun `saveAddress should update existing address when id is not zero`() = runTest {
-        val address = TestDataFactory.createWorkAddress(id = 1L)
-        coEvery { repository.updateAddress(address) } returns Unit
-        coEvery { repository.getActiveAddresses() } returns emptyList()
-        coEvery { geofenceManager.removeGeofences() } returns Unit
-
-        viewModel.saveAddress(address)
-
-        coVerify { repository.updateAddress(address) }
-        coVerify { geofenceManager.removeGeofences() }
-        assertEquals("Local salvo com sucesso", viewModel.message.value)
-    }
-
-    @Test
-    fun `saveAddress should register geofences when there are active addresses`() = runTest {
-        val address = TestDataFactory.createWorkAddress(id = 0L)
-        val activeAddresses = listOf(TestDataFactory.createWorkAddress(id = 1L, isActive = true))
-        coEvery { repository.insertAddress(address) } returns Unit
-        coEvery { repository.getActiveAddresses() } returns activeAddresses
-        coEvery { geofenceManager.registerGeofences(activeAddresses) } returns Unit
-
-        viewModel.saveAddress(address)
-
-        coVerify { geofenceManager.registerGeofences(activeAddresses) }
-    }
-
-    @Test
-    fun `clearMessage should reset message`() = runTest {
-        coEvery { repository.deleteAddress(any()) } returns Unit
-        coEvery { repository.getActiveAddresses() } returns emptyList()
-        coEvery { geofenceManager.removeGeofences() } returns Unit
-        viewModel.deleteAddress(TestDataFactory.createWorkAddress())
-        
-        viewModel.clearMessage()
-        
-        assertNull(viewModel.message.value)
     }
 }

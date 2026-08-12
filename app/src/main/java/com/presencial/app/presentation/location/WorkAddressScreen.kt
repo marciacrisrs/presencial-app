@@ -20,11 +20,11 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.MultiplePermissionsState
 import com.google.accompanist.permissions.rememberMultiplePermissionsState
-import com.presencial.app.domain.model.WorkAddress
 import com.presencial.app.presentation.location.components.WorkAddressContent
 import com.presencial.app.presentation.location.components.WorkAddressContentParams
 import com.presencial.app.presentation.location.components.WorkAddressDialogParams
 import com.presencial.app.presentation.location.components.WorkAddressDialogs
+import com.presencial.app.presentation.location.components.WorkAddressDialogResult
 import com.presencial.app.presentation.location.components.WorkAddressTopBar
 import com.presencial.app.presentation.location.model.WorkAddressViewModel
 
@@ -40,6 +40,9 @@ fun WorkAddressScreen(
     val addresses by viewModel.addresses.collectAsStateWithLifecycle()
     val editingAddress by viewModel.editingAddress.collectAsStateWithLifecycle()
     val message by viewModel.message.collectAsStateWithLifecycle()
+    val isGeocoding by viewModel.isGeocoding.collectAsStateWithLifecycle()
+    val geocodedLocation by viewModel.geocodedLocation.collectAsStateWithLifecycle()
+    val currentGpsLocation by viewModel.currentGpsLocation.collectAsStateWithLifecycle()
     val snackbarHostState = remember { SnackbarHostState() }
     var showBackgroundDialog by remember { mutableStateOf(false) }
 
@@ -86,6 +89,9 @@ fun WorkAddressScreen(
             editingAddress = editingAddress,
             foregroundPermissions = foregroundPermissions,
             backgroundPermission = backgroundPermission,
+            isGeocoding = isGeocoding,
+            geocodedLocation = geocodedLocation,
+            currentGpsLocation = currentGpsLocation,
             onDismissBackground = { showBackgroundDialog = false },
             viewModel = viewModel
         )
@@ -102,9 +108,12 @@ private fun WorkAddressFAB(onClick: () -> Unit) {
 @OptIn(ExperimentalPermissionsApi::class)
 private data class WorkAddressDialogsParams(
     val showBackgroundDialog: Boolean,
-    val editingAddress: WorkAddress?,
+    val editingAddress: com.presencial.app.domain.model.WorkAddress?,
     val foregroundPermissions: MultiplePermissionsState,
     val backgroundPermission: MultiplePermissionsState,
+    val isGeocoding: Boolean,
+    val geocodedLocation: Pair<Double, Double>?,
+    val currentGpsLocation: Pair<Double, Double>?,
     val onDismissBackground: () -> Unit,
     val viewModel: WorkAddressViewModel
 )
@@ -119,52 +128,31 @@ private fun WorkAddressDialogsWrapper(
             showBackgroundDialog = params.showBackgroundDialog,
             editingAddress = params.editingAddress,
             foregroundPermissions = params.foregroundPermissions,
+            isGeocoding = params.isGeocoding,
+            geocodedLocation = params.geocodedLocation,
+            currentGpsLocation = params.currentGpsLocation,
             onDismissBackground = params.onDismissBackground,
             onConfirmBackground = {
                 params.backgroundPermission.launchMultiplePermissionRequest()
             },
             onStopEditing = params.viewModel::stopEditing,
             onSaveAddress = { result ->
-                handleSaveAddress(
-                    SaveAddressParams(
-                        viewModel = params.viewModel,
-                        address = params.editingAddress,
-                        name = result.name,
-                        addressText = result.addressText,
-                        radius = result.radius,
-                        useCurrent = result.isNew
-                    )
+                params.viewModel.saveWorkAddress(
+                    id = result.id,
+                    name = result.name,
+                    addressText = result.addressText,
+                    latitude = result.latitude,
+                    longitude = result.longitude,
+                    radius = result.radius,
+                    isActive = result.isActive
                 )
+            },
+            onGeocodeRequest = params.viewModel::geocodeAddress,
+            onUseCurrentLocation = params.viewModel::fetchCurrentLocation,
+            onLocationConsumed = {
+                params.viewModel.consumeGeocodedLocation()
+                params.viewModel.consumeCurrentGpsLocation()
             }
         )
     )
-}
-
-private data class SaveAddressParams(
-    val viewModel: WorkAddressViewModel,
-    val address: WorkAddress?,
-    val name: String,
-    val addressText: String,
-    val radius: Float,
-    val useCurrent: Boolean
-)
-
-private fun handleSaveAddress(params: SaveAddressParams) {
-    if (params.useCurrent) {
-        params.viewModel.saveCurrentLocationAsWorkAddress(
-            params.name,
-            params.addressText,
-            params.radius
-        )
-    } else {
-        params.address?.let {
-            params.viewModel.saveAddress(
-                it.copy(
-                    name = params.name,
-                    addressText = params.addressText,
-                    radius = params.radius
-                )
-            )
-        }
-    }
 }

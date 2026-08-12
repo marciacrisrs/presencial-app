@@ -9,5 +9,6 @@ data class CheckIn(
     val date: LocalDate,
     val status: DayStatus,
     val updatedAt: Long = System.currentTimeMillis(),
-    val source: String = "MANUAL"
+    val source: String = "MANUAL",
+    val workAddressId: Long? = null
 )

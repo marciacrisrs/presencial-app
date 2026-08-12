@@ -23,16 +23,22 @@ class WorkAddressFlowTest {
     val composeTestRule = createComposeRule()
 
     private val viewModel: WorkAddressViewModel = mockk(relaxed = true)
-    
+
     private val addressesFlow = MutableStateFlow<List<WorkAddress>>(emptyList())
     private val editingAddressFlow = MutableStateFlow<WorkAddress?>(null)
     private val messageFlow = MutableStateFlow<String?>(null)
+    private val isGeocodingFlow = MutableStateFlow(false)
+    private val geocodedLocationFlow = MutableStateFlow<Pair<Double, Double>?>(null)
+    private val currentGpsLocationFlow = MutableStateFlow<Pair<Double, Double>?>(null)
 
     @Before
     fun setup() {
         every { viewModel.addresses } returns addressesFlow
         every { viewModel.editingAddress } returns editingAddressFlow
         every { viewModel.message } returns messageFlow
+        every { viewModel.isGeocoding } returns isGeocodingFlow
+        every { viewModel.geocodedLocation } returns geocodedLocationFlow
+        every { viewModel.currentGpsLocation } returns currentGpsLocationFlow
     }
 
     @Test
@@ -48,7 +54,13 @@ class WorkAddressFlowTest {
 
     @Test
     fun workAddressScreen_withAddresses_showsList() {
-        val address = WorkAddress(id = 1, name = "Escritório", addressText = "Rua A, 123", latitude = 0.0, longitude = 0.0)
+        val address = WorkAddress(
+            id = 1,
+            name = "Escritório",
+            addressText = "Rua A, 123",
+            latitude = -23.0,
+            longitude = -46.0
+        )
         addressesFlow.value = listOf(address)
 
         composeTestRule.setContent {
@@ -68,51 +80,73 @@ class WorkAddressFlowTest {
         composeTestRule.onNodeWithContentDescription("Adicionar").performClick()
 
         verify { viewModel.startEditing(null) }
-        
-        // Simular que o ViewModel atualizou o editingAddress
+
         editingAddressFlow.value = WorkAddress(name = "", addressText = "", latitude = 0.0, longitude = 0.0)
-        
+
         composeTestRule.onNodeWithText("Novo Local").assertExists()
     }
 
     @Test
-    fun dialogValidation_saveButtonEnabledOnlyWithName() {
-        // Mock permission state - assume granted for simplicity in this flow test
-        // The dialog check: name.isNotBlank() && (permissionsGranted || !isNewAddress)
-        // Since we are mocking the ViewModel, we need to ensure editingAddress is set to show the dialog
+    fun dialogValidation_saveButtonDisabledWithoutCoordinates() {
         editingAddressFlow.value = WorkAddress(name = "", addressText = "", latitude = 0.0, longitude = 0.0)
 
         composeTestRule.setContent {
             WorkAddressScreen(viewModel = viewModel, onBack = {})
         }
 
-        // Initially disabled if name is empty
-        composeTestRule.onNodeWithText("Salvar Local Atual").assertIsNotEnabled()
+        composeTestRule.onNodeWithText("Salvar Local").assertIsNotEnabled()
 
-        // Type name
         composeTestRule.onNodeWithText("Nome do Local").performTextInput("Meu Trabalho")
 
-        // Should be enabled
-        composeTestRule.onNodeWithText("Salvar Local Atual").assertIsEnabled()
+        composeTestRule.onNodeWithText("Salvar Local").assertIsNotEnabled()
+    }
+
+    @Test
+    fun dialogValidation_saveButtonEnabledWithNameAndCoordinates() {
+        editingAddressFlow.value = WorkAddress(
+            name = "",
+            addressText = "",
+            latitude = -23.0,
+            longitude = -46.0
+        )
+        geocodedLocationFlow.value = -23.0 to -46.0
+
+        composeTestRule.setContent {
+            WorkAddressScreen(viewModel = viewModel, onBack = {})
+        }
+
+        composeTestRule.onNodeWithText("Nome do Local").performTextInput("Meu Trabalho")
+
+        composeTestRule.onNodeWithText("Salvar Local").assertIsEnabled()
     }
 
     @Test
     fun saveAddress_triggersViewModelAction() {
-        editingAddressFlow.value = WorkAddress(name = "", addressText = "", latitude = 0.0, longitude = 0.0)
+        editingAddressFlow.value = WorkAddress(
+            name = "",
+            addressText = "",
+            latitude = -23.0,
+            longitude = -46.0
+        )
+        geocodedLocationFlow.value = -23.0 to -46.0
 
         composeTestRule.setContent {
             WorkAddressScreen(viewModel = viewModel, onBack = {})
         }
 
         composeTestRule.onNodeWithText("Nome do Local").performTextInput("Escritório Central")
-        composeTestRule.onNodeWithText("Salvar Local Atual").performClick()
+        composeTestRule.onNodeWithText("Salvar Local").performClick()
 
-        verify { 
-            viewModel.saveCurrentLocationAsWorkAddress(
+        verify {
+            viewModel.saveWorkAddress(
+                id = 0L,
                 name = "Escritório Central",
                 addressText = "",
-                radius = 50f
-            ) 
+                latitude = -23.0,
+                longitude = -46.0,
+                radius = 50f,
+                isActive = true
+            )
         }
     }
 }

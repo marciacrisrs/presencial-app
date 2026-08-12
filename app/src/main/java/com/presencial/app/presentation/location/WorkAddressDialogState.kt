@@ -7,8 +7,11 @@ data class WorkAddressDialogState(
     val name: String,
     val addressText: String,
     val radius: Float,
+    val latitude: Double,
+    val longitude: Double,
     val isNewAddress: Boolean,
-    val permissionsGranted: Boolean
+    val permissionsGranted: Boolean,
+    val isGeocoding: Boolean = false
 ) {
 
     val address: String get() = addressText
@@ -21,16 +24,15 @@ data class WorkAddressDialogState(
 
     val confirmButtonText: String
         get() = if (isNewAddress) {
-            "Salvar Local Atual"
+            "Salvar Local"
         } else {
             "Atualizar Local"
         }
 
-    val canUseCurrentLocation: Boolean
-        get() = isNewAddress
+    val hasValidCoordinates: Boolean
+        get() = latitude != 0.0 || longitude != 0.0
 
     fun canSave(name: String): Boolean {
-        return name.isNotBlank() &&
-                (permissionsGranted || !isNewAddress)
+        return name.isNotBlank() && hasValidCoordinates
     }
 }

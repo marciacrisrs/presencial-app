@@ -2,9 +2,12 @@ package com.presencial.app.data.backup
 
 import com.presencial.app.data.local.dao.CheckInDao
 import com.presencial.app.data.local.dao.MonthlySummaryDao
+import com.presencial.app.data.local.dao.WorkAddressDao
 import com.presencial.app.data.local.entity.CheckInEntity
 import com.presencial.app.data.local.entity.MonthlySummaryEntity
+import com.presencial.app.data.local.entity.WorkAddressEntity
 import com.presencial.app.di.IoDispatcher
+import com.presencial.app.domain.model.CheckInSource
 import com.presencial.app.domain.repository.SettingsRepository
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.flow.first
@@ -20,6 +23,7 @@ import javax.inject.Singleton
 class BackupManager @Inject constructor(
     private val checkInDao: CheckInDao,
     private val monthlySummaryDao: MonthlySummaryDao,
+    private val workAddressDao: WorkAddressDao,
     private val settingsRepository: SettingsRepository,
     @IoDispatcher private val ioDispatcher: CoroutineDispatcher
 ) {
@@ -35,9 +39,10 @@ class BackupManager @Inject constructor(
         val settings = settingsRepository.settings.first()
         val checkIns = checkInDao.observeAll().first()
         val summaries = monthlySummaryDao.observeAll().first()
+        val workAddresses = workAddressDao.getAllAddressesSync()
 
         return JSONObject().apply {
-            put("version", 1)
+            put("version", BACKUP_VERSION)
             put("requiredPercentage", settings.requiredPercentage)
             put("countSaturdaysAsWorkdays", settings.countSaturdaysAsWorkdays)
             put("checkIns", JSONArray().apply {
@@ -46,6 +51,8 @@ class BackupManager @Inject constructor(
                         put("dateEpochDay", ci.dateEpochDay)
                         put("status", ci.status)
                         put("updatedAt", ci.updatedAt)
+                        put("source", ci.source)
+                        ci.workAddressId?.let { put("workAddressId", it) }
                     })
                 }
             })
@@ -62,6 +69,19 @@ class BackupManager @Inject constructor(
                     })
                 }
             })
+            put("workAddresses", JSONArray().apply {
+                workAddresses.forEach { wa ->
+                    put(JSONObject().apply {
+                        put("id", wa.id)
+                        put("name", wa.name)
+                        put("addressText", wa.addressText)
+                        put("latitude", wa.latitude)
+                        put("longitude", wa.longitude)
+                        put("radius", wa.radius.toDouble())
+                        put("isActive", wa.isActive)
+                    })
+                }
+            })
         }
     }
 
@@ -70,6 +90,7 @@ class BackupManager @Inject constructor(
             val json = JSONObject(file.readText())
             checkInDao.deleteAll()
             monthlySummaryDao.deleteAll()
+            workAddressDao.deleteAll()
 
             val checkInsArray = json.getJSONArray("checkIns")
             val checkInEntities = (0 until checkInsArray.length()).map { i ->
@@ -77,7 +98,13 @@ class BackupManager @Inject constructor(
                 CheckInEntity(
                     dateEpochDay = obj.getLong("dateEpochDay"),
                     status = obj.getString("status"),
-                    updatedAt = obj.getLong("updatedAt")
+                    updatedAt = obj.getLong("updatedAt"),
+                    source = obj.optString("source", CheckInSource.MANUAL),
+                    workAddressId = if (obj.has("workAddressId") && !obj.isNull("workAddressId")) {
+                        obj.getLong("workAddressId")
+                    } else {
+                        null
+                    }
                 )
             }
             checkInDao.insertAll(checkInEntities)
@@ -97,8 +124,29 @@ class BackupManager @Inject constructor(
             }
             monthlySummaryDao.insertAll(summaryEntities)
 
+            if (json.has("workAddresses")) {
+                val workAddressesArray = json.getJSONArray("workAddresses")
+                val workAddressEntities = (0 until workAddressesArray.length()).map { i ->
+                    val obj = workAddressesArray.getJSONObject(i)
+                    WorkAddressEntity(
+                        id = obj.getLong("id"),
+                        name = obj.getString("name"),
+                        addressText = obj.optString("addressText", ""),
+                        latitude = obj.getDouble("latitude"),
+                        longitude = obj.getDouble("longitude"),
+                        radius = obj.getDouble("radius").toFloat(),
+                        isActive = obj.optBoolean("isActive", true)
+                    )
+                }
+                workAddressDao.insertAll(workAddressEntities)
+            }
+
             settingsRepository.updateRequiredPercentage(json.getInt("requiredPercentage"))
             settingsRepository.updateCountSaturdaysAsWorkdays(json.getBoolean("countSaturdaysAsWorkdays"))
         }
+    }
+
+    companion object {
+        const val BACKUP_VERSION = 2
     }
 }

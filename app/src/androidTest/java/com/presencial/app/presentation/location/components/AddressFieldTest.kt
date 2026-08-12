@@ -25,6 +25,9 @@ class AddressFieldTest {
                 AddressField(
                     value = initialValue,
                     onValueChange = {},
+                    onGeocodeClick = {},
+                    isGeocoding = false,
+                    geocodeEnabled = true
                 )
             }
         }
@@ -39,11 +42,14 @@ class AddressFieldTest {
                 AddressField(
                     value = "",
                     onValueChange = {},
+                    onGeocodeClick = {},
+                    isGeocoding = false,
+                    geocodeEnabled = true
                 )
             }
         }
 
-        composeTestRule.onNodeWithText("Endereço (opcional)").assertIsDisplayed()
+        composeTestRule.onNodeWithText("Endereço").assertIsDisplayed()
     }
 
     @Test
@@ -56,11 +62,14 @@ class AddressFieldTest {
                 AddressField(
                     value = "",
                     onValueChange = { updatedValue = it },
+                    onGeocodeClick = {},
+                    isGeocoding = false,
+                    geocodeEnabled = true
                 )
             }
         }
 
-        composeTestRule.onNodeWithText("Endereço (opcional)").performTextInput(newValue)
+        composeTestRule.onNodeWithText("Endereço").performTextInput(newValue)
 
         assert(updatedValue == newValue)
     }

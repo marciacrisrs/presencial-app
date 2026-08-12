@@ -4,6 +4,7 @@ import com.presencial.app.data.local.dao.CheckInDao
 import com.presencial.app.data.local.mapper.toDomain
 import com.presencial.app.data.local.mapper.toEntity
 import com.presencial.app.domain.model.CheckIn
+import com.presencial.app.domain.model.CheckInSource
 import com.presencial.app.domain.model.DayStatus
 import com.presencial.app.domain.repository.CheckInRepository
 import kotlinx.coroutines.flow.Flow
@@ -30,9 +31,25 @@ class CheckInRepositoryImpl @Inject constructor(
     override suspend fun getCheckIn(date: LocalDate): CheckIn? =
         checkInDao.getByDate(date.toEpochDay())?.toDomain()
 
-    override suspend fun saveCheckIn(date: LocalDate, status: DayStatus, source: String) {
+    override suspend fun saveCheckIn(
+        date: LocalDate,
+        status: DayStatus,
+        source: String,
+        workAddressId: Long?
+    ) {
         checkInDao.upsert(
-            CheckIn(date = date, status = status, source = source).toEntity()
+            CheckIn(date = date, status = status, source = source, workAddressId = workAddressId).toEntity()
+        )
+    }
+
+    override suspend fun countAutoGeofenceCheckIns(yearMonth: YearMonth): Int {
+        val start = yearMonth.atDay(1).toEpochDay()
+        val end = yearMonth.atEndOfMonth().toEpochDay()
+        return checkInDao.countAutoGeofenceBetween(
+            start = start,
+            end = end,
+            autoSource = CheckInSource.AUTO_GEOFENCE,
+            legacySource = "AUTOMATICO"
         )
     }
 

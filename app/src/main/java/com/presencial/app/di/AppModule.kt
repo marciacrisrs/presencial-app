@@ -18,6 +18,9 @@ import com.presencial.app.domain.repository.AbsenceRepository
 import com.presencial.app.domain.repository.CheckInRepository
 import com.presencial.app.domain.repository.MonthlySummaryRepository
 import com.presencial.app.domain.repository.SettingsRepository
+import com.presencial.app.data.location.AndroidGeocodingHelper
+import com.presencial.app.data.local.migration.MIGRATION_3_4
+import com.presencial.app.domain.location.GeocodingHelper
 import com.presencial.app.domain.repository.WorkAddressRepository
 import com.presencial.app.domain.util.DefaultTimeProvider
 import com.presencial.app.domain.util.TimeProvider
@@ -71,6 +74,7 @@ object DatabaseModule {
     @Singleton
     fun provideDatabase(@ApplicationContext context: Context): PresencialDatabase =
         Room.databaseBuilder(context, PresencialDatabase::class.java, "presencial.db")
+            .addMigrations(MIGRATION_3_4)
             .fallbackToDestructiveMigration(dropAllTables = false)
             .build()
 
@@ -130,4 +134,8 @@ interface RepositoryModule {
     @Binds
     @Singleton
     fun bindWorkAddressRepository(impl: WorkAddressRepositoryImpl): WorkAddressRepository
+
+    @Binds
+    @Singleton
+    fun bindGeocodingHelper(impl: AndroidGeocodingHelper): GeocodingHelper
 }
