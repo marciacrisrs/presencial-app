@@ -37,6 +37,7 @@ import androidx.compose.ui.unit.dp
 import com.airbnb.lottie.compose.LottieAnimation
 import com.airbnb.lottie.compose.LottieCompositionSpec
 import com.airbnb.lottie.compose.rememberLottieComposition
+import androidx.compose.ui.res.stringResource
 import com.presencial.app.R
 import com.presencial.app.domain.model.DashboardData
 import com.presencial.app.ui.components.CircularProgressCard
@@ -47,6 +48,16 @@ import java.time.format.TextStyle
 import java.util.Locale
 
 @Composable
+private fun dashboardGoalLabel(dashboard: DashboardData): String {
+    val company = dashboard.policyCompanyName.trim()
+    return if (company.isNotEmpty()) {
+        stringResource(R.string.dashboard_goal_with_company, dashboard.requiredPercentage, company)
+    } else {
+        stringResource(R.string.dashboard_goal_default, dashboard.requiredPercentage)
+    }
+}
+
+@Composable
 fun DashboardSmartMessageSection(dashboard: DashboardData) {
     AnimatedVisibility(
         visible = true,
@@ -54,7 +65,7 @@ fun DashboardSmartMessageSection(dashboard: DashboardData) {
     ) {
         Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
             Text(
-                text = "Inteligência",
+                text = stringResource(R.string.ai_section_title),
                 style = MaterialTheme.typography.titleMedium,
                 modifier = Modifier.padding(horizontal = 4.dp)
             )
@@ -74,7 +85,7 @@ fun DashboardProgressSection(dashboard: DashboardData) {
     ) {
         CircularProgressCard(
             progress = dashboard.progressFraction,
-            label = "Meta: ${dashboard.requiredPercentage}%",
+            label = dashboardGoalLabel(dashboard),
             modifier = Modifier.fillMaxWidth()
         )
     }

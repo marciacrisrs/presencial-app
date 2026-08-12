@@ -13,7 +13,8 @@ import javax.inject.Singleton
 @Singleton
 class AiIntelligenceService @Inject constructor(
     private val openAiChatClient: OpenAiChatClient,
-    private val promptBuilder: SmartMessagePromptBuilder
+    private val promptBuilder: SmartMessagePromptBuilder,
+    private val localSmartMessageEngine: LocalSmartMessageEngine
 ) {
 
     suspend fun fetchSmartMessage(
@@ -21,7 +22,7 @@ class AiIntelligenceService @Inject constructor(
         apiKey: String?
     ): String? {
         if (apiKey.isNullOrBlank()) {
-            return LocalSmartMessageEngine.generate(params)
+            return localSmartMessageEngine.generate(params)
         }
         return fetchFromOpenAi(params, apiKey)
     }

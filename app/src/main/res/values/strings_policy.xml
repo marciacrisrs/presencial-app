@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="policy_card_title">Política de presença</string>
+    <string name="policy_card_description">Configure as regras da sua empresa: percentual livre, dias fixos e semanas alternadas.</string>
+    <string name="policy_company_name_label">Nome da empresa</string>
+    <string name="policy_free_percentage_title">Percentual livre</string>
+    <string name="policy_free_percentage_description">Percentual mínimo de dias presenciais no mês.</string>
+    <string name="policy_fixed_weekdays_title">Dias fixos presenciais</string>
+    <string name="policy_fixed_weekdays_description">Dias da semana sempre obrigatórios (ex.: terça e quinta).</string>
+    <string name="policy_alternating_weeks_title">Semanas alternadas</string>
+    <string name="policy_alternating_weeks_description">Semanas presenciais alternadas com semanas remotas.</string>
+    <string name="policy_even_weeks_on_site">Semanas pares presenciais</string>
+    <string name="policy_odd_weeks_on_site">Semanas ímpares presenciais</string>
+    <string name="policy_conflict_priority_title">Prioridade de conflito</string>
+    <string name="policy_conflict_union_max">Usar o maior valor entre regras</string>
+    <string name="policy_conflict_fixed_first">Dias fixos/alternados primeiro</string>
+    <string name="policy_custom_percentage_label">Percentual personalizado (1–100)</string>
+    <string name="policy_weekly_summary_title">Resumo semanal do mês</string>
+    <string name="policy_weekly_summary_line">%1$d/%2$d – %3$d/%4$d · semana %5$s · %6$d dia(s) obrigatório(s)</string>
+    <string name="policy_week_on_site">presencial</string>
+    <string name="policy_week_remote">remota</string>
+    <string name="policy_validation_error">⚠ %1$s</string>
+    <string name="policy_validation_warning">ℹ %1$s</string>
+    <string name="dashboard_goal_with_company">Meta: %1$d%% · %2$s</string>
+    <string name="dashboard_goal_default">Meta: %1$d%%</string>
+</resources>

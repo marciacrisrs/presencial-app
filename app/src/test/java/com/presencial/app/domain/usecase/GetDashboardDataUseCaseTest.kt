@@ -36,6 +36,9 @@ class GetDashboardDataUseCaseTest {
             absenceRepository,
             settingsRepository,
             getAiSmartMessageUseCase,
+            com.presencial.app.domain.util.SmartMessageFallback(
+                com.presencial.app.util.FakeSmartMessageTextProvider()
+            ),
             timeProvider
         )
     }

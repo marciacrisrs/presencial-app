@@ -58,18 +58,10 @@ class OpenAiChatClient @Inject constructor(
 
             val body = stream.bufferedReader().use(BufferedReader::readText)
             if (status !in HTTP_SUCCESS_RANGE) {
-                error("OpenAI HTTP $status: $body")
+                error(OpenAiResponseParser.formatHttpError(status, body))
             }
 
-            val content = JSONObject(body)
-                .getJSONArray("choices")
-                .getJSONObject(0)
-                .getJSONObject("message")
-                .getString("content")
-                .trim()
-
-            require(content.isNotEmpty()) { "Resposta vazia da OpenAI" }
-            content
+            OpenAiResponseParser.parseChatContent(body)
         }
     }
 

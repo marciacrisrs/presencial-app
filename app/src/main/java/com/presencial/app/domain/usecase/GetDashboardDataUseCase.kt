@@ -7,7 +7,9 @@ import com.presencial.app.domain.model.DayStatus
 import com.presencial.app.domain.repository.AbsenceRepository
 import com.presencial.app.domain.repository.CheckInRepository
 import com.presencial.app.domain.repository.SettingsRepository
+import com.presencial.app.domain.model.AppSettings
 import com.presencial.app.domain.util.GoalCalculator
+import com.presencial.app.domain.util.PresencePolicyCalculator
 import com.presencial.app.domain.util.SmartMessageFallback
 import com.presencial.app.domain.util.SmartMessageMetricsCalculator
 import com.presencial.app.domain.util.TimeProvider
@@ -24,6 +26,7 @@ class GetDashboardDataUseCase @Inject constructor(
     private val absenceRepository: AbsenceRepository,
     private val settingsRepository: SettingsRepository,
     private val getAiSmartMessageUseCase: GetAiSmartMessageUseCase,
+    private val smartMessageFallback: SmartMessageFallback,
     private val timeProvider: TimeProvider
 ) {
     operator fun invoke(yearMonth: YearMonth = timeProvider.currentMonth()): Flow<DashboardData> {
@@ -38,8 +41,7 @@ class GetDashboardDataUseCase @Inject constructor(
                 yearMonth,
                 checkIns,
                 absences,
-                settings.requiredPercentage,
-                settings.countSaturdaysAsWorkdays
+                settings
             )
             emit(dashboard.copy(isLoadingAi = true))
             val baseParams = SmartMessageParams(
@@ -65,12 +67,18 @@ class GetDashboardDataUseCase @Inject constructor(
         yearMonth: YearMonth,
         checkIns: List<CheckIn>,
         absences: List<Absence>,
-        requiredPercentage: Int,
-        countSaturdays: Boolean
+        settings: AppSettings
     ): DashboardData {
+        val countSaturdays = settings.countSaturdaysAsWorkdays
+        val policy = settings.presencePolicy
         val today = timeProvider.today()
         val workdays = WorkdayCalculator.countLiquidWorkdaysInMonth(yearMonth, countSaturdays, absences)
-        val requiredDays = GoalCalculator.calculateRequiredDays(workdays, requiredPercentage)
+        val requiredDays = PresencePolicyCalculator.calculateRequiredDays(
+            yearMonth,
+            countSaturdays,
+            absences,
+            policy
+        )
         val completedDays = checkIns.count { it.status == DayStatus.PRESENCIAL }
         val homeOfficeDays = checkIns.count { it.status == DayStatus.HOME_OFFICE }
         val remainingDays = GoalCalculator.calculateRemainingDays(completedDays, requiredDays)
@@ -107,14 +115,15 @@ class GetDashboardDataUseCase @Inject constructor(
             remainingDays = remainingDays,
             homeOfficeDays = homeOfficeDays,
             achievedPercentage = achievedPercentage,
-            requiredPercentage = requiredPercentage,
+            requiredPercentage = settings.requiredPercentage,
             progressFraction = progressFraction,
-            smartMessage = SmartMessageFallback.generate(params),
+            smartMessage = smartMessageFallback.generate(params),
             countSaturdays = countSaturdays,
             todayIsPresencial = todayCheckIn?.status == DayStatus.PRESENCIAL,
             todayIsWorkday = WorkdayCalculator.isWorkday(today, countSaturdays),
             yesterdayIsPending = yesterdayIsPending,
-            streak = streak
+            streak = streak,
+            policyCompanyName = policy.companyName
         )
     }
 

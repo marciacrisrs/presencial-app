@@ -8,7 +8,8 @@ import javax.inject.Inject
 
 class GetAiSmartMessageUseCase @Inject constructor(
     private val aiService: AiIntelligenceService,
-    private val settingsRepository: SettingsRepository
+    private val settingsRepository: SettingsRepository,
+    private val smartMessageFallback: SmartMessageFallback
 ) {
     suspend operator fun invoke(params: SmartMessageParams): String {
         val apiKey = settingsRepository.settings.first().openAiApiKey.trim()
@@ -18,6 +19,6 @@ class GetAiSmartMessageUseCase @Inject constructor(
         }.getOrNull()
 
         return aiMessage?.takeIf { it.isNotBlank() }
-            ?: SmartMessageFallback.generate(params)
+            ?: smartMessageFallback.generate(params)
     }
 }

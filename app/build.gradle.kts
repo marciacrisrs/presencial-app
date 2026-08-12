@@ -166,6 +166,7 @@ dependencies {
 
     // DataStore
     implementation(libs.androidx.datastore.preferences)
+    implementation(libs.androidx.security.crypto)
 
     // WorkManager
     implementation(libs.androidx.work.runtime.ktx)

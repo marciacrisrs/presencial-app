@@ -1,6 +1,7 @@
 package com.presencial.app.data.remote
 
 import com.presencial.app.domain.usecase.SmartMessageParams
+import com.presencial.app.domain.util.LocalSmartMessageEngine
 import io.mockk.coEvery
 import io.mockk.every
 import io.mockk.mockk
@@ -18,6 +19,7 @@ class AiIntelligenceServiceTest {
 
     private val openAiChatClient = mockk<OpenAiChatClient>()
     private val promptBuilder = mockk<SmartMessagePromptBuilder>()
+    private val localSmartMessageEngine = mockk<LocalSmartMessageEngine>()
     private lateinit var service: AiIntelligenceService
 
     private val params = SmartMessageParams(
@@ -36,22 +38,19 @@ class AiIntelligenceServiceTest {
 
     @BeforeEach
     fun setUp() {
-        service = AiIntelligenceService(openAiChatClient, promptBuilder)
+        service = AiIntelligenceService(openAiChatClient, promptBuilder, localSmartMessageEngine)
         every { promptBuilder.systemPrompt() } returns "system"
         every { promptBuilder.buildUserPrompt(any()) } returns "user"
     }
 
     @Test
     fun `given no api key, when fetchSmartMessage, then return local message`() = runTest {
+        every { localSmartMessageEngine.generate(params) } returns "📅 Mensagem local"
+
         val result = service.fetchSmartMessage(params, apiKey = null)
 
         assertNotNull(result)
-        assertTrue(
-            result!!.contains("📅") ||
-                result.contains("⚠️") ||
-                result.contains("🎯") ||
-                result.contains("Faltam")
-        )
+        assertEquals("📅 Mensagem local", result)
     }
 
     @Test

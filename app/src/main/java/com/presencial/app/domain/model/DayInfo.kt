@@ -12,5 +12,6 @@ data class DayInfo(
     val isHoliday: Boolean,
     val holidayName: String? = null,
     val isEditable: Boolean = false,
-    val source: String = "MANUAL"
+    val source: String = "MANUAL",
+    val isPolicyRequired: Boolean = false
 )

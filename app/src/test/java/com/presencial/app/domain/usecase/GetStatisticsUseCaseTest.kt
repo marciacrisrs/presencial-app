@@ -1,6 +1,7 @@
 package com.presencial.app.domain.usecase
 
 import app.cash.turbine.test
+import com.presencial.app.domain.model.PresencePolicy
 import com.presencial.app.domain.model.AppSettings
 import com.presencial.app.domain.model.DayStatus
 import com.presencial.app.domain.repository.AbsenceRepository
@@ -63,7 +64,11 @@ class GetStatisticsUseCaseTest {
         // 5 workdays subtracted from Aug 2026.
         // Aug 2026 has 21 workdays - 5 = 16 liquid workdays.
         
-        val settings = AppSettings(requiredPercentage = 50, countSaturdaysAsWorkdays = false)
+        val settings = AppSettings(
+            requiredPercentage = 50,
+            countSaturdaysAsWorkdays = false,
+            presencePolicy = PresencePolicy.fromLegacyPercentage(50)
+        )
 
         every { checkInRepository.observeAllCheckIns() } returns flowOf(checkIns)
         every { absenceRepository.getAllAbsences() } returns flowOf(absences)

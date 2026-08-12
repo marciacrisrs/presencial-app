@@ -14,6 +14,9 @@ import io.mockk.mockk
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.runTest
+import com.presencial.app.domain.model.PresencePolicy
+import com.presencial.app.domain.model.WeekParity
+import java.time.DayOfWeek
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
@@ -62,6 +65,99 @@ class BackupManagerTest {
         val jsonString = outputStream.toString()
         assertTrue(jsonString.contains("\"source\": \"${CheckInSource.AUTO_GEOFENCE}\""))
         assertTrue(jsonString.contains("\"workAddresses\":"))
+    }
+
+    @Test
+    fun `when exportToStream, then JSON must not contain openai api key`() = runTest {
+        val settings = AppSettings(
+            requiredPercentage = 40,
+            countSaturdaysAsWorkdays = false,
+            openAiApiKey = "sk-secret-should-not-export"
+        )
+        every { settingsRepository.settings } returns flowOf(settings)
+        every { checkInDao.observeAll() } returns flowOf(emptyList())
+        every { monthlySummaryDao.observeAll() } returns flowOf(emptyList())
+        coEvery { workAddressDao.getAllAddressesSync() } returns emptyList()
+
+        val outputStream = ByteArrayOutputStream()
+        val result = backupManager.exportToStream(outputStream)
+
+        assertTrue(result.isSuccess)
+        val jsonString = outputStream.toString().lowercase()
+        assertTrue(!jsonString.contains("openai"))
+        assertTrue(!jsonString.contains("sk-secret"))
+    }
+
+    @Test
+    fun `when exportToStream, then include presence policy v3`() = runTest {
+        val policy = PresencePolicy(
+            companyName = "Acme",
+            freePercentageEnabled = true,
+            freePercentage = 35,
+            fixedWeekdaysEnabled = true,
+            mandatoryWeekdays = setOf(DayOfWeek.TUESDAY, DayOfWeek.THURSDAY),
+            alternatingWeeksEnabled = true,
+            onSiteWeekParity = WeekParity.EVEN
+        )
+        val settings = AppSettings(
+            requiredPercentage = 35,
+            countSaturdaysAsWorkdays = false,
+            presencePolicy = policy
+        )
+        every { settingsRepository.settings } returns flowOf(settings)
+        every { checkInDao.observeAll() } returns flowOf(emptyList())
+        every { monthlySummaryDao.observeAll() } returns flowOf(emptyList())
+        coEvery { workAddressDao.getAllAddressesSync() } returns emptyList()
+
+        val outputStream = ByteArrayOutputStream()
+        val result = backupManager.exportToStream(outputStream)
+
+        assertTrue(result.isSuccess)
+        val jsonString = outputStream.toString()
+        assertTrue(jsonString.contains("\"version\": 3"))
+        assertTrue(jsonString.contains("\"presencePolicy\""))
+        assertTrue(jsonString.contains("\"companyName\": \"Acme\""))
+    }
+
+    @Test
+    fun `when importFromFile v3, then restore presence policy`() = runTest {
+        val json = """
+            {
+              "version": 3,
+              "requiredPercentage": 35,
+              "countSaturdaysAsWorkdays": false,
+              "presencePolicy": {
+                "companyName": "Acme",
+                "freePercentageEnabled": true,
+                "freePercentage": 35,
+                "fixedWeekdaysEnabled": true,
+                "mandatoryWeekdays": "TUESDAY,THURSDAY",
+                "alternatingWeeksEnabled": false,
+                "alternatingAnchorDate": 20672,
+                "onSiteWeekParity": "EVEN",
+                "conflictPriority": "UNION_MAX"
+              },
+              "checkIns": [],
+              "summaries": []
+            }
+        """.trimIndent()
+        val tempFile = File.createTempFile("backup_v3", ".json")
+        tempFile.writeText(json)
+
+        coEvery { checkInDao.deleteAll() } returns Unit
+        coEvery { monthlySummaryDao.deleteAll() } returns Unit
+        coEvery { workAddressDao.deleteAll() } returns Unit
+        coEvery { checkInDao.insertAll(any()) } returns Unit
+        coEvery { monthlySummaryDao.insertAll(any()) } returns Unit
+        coEvery { settingsRepository.updateRequiredPercentage(35) } returns Unit
+        coEvery { settingsRepository.updateCountSaturdaysAsWorkdays(false) } returns Unit
+        coEvery { settingsRepository.updatePresencePolicy(any()) } returns Unit
+
+        val result = backupManager.importFromFile(tempFile)
+
+        assertTrue(result.isSuccess)
+        coVerify { settingsRepository.updatePresencePolicy(match { it.companyName == "Acme" }) }
+        tempFile.delete()
     }
 
     @Test

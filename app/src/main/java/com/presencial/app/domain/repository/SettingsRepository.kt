@@ -1,6 +1,7 @@
 package com.presencial.app.domain.repository
 
 import com.presencial.app.domain.model.AppSettings
+import com.presencial.app.domain.model.PresencePolicy
 import kotlinx.coroutines.flow.Flow
 
 interface SettingsRepository {
@@ -8,4 +9,5 @@ interface SettingsRepository {
     suspend fun updateRequiredPercentage(percentage: Int)
     suspend fun updateCountSaturdaysAsWorkdays(count: Boolean)
     suspend fun updateOpenAiApiKey(apiKey: String)
+    suspend fun updatePresencePolicy(policy: PresencePolicy)
 }

@@ -7,7 +7,9 @@ import com.presencial.app.data.local.entity.CheckInEntity
 import com.presencial.app.data.local.entity.MonthlySummaryEntity
 import com.presencial.app.data.local.entity.WorkAddressEntity
 import com.presencial.app.di.IoDispatcher
+import com.presencial.app.data.preferences.PresencePolicyMapper
 import com.presencial.app.domain.model.CheckInSource
+import com.presencial.app.domain.model.PresencePolicy
 import com.presencial.app.domain.repository.SettingsRepository
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.flow.first
@@ -45,6 +47,7 @@ class BackupManager @Inject constructor(
             put("version", BACKUP_VERSION)
             put("requiredPercentage", settings.requiredPercentage)
             put("countSaturdaysAsWorkdays", settings.countSaturdaysAsWorkdays)
+            put("presencePolicy", JSONObject(PresencePolicyMapper.toJson(settings.presencePolicy)))
             put("checkIns", JSONArray().apply {
                 checkIns.forEach { ci ->
                     put(JSONObject().apply {
@@ -143,10 +146,16 @@ class BackupManager @Inject constructor(
 
             settingsRepository.updateRequiredPercentage(json.getInt("requiredPercentage"))
             settingsRepository.updateCountSaturdaysAsWorkdays(json.getBoolean("countSaturdaysAsWorkdays"))
+            if (json.has("presencePolicy")) {
+                val policyJson = json.getJSONObject("presencePolicy")
+                settingsRepository.updatePresencePolicy(
+                    PresencePolicyMapper.fromJson(policyJson.toString(), json.getInt("requiredPercentage"))
+                )
+            }
         }
     }
 
     companion object {
-        const val BACKUP_VERSION = 2
+        const val BACKUP_VERSION = 3
     }
 }

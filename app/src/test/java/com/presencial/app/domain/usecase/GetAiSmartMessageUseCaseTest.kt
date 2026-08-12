@@ -3,6 +3,8 @@ package com.presencial.app.domain.usecase
 import com.presencial.app.data.remote.AiIntelligenceService
 import com.presencial.app.domain.model.AppSettings
 import com.presencial.app.domain.repository.SettingsRepository
+import com.presencial.app.domain.util.SmartMessageFallback
+import com.presencial.app.util.FakeSmartMessageTextProvider
 import io.mockk.coEvery
 import io.mockk.every
 import io.mockk.mockk
@@ -18,6 +20,7 @@ class GetAiSmartMessageUseCaseTest {
 
     private val aiService: AiIntelligenceService = mockk()
     private val settingsRepository: SettingsRepository = mockk()
+    private val smartMessageFallback = SmartMessageFallback(FakeSmartMessageTextProvider())
     private lateinit var useCase: GetAiSmartMessageUseCase
 
     private val params = SmartMessageParams(
@@ -37,7 +40,7 @@ class GetAiSmartMessageUseCaseTest {
     @BeforeEach
     fun setup() {
         every { settingsRepository.settings } returns flowOf(AppSettings())
-        useCase = GetAiSmartMessageUseCase(aiService, settingsRepository)
+        useCase = GetAiSmartMessageUseCase(aiService, settingsRepository, smartMessageFallback)
     }
 
     @Test

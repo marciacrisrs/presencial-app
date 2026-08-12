@@ -1,11 +1,16 @@
 package com.presencial.app.domain.util
 
 import com.presencial.app.domain.usecase.SmartMessageParams
+import javax.inject.Inject
+import javax.inject.Singleton
 
 /**
  * Gera mensagens contextuais localmente quando a API de IA não está disponível.
  */
-object LocalSmartMessageEngine {
+@Singleton
+class LocalSmartMessageEngine @Inject constructor(
+    private val texts: SmartMessageTextProvider
+) {
 
     fun generate(params: SmartMessageParams): String {
         val remaining = params.remainingDays
@@ -13,40 +18,40 @@ object LocalSmartMessageEngine {
 
         return when {
             params.requiredDays <= 0 ->
-                "Configure seu percentual de presença nas configurações."
+                texts.configureRequiredPercentage()
 
             params.completedDays >= params.requiredDays ->
-                "🎉 Meta batida! Aproveite o home office sem culpa."
+                texts.goalMetCelebration()
 
             remaining > remainingWorkdays && remainingWorkdays > 0 ->
-                "⚠️ Alerta: você precisa ir todos os dias restantes para atingir a meta."
+                texts.mustAttendAllRemaining()
 
             params.weeklyRequiredDays > 0 &&
                 params.weeklyCompletedDays < params.weeklyRequiredDays ->
-                "⚠️ Você precisará comparecer ${params.weeklyRequiredDays} vezes nesta semana."
+                texts.weeklyRequired(params.weeklyRequiredDays)
 
             remainingWorkdays > remaining * SAFETY_MARGIN &&
                 remainingWorkdays > 0 &&
                 remaining > 0 ->
-                "📅 Você pode fazer home office até sexta sem comprometer sua meta."
+                texts.homeOfficeUntilFriday()
 
             remaining <= CLOSE_TO_GOAL_THRESHOLD && remaining > 0 ->
-                "🎯 Quase lá! Apenas mais $remaining presenciais e a meta é sua."
+                texts.closeToGoal(remaining)
 
             params.achievedPercentage < LOW_PROGRESS_THRESHOLD ->
-                "🚀 Início de mês! Que tal planejar 2 presenciais para esta semana?"
+                texts.monthStartSuggestion()
 
             params.projectedMonthPercentage > 0 ->
-                "🎯 Se mantiver o ritmo atual, terminará o mês com ${params.projectedMonthPercentage}%."
+                texts.projectedMonthEnd(params.projectedMonthPercentage)
 
             else ->
-                "📅 Faltam $remaining ${dayLabel(remaining)} para a meta."
+                texts.remainingDays(remaining)
         }
     }
 
-    private fun dayLabel(count: Int): String = if (count == 1) "dia" else "dias"
-
-    private const val SAFETY_MARGIN = 2
-    private const val CLOSE_TO_GOAL_THRESHOLD = 3
-    private const val LOW_PROGRESS_THRESHOLD = 30f
+    companion object {
+        private const val SAFETY_MARGIN = 2
+        private const val CLOSE_TO_GOAL_THRESHOLD = 3
+        private const val LOW_PROGRESS_THRESHOLD = 30f
+    }
 }

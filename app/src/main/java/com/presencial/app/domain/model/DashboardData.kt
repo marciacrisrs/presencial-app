@@ -22,5 +22,6 @@ data class DashboardData(
     val todayIsPresencial: Boolean,
     val todayIsWorkday: Boolean,
     val yesterdayIsPending: Boolean,
-    val streak: Int
+    val streak: Int,
+    val policyCompanyName: String = ""
 )

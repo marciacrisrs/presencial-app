@@ -4,14 +4,21 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.presencial.app.data.backup.BackupManager
 import com.presencial.app.domain.model.AppSettings
+import com.presencial.app.domain.model.PolicyValidationResult
+import com.presencial.app.domain.model.PresencePolicy
+import com.presencial.app.domain.model.WeeklyPolicySummary
 import com.presencial.app.domain.model.WorkAddress
 import com.presencial.app.domain.repository.SettingsRepository
 import com.presencial.app.domain.repository.WorkAddressRepository
-import com.presencial.app.domain.widget.WidgetRefresher
+import com.presencial.app.domain.usecase.GetWeeklyPolicySummaryUseCase
 import com.presencial.app.domain.usecase.SyncGeofencesUseCase
+import com.presencial.app.domain.util.PresencePolicyCalculator
+import com.presencial.app.domain.widget.WidgetRefresher
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import java.io.File
@@ -24,7 +31,8 @@ class SettingsViewModel @Inject constructor(
     private val backupManager: BackupManager,
     private val syncGeofencesUseCase: SyncGeofencesUseCase,
     workAddressRepository: WorkAddressRepository,
-    private val widgetRefresher: WidgetRefresher
+    private val widgetRefresher: WidgetRefresher,
+    getWeeklyPolicySummaryUseCase: GetWeeklyPolicySummaryUseCase
 ) : ViewModel() {
 
     val settings: StateFlow<AppSettings> = settingsRepository.settings
@@ -33,12 +41,28 @@ class SettingsViewModel @Inject constructor(
     val workAddresses: StateFlow<List<WorkAddress>> = workAddressRepository.getAllAddresses()
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(STOP_TIMEOUT_MS), emptyList())
 
+    val policyValidation: StateFlow<PolicyValidationResult> = settings
+        .map { PresencePolicyCalculator.validate(it.presencePolicy) }
+        .stateIn(
+            viewModelScope,
+            SharingStarted.WhileSubscribed(STOP_TIMEOUT_MS),
+            PolicyValidationResult(isValid = true)
+        )
+
+    val weeklySummaries: StateFlow<List<WeeklyPolicySummary>> = getWeeklyPolicySummaryUseCase()
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(STOP_TIMEOUT_MS), emptyList())
+
     private val _message = kotlinx.coroutines.flow.MutableStateFlow<String?>(null)
     val message: StateFlow<String?> = _message
 
-    fun updatePercentage(percentage: Int) {
+    fun updatePresencePolicy(policy: PresencePolicy) {
         viewModelScope.launch {
-            settingsRepository.updateRequiredPercentage(percentage)
+            val validation = PresencePolicyCalculator.validate(policy.normalized())
+            if (!validation.isValid) {
+                _message.value = validation.errors.firstOrNull()
+                return@launch
+            }
+            settingsRepository.updatePresencePolicy(policy)
             widgetRefresher.refresh()
         }
     }
@@ -70,6 +94,7 @@ class SettingsViewModel @Inject constructor(
             backupManager.importFromFile(file)
                 .onSuccess {
                     syncGeofencesUseCase()
+                    widgetRefresher.refresh()
                     _message.value = "Backup restaurado com sucesso!"
                 }
                 .onFailure { _message.value = "Erro ao restaurar: ${it.message}" }

@@ -110,5 +110,6 @@ sonar {
         )
 
         property("sonar.sourceEncoding", "UTF-8")
+        property("sonar.qualitygate.wait", "true")
     }
 }

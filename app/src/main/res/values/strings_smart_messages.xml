@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="smart_msg_configure_percentage">Configure seu percentual de presença nas configurações.</string>
+    <string name="smart_msg_goal_met">🎉 Meta batida! Aproveite o home office sem culpa.</string>
+    <string name="smart_msg_must_attend_all">⚠️ Alerta: você precisa ir todos os dias restantes para atingir a meta.</string>
+    <string name="smart_msg_weekly_required">⚠️ Você precisará comparecer %1$d vezes nesta semana.</string>
+    <string name="smart_msg_home_office_until_friday">📅 Você pode fazer home office até sexta sem comprometer sua meta.</string>
+    <string name="smart_msg_close_to_goal">🎯 Quase lá! Apenas mais %1$d presenciais e a meta é sua.</string>
+    <string name="smart_msg_month_start">🚀 Início de mês! Que tal planejar 2 presenciais para esta semana?</string>
+    <string name="smart_msg_projected_end">🎯 Se mantiver o ritmo atual, terminará o mês com %1$d%%.</string>
+    <plurals name="smart_msg_remaining_days">
+        <item quantity="one">📅 Faltam %d dia para a meta.</item>
+        <item quantity="other">📅 Faltam %d dias para a meta.</item>
+    </plurals>
+    <string name="smart_msg_fallback_goal_completed">Meta concluída 🎉</string>
+    <plurals name="smart_msg_fallback_remaining">
+        <item quantity="one">Faltam %d dia.</item>
+        <item quantity="other">Faltam %d dias.</item>
+    </plurals>
+</resources>

@@ -1,17 +1,19 @@
 package com.presencial.app.domain.util
 
 import com.presencial.app.domain.usecase.SmartMessageParams
+import javax.inject.Inject
+import javax.inject.Singleton
 
-object SmartMessageFallback {
+@Singleton
+class SmartMessageFallback @Inject constructor(
+    private val texts: SmartMessageTextProvider
+) {
 
     fun generate(params: SmartMessageParams): String = when {
         params.requiredDays <= 0 ->
-            "Configure seu percentual de presença nas configurações."
+            texts.configureRequiredPercentage()
         params.completedDays >= params.requiredDays || params.remainingDays == 0 ->
-            "Meta concluída 🎉"
-        else -> {
-            val days = params.remainingDays
-            "Faltam $days ${if (days == 1) "dia" else "dias"}."
-        }
+            texts.fallbackGoalCompleted()
+        else -> texts.fallbackRemainingDays(params.remainingDays)
     }
 }

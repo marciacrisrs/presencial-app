@@ -3,8 +3,12 @@ package com.presencial.app.presentation.settings
 import app.cash.turbine.test
 import com.presencial.app.data.backup.BackupManager
 import com.presencial.app.domain.model.AppSettings
+import com.presencial.app.domain.model.PresencePolicy
+import com.presencial.app.domain.repository.AbsenceRepository
 import com.presencial.app.domain.repository.SettingsRepository
 import com.presencial.app.domain.repository.WorkAddressRepository
+import com.presencial.app.domain.usecase.GetWeeklyPolicySummaryUseCase
+import com.presencial.app.util.FakeTimeProvider
 import com.presencial.app.domain.usecase.SyncGeofencesUseCase
 import com.presencial.app.domain.widget.WidgetRefresher
 import com.presencial.app.util.MainDispatcherExtension
@@ -32,13 +36,21 @@ class SettingsViewModelTest {
     private val backupManager = mockk<BackupManager>()
     private val syncGeofencesUseCase = mockk<SyncGeofencesUseCase>()
     private val workAddressRepository = mockk<WorkAddressRepository>()
+    private val absenceRepository = mockk<AbsenceRepository>()
     private val widgetRefresher = mockk<WidgetRefresher>()
+    private lateinit var getWeeklyPolicySummaryUseCase: GetWeeklyPolicySummaryUseCase
     private lateinit var viewModel: SettingsViewModel
 
     @BeforeEach
     fun setup() {
         every { settingsRepository.settings } returns flowOf(AppSettings())
         every { workAddressRepository.getAllAddresses() } returns flowOf(emptyList())
+        every { absenceRepository.getAbsencesInRange(any(), any()) } returns flowOf(emptyList())
+        getWeeklyPolicySummaryUseCase = GetWeeklyPolicySummaryUseCase(
+            absenceRepository = absenceRepository,
+            settingsRepository = settingsRepository,
+            timeProvider = FakeTimeProvider()
+        )
         coEvery { syncGeofencesUseCase() } returns Unit
         coEvery { widgetRefresher.refresh() } returns Unit
         viewModel = SettingsViewModel(
@@ -46,7 +58,8 @@ class SettingsViewModelTest {
             backupManager,
             syncGeofencesUseCase,
             workAddressRepository,
-            widgetRefresher
+            widgetRefresher,
+            getWeeklyPolicySummaryUseCase
         )
     }
 
@@ -69,7 +82,8 @@ class SettingsViewModelTest {
             backupManager,
             syncGeofencesUseCase,
             workAddressRepository,
-            widgetRefresher
+            widgetRefresher,
+            getWeeklyPolicySummaryUseCase
         )
 
         viewModel.settings.test {
@@ -78,12 +92,13 @@ class SettingsViewModelTest {
     }
 
     @Test
-    fun `updatePercentage should call repository`() = runTest {
-        coEvery { settingsRepository.updateRequiredPercentage(60) } returns Unit
-        
-        viewModel.updatePercentage(60)
-        
-        coVerify { settingsRepository.updateRequiredPercentage(60) }
+    fun `updatePresencePolicy should call repository`() = runTest {
+        val policy = PresencePolicy(companyName = "Acme", freePercentage = 50)
+        coEvery { settingsRepository.updatePresencePolicy(policy) } returns Unit
+
+        viewModel.updatePresencePolicy(policy)
+
+        coVerify { settingsRepository.updatePresencePolicy(policy) }
     }
 
     @Test
@@ -130,6 +145,7 @@ class SettingsViewModelTest {
         viewModel.importBackup(file)
 
         coVerify { syncGeofencesUseCase() }
+        coVerify { widgetRefresher.refresh() }
         assertEquals("Backup restaurado com sucesso!", viewModel.message.value)
     }
 

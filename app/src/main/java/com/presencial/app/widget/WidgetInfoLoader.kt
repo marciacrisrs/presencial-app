@@ -3,8 +3,10 @@ package com.presencial.app.widget
 import android.content.Context
 import com.presencial.app.data.local.PresencialDatabase
 import com.presencial.app.data.local.mapper.toDomain
+import com.presencial.app.data.preferences.PresencePolicyMapper
 import com.presencial.app.domain.model.DayStatus
 import com.presencial.app.domain.util.GoalCalculator
+import com.presencial.app.domain.util.PresencePolicyCalculator
 import com.presencial.app.domain.util.WorkdayCalculator
 import kotlinx.coroutines.flow.first
 import java.time.LocalDate
@@ -17,6 +19,10 @@ object WidgetInfoLoader {
         val prefs = context.getSharedPreferences(WIDGET_PREFS, Context.MODE_PRIVATE)
         val percentage = prefs.getInt(PREF_REQUIRED_PERCENTAGE, DEFAULT_REQUIRED_PERCENTAGE)
         val countSaturdays = prefs.getBoolean(PREF_COUNT_SATURDAYS, false)
+        val policy = PresencePolicyMapper.fromJson(
+            prefs.getString(PREF_PRESENCE_POLICY, null),
+            percentage
+        )
 
         val today = LocalDate.now()
         val yearMonth = YearMonth.from(today)
@@ -33,7 +39,12 @@ object WidgetInfoLoader {
             countSaturdays,
             absences
         )
-        val required = GoalCalculator.calculateRequiredDays(workdays, percentage)
+        val required = PresencePolicyCalculator.calculateRequiredDays(
+            yearMonth,
+            countSaturdays,
+            absences,
+            policy
+        )
 
         val checkIns = db.checkInDao().observeBetween(start, end).first()
         val completed = checkIns.count { it.status == DayStatus.PRESENCIAL.name }
@@ -66,5 +77,6 @@ object WidgetInfoLoader {
     private const val WIDGET_PREFS = "presencial_settings"
     private const val PREF_REQUIRED_PERCENTAGE = "required_percentage"
     private const val PREF_COUNT_SATURDAYS = "count_saturdays_as_workdays"
+    private const val PREF_PRESENCE_POLICY = "presence_policy_json"
     private const val DEFAULT_REQUIRED_PERCENTAGE = 40
 }
