@@ -213,8 +213,9 @@ kover {
                 classes(
                     "**.notification.**", "**.*WidgetReceiver*",
                     "**.*BasePresencialWidget*", "**.*WidgetSmall*",
-                    "**.*WidgetMedium*", "**.*WidgetLarge*", "**.worker.**",
-                    "**.data.export.**", "**.domain.location.**",
+                    "**.*WidgetMedium*", "**.*WidgetLarge*", "**.widget.**",
+                    "**.worker.**", "**.data.export.**", "**.domain.location.**",
+                    "**.data.location.**", "**.data.local.migration.**",
                     "**.*_Impl*", "**.*WidgetColors*"
                 )
             }

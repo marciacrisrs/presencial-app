@@ -30,7 +30,7 @@ subprojects {
     }
 }
 tasks.named("sonar") {
-    dependsOn(":app:koverXmlReport")
+    dependsOn(":app:testDebugUnitTest", ":app:koverXmlReport")
 }
 sonar {
     properties {
@@ -79,7 +79,9 @@ sonar {
             **/data/local/entity/**
             **/data/local/mapper/**
             **/data/local/converter/**
+            **/data/local/migration/**
             **/data/preferences/**
+            **/data/location/**
             **/domain/model/**
             **/*Database*.*
             **/*SettingsDataStore*.*
@@ -93,6 +95,7 @@ sonar {
             **/*DialogState*.*
         
             **/notification/**
+            **/widget/**
             **/*WidgetReceiver*.*
             **/*BasePresencialWidget*.*
             **/*WidgetSmall*.*
