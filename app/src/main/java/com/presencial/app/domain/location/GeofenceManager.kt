@@ -58,8 +58,8 @@ class GeofenceManager @Inject constructor(
             addGeofences(geofences)
         }.build()
 
-        geofencingClient.addGeofences(request, geofencePendingIntent).addOnFailureListener { e ->
-            Log.e(TAG, "Falha ao registrar geofences: ${e.message}", e)
+        geofencingClient.addGeofences(request, geofencePendingIntent).addOnFailureListener {
+            Log.e(TAG, "Falha ao registrar geofences")
         }.addOnSuccessListener {
             Log.d(TAG, "Geofences registradas: ${geofences.size}")
         }
@@ -67,8 +67,8 @@ class GeofenceManager @Inject constructor(
 
     fun removeGeofences() {
         geofencingClient.removeGeofences(geofencePendingIntent)
-            .addOnFailureListener { e ->
-                Log.e(TAG, "Falha ao remover geofences: ${e.message}", e)
+            .addOnFailureListener {
+                Log.e(TAG, "Falha ao remover geofences")
             }
     }
 
