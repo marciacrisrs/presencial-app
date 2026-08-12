@@ -38,10 +38,4 @@ class AndroidSmartMessageTextProvider @Inject constructor(
 
     override fun remainingDays(count: Int): String =
         context.resources.getQuantityString(R.plurals.smart_msg_remaining_days, count, count)
-
-    override fun fallbackGoalCompleted(): String =
-        context.getString(R.string.smart_msg_fallback_goal_completed)
-
-    override fun fallbackRemainingDays(count: Int): String =
-        context.resources.getQuantityString(R.plurals.smart_msg_fallback_remaining, count, count)
 }

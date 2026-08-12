@@ -29,8 +29,7 @@ class SettingsDataStoreTest {
     private val dataStore: DataStore<Preferences> = mockk()
     private val sharedPrefs: SharedPreferences = mockk()
     private val sharedPrefsEditor: SharedPreferences.Editor = mockk(relaxed = true)
-    private val openAiApiKeyStore: OpenAiApiKeyStore = mockk(relaxed = true)
-    
+
     private val dataStoreFlow = MutableStateFlow(preferencesOf())
     private lateinit var settingsDataStore: SettingsDataStore
 
@@ -39,21 +38,23 @@ class SettingsDataStoreTest {
         every { context.getSharedPreferences(any(), any()) } returns sharedPrefs
         every { sharedPrefs.edit() } returns sharedPrefsEditor
         every { dataStore.data } returns dataStoreFlow
-        every { openAiApiKeyStore.read() } returns ""
-        
-        settingsDataStore = SettingsDataStore(context, dataStore, openAiApiKeyStore)
+        coEvery { dataStore.updateData(any()) } coAnswers {
+            @Suppress("UNCHECKED_CAST")
+            val transform = args[0] as suspend (Preferences) -> Preferences
+            transform(preferencesOf())
+        }
+
+        settingsDataStore = SettingsDataStore(context, dataStore)
     }
 
     @Test
     fun `when settings is observed, then return domain object from datastore`() = runTest {
-        // Arrange
         val prefs = preferencesOf(
             intPreferencesKey("required_percentage") to 60,
             booleanPreferencesKey("count_saturdays_as_workdays") to true
         )
         dataStoreFlow.value = prefs
 
-        // Act & Assert
         settingsDataStore.settings.test {
             val result = awaitItem()
             assertEquals(60, result.requiredPercentage)
@@ -63,7 +64,6 @@ class SettingsDataStoreTest {
 
     @Test
     fun `when updateRequiredPercentage with valid value, then datastore is updated`() = runTest {
-        // Arrange
         val percentage = 60
         mockkStatic("androidx.datastore.preferences.core.PreferencesKt")
         val transform = slot<suspend (Preferences) -> Preferences>()
@@ -73,10 +73,8 @@ class SettingsDataStoreTest {
             mutablePrefs
         }
 
-        // Act
         settingsDataStore.updateRequiredPercentage(percentage)
 
-        // Assert
         coVerify { dataStore.updateData(any()) }
         coVerify { sharedPrefsEditor.putInt("required_percentage", percentage) }
     }
@@ -119,8 +117,26 @@ class SettingsDataStoreTest {
     }
 
     @Test
+    fun `when updatePresencePolicy with preset chips, then persist selected percentage`() = runTest {
+        val policy = PresencePolicy(
+            freePercentageEnabled = false,
+            freePercentage = 60
+        )
+        mockkStatic("androidx.datastore.preferences.core.PreferencesKt")
+        val transform = slot<suspend (Preferences) -> Preferences>()
+        coEvery { dataStore.updateData(capture(transform)) } coAnswers {
+            val mutablePrefs = mockk<MutablePreferences>(relaxed = true)
+            transform.captured(mutablePrefs)
+            mutablePrefs
+        }
+
+        settingsDataStore.updatePresencePolicy(policy)
+
+        coVerify { sharedPrefsEditor.putInt("required_percentage", 60) }
+    }
+
+    @Test
     fun `when updateCountSaturdaysAsWorkdays, then datastore is updated`() = runTest {
-        // Arrange
         val count = true
         mockkStatic("androidx.datastore.preferences.core.PreferencesKt")
         val transform = slot<suspend (Preferences) -> Preferences>()
@@ -130,10 +146,8 @@ class SettingsDataStoreTest {
             mutablePrefs
         }
 
-        // Act
         settingsDataStore.updateCountSaturdaysAsWorkdays(count)
 
-        // Assert
         coVerify { dataStore.updateData(any()) }
         coVerify { sharedPrefsEditor.putBoolean("count_saturdays_as_workdays", count) }
     }

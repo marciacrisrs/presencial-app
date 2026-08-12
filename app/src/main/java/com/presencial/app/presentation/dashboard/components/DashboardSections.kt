@@ -64,8 +64,7 @@ fun DashboardSmartMessageSection(dashboard: DashboardData) {
         enter = fadeIn() + slideInVertically(initialOffsetY = { ANIM_OFFSET_SMART_MESSAGE })
     ) {
         SmartMessageCard(
-            message = dashboard.smartMessage,
-            isLoading = dashboard.isLoadingAi
+            message = dashboard.smartMessage
         )
     }
 }

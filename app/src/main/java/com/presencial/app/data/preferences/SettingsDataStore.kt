@@ -21,12 +21,11 @@ import javax.inject.Singleton
 @Singleton
 class SettingsDataStore @Inject constructor(
     @ApplicationContext private val context: Context,
-    private val dataStore: DataStore<Preferences>,
-    private val openAiApiKeyStore: OpenAiApiKeyStore
+    private val dataStore: DataStore<Preferences>
 ) : SettingsRepository {
 
     init {
-        runBlocking { migrateLegacyOpenAiKey() }
+        runBlocking { cleanupLegacyOpenAiKey() }
     }
 
     private object Keys {
@@ -42,7 +41,6 @@ class SettingsDataStore @Inject constructor(
         AppSettings(
             requiredPercentage = percentage,
             countSaturdaysAsWorkdays = prefs[Keys.COUNT_SATURDAYS] ?: false,
-            openAiApiKey = openAiApiKeyStore.read(),
             presencePolicy = policy
         ).synced()
     }
@@ -62,19 +60,9 @@ class SettingsDataStore @Inject constructor(
         syncToSharedPreferences(null, count, null)
     }
 
-    override suspend fun updateOpenAiApiKey(apiKey: String) {
-        openAiApiKeyStore.save(apiKey)
-        dataStore.edit { it.remove(Keys.OPENAI_API_KEY) }
-    }
-
     override suspend fun updatePresencePolicy(policy: PresencePolicy) {
         val normalized = policy.normalized()
-        val percentage = if (normalized.freePercentageEnabled) {
-            normalized.freePercentage
-        } else {
-            settings.first().requiredPercentage
-        }
-        persistPolicy(percentage, null, normalized)
+        persistPolicy(normalized.freePercentage, null, normalized)
     }
 
     private suspend fun persistPolicy(
@@ -90,12 +78,7 @@ class SettingsDataStore @Inject constructor(
         syncToSharedPreferences(percentage, countSaturdays, policy)
     }
 
-    private suspend fun migrateLegacyOpenAiKey() {
-        val prefs = dataStore.data.first()
-        val legacyKey = prefs[Keys.OPENAI_API_KEY] ?: return
-        if (legacyKey.isNotBlank() && openAiApiKeyStore.read().isBlank()) {
-            openAiApiKeyStore.save(legacyKey)
-        }
+    private suspend fun cleanupLegacyOpenAiKey() {
         dataStore.edit { it.remove(Keys.OPENAI_API_KEY) }
     }
 

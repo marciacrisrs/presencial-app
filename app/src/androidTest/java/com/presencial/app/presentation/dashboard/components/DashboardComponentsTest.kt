@@ -30,7 +30,6 @@ class DashboardComponentsTest {
         requiredPercentage = 68,
         progressFraction = 0.53f,
         smartMessage = "Você está no caminho certo!",
-        isLoadingAi = false,
         countSaturdays = false,
         todayIsPresencial = false,
         todayIsWorkday = true,

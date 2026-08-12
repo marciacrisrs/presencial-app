@@ -26,9 +26,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
-import androidx.compose.ui.semantics.liveRegion
 import androidx.compose.ui.semantics.semantics
-import androidx.compose.ui.semantics.LiveRegionMode
 import com.presencial.app.R
 import com.presencial.app.domain.model.DashboardData
 
@@ -36,17 +34,14 @@ import com.presencial.app.domain.model.DashboardData
 fun SmartMessageCard(
     message: String,
     modifier: Modifier = Modifier,
-    isLoading: Boolean = false,
 ) {
-    val messageDescription = stringResource(R.string.ai_message_content_description)
-    val loadingDescription = stringResource(R.string.ai_message_loading)
+    val messageDescription = stringResource(R.string.dashboard_message_content_description)
 
     Card(
         modifier = modifier
             .fillMaxWidth()
             .semantics {
-                contentDescription = if (isLoading) loadingDescription else messageDescription
-                if (isLoading) liveRegion = LiveRegionMode.Polite
+                contentDescription = messageDescription
             },
         shape = RoundedCornerShape(CORNER_RADIUS_MEDIUM),
         colors = CardDefaults.cardColors(
@@ -54,20 +49,12 @@ fun SmartMessageCard(
         )
     ) {
         Box(modifier = Modifier.padding(PADDING_MEDIUM).fillMaxWidth()) {
-            if (isLoading) {
-                ShimmerBox(
-                    height = 20.dp,
-                    modifier = Modifier.semantics { contentDescription = loadingDescription },
-                    widthFraction = SHIMMER_WIDTH_FRACTION
-                )
-            } else {
-                Text(
-                    text = message,
-                    style = MaterialTheme.typography.bodyMedium,
-                    textAlign = TextAlign.Center,
-                    modifier = Modifier.fillMaxWidth()
-                )
-            }
+            Text(
+                text = message,
+                style = MaterialTheme.typography.bodyMedium,
+                textAlign = TextAlign.Center,
+                modifier = Modifier.fillMaxWidth()
+            )
         }
     }
 }
@@ -198,5 +185,4 @@ private val CORNER_RADIUS_MEDIUM = 12.dp
 private val CORNER_RADIUS_LARGE = 16.dp
 private val CORNER_RADIUS_EXTRA_LARGE = 24.dp
 private val STROKE_WIDTH_DP = 14.dp
-private const val SHIMMER_WIDTH_FRACTION = 0.8f
 private const val ASPECT_RATIO_SQUARE = 1f

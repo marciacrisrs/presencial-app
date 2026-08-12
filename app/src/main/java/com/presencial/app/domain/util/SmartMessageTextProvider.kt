@@ -10,6 +10,4 @@ interface SmartMessageTextProvider {
     fun monthStartSuggestion(): String
     fun projectedMonthEnd(percentage: Int): String
     fun remainingDays(count: Int): String
-    fun fallbackGoalCompleted(): String
-    fun fallbackRemainingDays(count: Int): String
 }

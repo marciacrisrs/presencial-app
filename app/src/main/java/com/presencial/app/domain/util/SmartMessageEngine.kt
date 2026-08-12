@@ -5,10 +5,10 @@ import javax.inject.Inject
 import javax.inject.Singleton
 
 /**
- * Gera mensagens contextuais localmente quando a API de IA não está disponível.
+ * Gera mensagens contextuais do dashboard a partir de modelos fixos.
  */
 @Singleton
-class LocalSmartMessageEngine @Inject constructor(
+class SmartMessageEngine @Inject constructor(
     private val texts: SmartMessageTextProvider
 ) {
 

@@ -8,7 +8,6 @@ import androidx.compose.ui.test.performClick
 import com.presencial.app.domain.model.DayInfo
 import com.presencial.app.domain.model.DayStatus
 import com.presencial.app.ui.theme.PresencialTheme
-import io.mockk.any
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify

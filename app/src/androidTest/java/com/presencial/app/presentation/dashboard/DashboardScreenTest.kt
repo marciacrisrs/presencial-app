@@ -105,7 +105,6 @@ class DashboardScreenTest {
         requiredPercentage = 60,
         progressFraction = 0.33f,
         smartMessage = "Bom trabalho!",
-        isLoadingAi = false,
         countSaturdays = false,
         todayIsPresencial = false,
         todayIsWorkday = true,

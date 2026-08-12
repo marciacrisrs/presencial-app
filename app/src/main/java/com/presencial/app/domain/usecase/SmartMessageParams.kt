@@ -4,7 +4,7 @@ import java.time.LocalDate
 import java.time.YearMonth
 
 /**
- * Parâmetros para geração de mensagens inteligentes.
+ * Parâmetros para geração de mensagens contextuais do dashboard.
  */
 data class SmartMessageParams(
     val completedDays: Int,

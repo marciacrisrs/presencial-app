@@ -50,7 +50,7 @@ jobs:
         env:
           PLAY_STORE_SERVICE_ACCOUNT_JSON: ${{ secrets.PLAY_STORE_SERVICE_ACCOUNT_JSON }}
         run: |
-          npm install --no-save google-auth-library googleapis
+          npm install --ignore-scripts --no-save google-auth-library@9.15.1 googleapis@144.0.0
           PLAY_MAX_CODE=$(node scripts/get-play-version-code.mjs com.presencial.app)
           LOCAL_CODE=$(./gradlew -q printVersionCode)
           TARGET_CODE=$(( PLAY_MAX_CODE > LOCAL_CODE ? PLAY_MAX_CODE + 1 : LOCAL_CODE + 1 ))
