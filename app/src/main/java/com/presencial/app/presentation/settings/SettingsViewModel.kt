@@ -5,6 +5,7 @@ import androidx.lifecycle.viewModelScope
 import com.presencial.app.data.backup.BackupManager
 import com.presencial.app.domain.model.AppSettings
 import com.presencial.app.domain.repository.SettingsRepository
+import com.presencial.app.domain.usecase.SyncGeofencesUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -17,7 +18,8 @@ import javax.inject.Inject
 @HiltViewModel
 class SettingsViewModel @Inject constructor(
     private val settingsRepository: SettingsRepository,
-    private val backupManager: BackupManager
+    private val backupManager: BackupManager,
+    private val syncGeofencesUseCase: SyncGeofencesUseCase
 ) : ViewModel() {
 
     val settings: StateFlow<AppSettings> = settingsRepository.settings
@@ -50,7 +52,10 @@ class SettingsViewModel @Inject constructor(
     fun importBackup(file: File) {
         viewModelScope.launch {
             backupManager.importFromFile(file)
-                .onSuccess { _message.value = "Backup restaurado com sucesso!" }
+                .onSuccess {
+                    syncGeofencesUseCase()
+                    _message.value = "Backup restaurado com sucesso!"
+                }
                 .onFailure { _message.value = "Erro ao restaurar: ${it.message}" }
         }
     }

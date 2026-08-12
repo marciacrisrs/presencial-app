@@ -4,6 +4,7 @@ import app.cash.turbine.test
 import com.presencial.app.data.backup.BackupManager
 import com.presencial.app.domain.model.AppSettings
 import com.presencial.app.domain.repository.SettingsRepository
+import com.presencial.app.domain.usecase.SyncGeofencesUseCase
 import com.presencial.app.util.MainDispatcherExtension
 import io.mockk.coEvery
 import io.mockk.coVerify
@@ -27,12 +28,14 @@ class SettingsViewModelTest {
 
     private val settingsRepository = mockk<SettingsRepository>()
     private val backupManager = mockk<BackupManager>()
+    private val syncGeofencesUseCase = mockk<SyncGeofencesUseCase>()
     private lateinit var viewModel: SettingsViewModel
 
     @BeforeEach
     fun setup() {
         every { settingsRepository.settings } returns flowOf(AppSettings())
-        viewModel = SettingsViewModel(settingsRepository, backupManager)
+        coEvery { syncGeofencesUseCase() } returns Unit
+        viewModel = SettingsViewModel(settingsRepository, backupManager, syncGeofencesUseCase)
     }
 
     @Test
@@ -40,7 +43,7 @@ class SettingsViewModelTest {
         val appSettings = AppSettings(requiredPercentage = 50, countSaturdaysAsWorkdays = true)
         every { settingsRepository.settings } returns flowOf(appSettings)
         
-        viewModel = SettingsViewModel(settingsRepository, backupManager)
+        viewModel = SettingsViewModel(settingsRepository, backupManager, syncGeofencesUseCase)
 
         viewModel.settings.test {
             assertEquals(appSettings, awaitItem())
@@ -93,12 +96,13 @@ class SettingsViewModelTest {
     }
 
     @Test
-    fun `importBackup should show success message on success`() = runTest {
+    fun `importBackup should sync geofences on success`() = runTest {
         val file = mockk<File>()
         coEvery { backupManager.importFromFile(file) } returns Result.success(Unit)
 
         viewModel.importBackup(file)
 
+        coVerify { syncGeofencesUseCase() }
         assertEquals("Backup restaurado com sucesso!", viewModel.message.value)
     }
 
@@ -109,6 +113,7 @@ class SettingsViewModelTest {
 
         viewModel.importBackup(file)
 
+        coVerify(exactly = 0) { syncGeofencesUseCase() }
         assertEquals("Erro ao restaurar: Invalid file", viewModel.message.value)
     }
 

@@ -59,7 +59,7 @@ UI (Compose) → ViewModel → UseCase → Repository → Room / DataStore / Rem
 1. **Meta mensal:** `ceil(dias_úteis_líquidos × percentual / 100)`
 2. **Dias úteis líquidos:** exclui domingos, feriados nacionais, sábados (configurável) e períodos de ausência registrados (férias, licenças, etc.)
 3. **Feriados móveis:** calculados a partir da Páscoa (algoritmo de Meeus/Jones/Butcher)
-4. **Geofencing:** check-in automático via dwell de 30 s dentro do raio configurado; geofences restauradas no boot e na inicialização do app. A localização é definida por geocoding do endereço ou GPS.
+4. **Geofencing:** check-in automático via dwell de 30 s dentro do raio configurado; geofences restauradas no boot, startup e após restore de backup. Localização definida por mapa interativo (OpenStreetMap), geocoding ou GPS.
 
 ## Como executar
 

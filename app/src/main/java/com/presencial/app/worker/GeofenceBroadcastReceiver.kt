@@ -6,9 +6,8 @@ import android.content.Intent
 import android.util.Log
 import com.google.android.gms.location.Geofence
 import com.google.android.gms.location.GeofencingEvent
+import com.presencial.app.domain.location.GeofenceEventHandler
 import com.presencial.app.domain.usecase.AutoCheckInResult
-import com.presencial.app.domain.usecase.AutoGeofenceCheckInUseCase
-import com.presencial.app.notification.NotificationHelper
 import dagger.hilt.android.EntryPointAccessors
 import dagger.hilt.EntryPoint
 import dagger.hilt.InstallIn
@@ -25,8 +24,7 @@ class GeofenceBroadcastReceiver : BroadcastReceiver() {
     @EntryPoint
     @InstallIn(SingletonComponent::class)
     interface GeofenceEntryPoint {
-        fun autoGeofenceCheckInUseCase(): AutoGeofenceCheckInUseCase
-        fun notificationHelper(): NotificationHelper
+        fun geofenceEventHandler(): GeofenceEventHandler
     }
 
     override fun onReceive(context: Context, intent: Intent) {
@@ -45,20 +43,19 @@ class GeofenceBroadcastReceiver : BroadcastReceiver() {
             ?.toLongOrNull()
 
         val pendingResult = goAsync()
-        val entryPoint = EntryPointAccessors.fromApplication(
+        val handler = EntryPointAccessors.fromApplication(
             context.applicationContext,
             GeofenceEntryPoint::class.java
-        )
+        ).geofenceEventHandler()
 
         scope.launch {
             try {
-                when (entryPoint.autoGeofenceCheckInUseCase()(workAddressId)) {
-                    AutoCheckInResult.Success ->
-                        entryPoint.notificationHelper().showAutoCheckInNotification()
+                when (handler.handleDwellTransition(workAddressId)) {
                     AutoCheckInResult.SkippedAlreadyCheckedIn ->
                         Log.d(TAG, "Check-in automático ignorado: já registrado hoje")
                     AutoCheckInResult.SkippedNonWorkday ->
                         Log.d(TAG, "Check-in automático ignorado: dia não útil")
+                    AutoCheckInResult.Success -> Unit
                 }
             } finally {
                 pendingResult.finish()
