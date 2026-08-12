@@ -21,7 +21,8 @@ enum class PolicyConflictPriority {
  */
 data class PresencePolicy(
     val companyName: String = "",
-    val freePercentageEnabled: Boolean = true,
+    /** Percentual livre ativo: slider personalizado. Desligado: presets 20/40/60/80. */
+    val freePercentageEnabled: Boolean = false,
     val freePercentage: Int = 40,
     val fixedWeekdaysEnabled: Boolean = false,
     val mandatoryWeekdays: Set<DayOfWeek> = emptySet(),

@@ -76,7 +76,7 @@ class GetMonthCalendarUseCase @Inject constructor(
                 current.isAfter(today) -> DayStatus.FUTURO
                 isHoliday -> DayStatus.FERIADO
                 isWeekend -> DayStatus.FIM_DE_SEMANA
-                isWorkday && current.isBefore(today) -> DayStatus.FALTOU
+                isWorkday && current.isBefore(today) -> DayStatus.HOME_OFFICE
                 else -> DayStatus.HOME_OFFICE
             }
 

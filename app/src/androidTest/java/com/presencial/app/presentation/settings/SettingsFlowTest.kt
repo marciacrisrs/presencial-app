@@ -3,17 +3,14 @@ package com.presencial.app.presentation.settings
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.isToggleable
 import androidx.compose.ui.test.junit4.createComposeRule
-import androidx.compose.ui.test.onNode
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import com.presencial.app.domain.model.AppSettings
 import com.presencial.app.domain.model.PolicyValidationResult
 import com.presencial.app.domain.model.PresencePolicy
 import com.presencial.app.ui.theme.PresencialTheme
-import io.mockk.any
 import io.mockk.every
 import io.mockk.mockk
-import io.mockk.match
 import io.mockk.verify
 import kotlinx.coroutines.flow.MutableStateFlow
 import org.junit.Before
@@ -30,14 +27,12 @@ class SettingsFlowTest {
     private val messageFlow = MutableStateFlow<String?>(null)
 
     private val policyValidationFlow = MutableStateFlow(PolicyValidationResult(isValid = true))
-    private val weeklySummariesFlow = MutableStateFlow(emptyList<com.presencial.app.domain.model.WeeklyPolicySummary>())
 
     @Before
     fun setup() {
         every { viewModel.settings } returns settingsFlow
         every { viewModel.message } returns messageFlow
         every { viewModel.policyValidation } returns policyValidationFlow
-        every { viewModel.weeklySummaries } returns weeklySummariesFlow
     }
 
     @Test

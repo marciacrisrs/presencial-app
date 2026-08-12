@@ -2,9 +2,9 @@ package com.presencial.app.presentation.history
 
 import android.content.Intent
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.slideInVertically
-import androidx.compose.animation.core.tween
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -16,6 +16,8 @@ import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Share
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
@@ -23,16 +25,23 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.presencial.app.R
 import com.presencial.app.domain.model.HistoryMonthData
 import com.presencial.app.domain.model.MonthlySummary
+import com.presencial.app.domain.model.WeeklyPolicySummary
 import com.presencial.app.ui.components.ShimmerBox
 import java.time.format.TextStyle
 import java.util.Locale
@@ -40,13 +49,23 @@ import java.util.Locale
 @Composable
 fun HistoryScreen(viewModel: HistoryViewModel = hiltViewModel()) {
     val historyMonths by viewModel.historyMonths.collectAsStateWithLifecycle()
+    val weeklySummaries by viewModel.weeklySummaries.collectAsStateWithLifecycle()
     val context = LocalContext.current
+    var showWeeklySummary by remember { mutableStateOf(false) }
 
     Column(
         modifier = Modifier.fillMaxSize().padding(20.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
         Text("Histórico", style = MaterialTheme.typography.headlineLarge)
+
+        Button(
+            onClick = { showWeeklySummary = true },
+            modifier = Modifier.fillMaxWidth(),
+            enabled = weeklySummaries.isNotEmpty()
+        ) {
+            Text(stringResource(R.string.policy_weekly_summary_title))
+        }
 
         if (historyMonths.isEmpty()) {
             HistorySkeleton()
@@ -74,11 +93,55 @@ fun HistoryScreen(viewModel: HistoryViewModel = hiltViewModel()) {
             }
         }
     }
+
+    if (showWeeklySummary) {
+        WeeklySummaryDialog(
+            summaries = weeklySummaries,
+            onDismiss = { showWeeklySummary = false }
+        )
+    }
+}
+
+@Composable
+private fun WeeklySummaryDialog(
+    summaries: List<WeeklyPolicySummary>,
+    onDismiss: () -> Unit
+) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text(stringResource(R.string.policy_weekly_summary_title)) },
+        text = {
+            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                summaries.forEach { week ->
+                    val mode = stringResource(
+                        if (week.isOnSiteWeek) R.string.policy_week_on_site else R.string.policy_week_remote
+                    )
+                    Text(
+                        stringResource(
+                            R.string.policy_weekly_summary_line,
+                            week.weekStart.dayOfMonth,
+                            week.weekStart.monthValue,
+                            week.weekEnd.dayOfMonth,
+                            week.weekEnd.monthValue,
+                            mode,
+                            week.requiredCount
+                        ),
+                        style = MaterialTheme.typography.bodySmall
+                    )
+                }
+            }
+        },
+        confirmButton = {
+            TextButton(onClick = onDismiss) {
+                Text(stringResource(R.string.close))
+            }
+        }
+    )
 }
 
 private fun shareSummary(context: android.content.Context, summary: MonthlySummary) {
     val monthName = summary.yearMonth.month.getDisplayName(
-        TextStyle.FULL, 
+        TextStyle.FULL,
         Locale.forLanguageTag("pt-BR")
     )
     val text = buildString {

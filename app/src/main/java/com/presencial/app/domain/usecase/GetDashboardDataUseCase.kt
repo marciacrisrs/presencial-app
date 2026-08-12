@@ -1,22 +1,21 @@
 package com.presencial.app.domain.usecase
 
 import com.presencial.app.domain.model.Absence
+import com.presencial.app.domain.model.AppSettings
 import com.presencial.app.domain.model.CheckIn
 import com.presencial.app.domain.model.DashboardData
 import com.presencial.app.domain.model.DayStatus
 import com.presencial.app.domain.repository.AbsenceRepository
 import com.presencial.app.domain.repository.CheckInRepository
 import com.presencial.app.domain.repository.SettingsRepository
-import com.presencial.app.domain.model.AppSettings
 import com.presencial.app.domain.util.GoalCalculator
 import com.presencial.app.domain.util.PresencePolicyCalculator
-import com.presencial.app.domain.util.SmartMessageFallback
 import com.presencial.app.domain.util.SmartMessageMetricsCalculator
 import com.presencial.app.domain.util.TimeProvider
 import com.presencial.app.domain.util.WorkdayCalculator
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
-import kotlinx.coroutines.flow.transform
+import kotlinx.coroutines.flow.map
 import java.time.LocalDate
 import java.time.YearMonth
 import javax.inject.Inject
@@ -25,8 +24,7 @@ class GetDashboardDataUseCase @Inject constructor(
     private val checkInRepository: CheckInRepository,
     private val absenceRepository: AbsenceRepository,
     private val settingsRepository: SettingsRepository,
-    private val getAiSmartMessageUseCase: GetAiSmartMessageUseCase,
-    private val smartMessageFallback: SmartMessageFallback,
+    private val getSmartMessageUseCase: GetSmartMessageUseCase,
     private val timeProvider: TimeProvider
 ) {
     operator fun invoke(yearMonth: YearMonth = timeProvider.currentMonth()): Flow<DashboardData> {
@@ -36,30 +34,8 @@ class GetDashboardDataUseCase @Inject constructor(
             settingsRepository.settings
         ) { checkIns, absences, settings ->
             Triple(checkIns, absences, settings)
-        }.transform { (checkIns, absences, settings) ->
-            val dashboard = buildDashboard(
-                yearMonth,
-                checkIns,
-                absences,
-                settings
-            )
-            emit(dashboard.copy(isLoadingAi = true))
-            val baseParams = SmartMessageParams(
-                completedDays = dashboard.completedDays,
-                requiredDays = dashboard.requiredDays,
-                remainingDays = dashboard.remainingDays,
-                achievedPercentage = dashboard.achievedPercentage,
-                today = timeProvider.today(),
-                yearMonth = dashboard.yearMonth,
-                countSaturdays = dashboard.countSaturdays
-            )
-            val enrichedParams = SmartMessageMetricsCalculator.enrich(
-                params = baseParams,
-                checkIns = checkIns,
-                today = timeProvider.today()
-            )
-            val aiMessage = getAiSmartMessageUseCase(enrichedParams)
-            emit(dashboard.copy(smartMessage = aiMessage, isLoadingAi = false))
+        }.map { (checkIns, absences, settings) ->
+            buildDashboard(yearMonth, checkIns, absences, settings)
         }
     }
 
@@ -87,9 +63,9 @@ class GetDashboardDataUseCase @Inject constructor(
         val todayCheckIn = checkIns.find { it.date == today }
         val yesterday = today.minusDays(1)
         val yesterdayCheckIn = checkIns.find { it.date == yesterday }
-        val yesterdayIsPending = WorkdayCalculator.isWorkday(yesterday, countSaturdays) && 
-                yesterdayCheckIn == null
-        
+        val yesterdayIsPending = WorkdayCalculator.isWorkday(yesterday, countSaturdays) &&
+            yesterdayCheckIn == null
+
         val streak = calculateStreak(checkIns, today)
 
         val params = SmartMessageMetricsCalculator.enrich(
@@ -117,7 +93,7 @@ class GetDashboardDataUseCase @Inject constructor(
             achievedPercentage = achievedPercentage,
             requiredPercentage = settings.requiredPercentage,
             progressFraction = progressFraction,
-            smartMessage = smartMessageFallback.generate(params),
+            smartMessage = getSmartMessageUseCase(params),
             countSaturdays = countSaturdays,
             todayIsPresencial = todayCheckIn?.status == DayStatus.PRESENCIAL,
             todayIsWorkday = WorkdayCalculator.isWorkday(today, countSaturdays),

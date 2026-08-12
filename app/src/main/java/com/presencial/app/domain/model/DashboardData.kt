@@ -17,7 +17,6 @@ data class DashboardData(
     val requiredPercentage: Int,
     val progressFraction: Float,
     val smartMessage: String,
-    val isLoadingAi: Boolean = false,
     val countSaturdays: Boolean,
     val todayIsPresencial: Boolean,
     val todayIsWorkday: Boolean,

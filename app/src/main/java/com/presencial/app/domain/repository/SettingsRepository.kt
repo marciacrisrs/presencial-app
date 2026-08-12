@@ -8,6 +8,5 @@ interface SettingsRepository {
     val settings: Flow<AppSettings>
     suspend fun updateRequiredPercentage(percentage: Int)
     suspend fun updateCountSaturdaysAsWorkdays(count: Boolean)
-    suspend fun updateOpenAiApiKey(apiKey: String)
     suspend fun updatePresencePolicy(policy: PresencePolicy)
 }

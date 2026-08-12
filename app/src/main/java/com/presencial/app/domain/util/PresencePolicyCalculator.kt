@@ -20,15 +20,8 @@ object PresencePolicyCalculator {
         val errors = mutableListOf<String>()
         val warnings = mutableListOf<String>()
 
-        if (!normalized.freePercentageEnabled &&
-            !normalized.fixedWeekdaysEnabled &&
-            !normalized.alternatingWeeksEnabled
-        ) {
-            errors += "Ative ao menos uma regra de presença."
-        }
-
         if (normalized.fixedWeekdaysEnabled && normalized.mandatoryWeekdays.isEmpty()) {
-            errors += "Selecione ao menos um dia fixo presencial."
+            warnings += "Selecione ao menos um dia fixo presencial."
         }
 
         if (normalized.alternatingWeeksEnabled && normalized.fixedWeekdaysEnabled) {
@@ -66,11 +59,10 @@ object PresencePolicyCalculator {
             absences,
             normalized
         )
-        val percentageDays = if (normalized.freePercentageEnabled) {
-            GoalCalculator.calculateRequiredDays(liquidWorkdays, normalized.freePercentage)
-        } else {
-            0
-        }
+        val percentageDays = GoalCalculator.calculateRequiredDays(
+            liquidWorkdays,
+            normalized.freePercentage
+        )
 
         return when (normalized.conflictPriority) {
             PolicyConflictPriority.UNION_MAX ->

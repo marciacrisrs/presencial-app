@@ -79,20 +79,14 @@ class GetMonthCalendarUseCaseTest {
             assertEquals(DayStatus.FERIADO, sept7?.status)
             assertEquals("Independência", sept7?.holidayName)
 
-            // Sept 8: Workday before today without check-in (FALTOU)
-            assertEquals(DayStatus.FALTOU, days.find { it.date == LocalDate.of(2026, 9, 8) }?.status)
+            // Sept 8: Workday before today without check-in (HOME_OFFICE default)
+            assertEquals(DayStatus.HOME_OFFICE, days.find { it.date == LocalDate.of(2026, 9, 8) }?.status)
 
             // Sept 10: Today without check-in (HOME_OFFICE)
-            // This is the default status for a new record on current day
             assertEquals(DayStatus.HOME_OFFICE, days.find { it.date == LocalDate.of(2026, 9, 10) }?.status)
 
             // Sept 14: Absence (ABSENCE)
             assertEquals(DayStatus.ABSENCE, days.find { it.date == LocalDate.of(2026, 9, 14) }?.status)
-
-            // Sept 8: Workday before today without check-in (FALTOU)
-            // Note: This is an existing status, we don't change it to HOME_OFFICE here, 
-            // but the UI dialog will default to HOME_OFFICE when editing this day.
-            assertEquals(DayStatus.FALTOU, days.find { it.date == LocalDate.of(2026, 9, 8) }?.status)
 
             // Sept 20: Future (FUTURO)
             assertEquals(DayStatus.FUTURO, days.find { it.date == LocalDate.of(2026, 9, 20) }?.status)

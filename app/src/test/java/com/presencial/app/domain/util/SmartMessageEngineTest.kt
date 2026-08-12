@@ -8,9 +8,9 @@ import org.junit.jupiter.api.Test
 import java.time.LocalDate
 import java.time.YearMonth
 
-class LocalSmartMessageEngineTest {
+class SmartMessageEngineTest {
 
-    private val engine = LocalSmartMessageEngine(FakeSmartMessageTextProvider())
+    private val engine = SmartMessageEngine(FakeSmartMessageTextProvider())
 
     private fun params(
         completedDays: Int = 8,

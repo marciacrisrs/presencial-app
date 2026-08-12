@@ -12,9 +12,4 @@
         <item quantity="one">📅 Faltam %d dia para a meta.</item>
         <item quantity="other">📅 Faltam %d dias para a meta.</item>
     </plurals>
-    <string name="smart_msg_fallback_goal_completed">Meta concluída 🎉</string>
-    <plurals name="smart_msg_fallback_remaining">
-        <item quantity="one">Faltam %d dia.</item>
-        <item quantity="other">Faltam %d dias.</item>
-    </plurals>
 </resources>

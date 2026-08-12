@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8"/>
+  <title>Mapa de localização</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <link rel="stylesheet"
+        href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+        integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
+        crossorigin="anonymous"/>
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+          integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
+          crossorigin="anonymous"></script>
+  <style>
+    html, body, #map { height: 100%; margin: 0; padding: 0; }
+  </style>
+</head>
+<body>
+  <div id="map"></div>
+  <script>
+    function postLocation(lat, lng) {
+      window.location.href = 'presencial://location/' + lat + '/' + lng;
+    }
+    function initMap(lat, lng) {
+      var map = L.map('map').setView([lat, lng], 16);
+      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        maxZoom: 19,
+        attribution: '&copy; OpenStreetMap'
+      }).addTo(map);
+      var marker = L.marker([lat, lng], { draggable: true }).addTo(map);
+      marker.on('dragend', function(e) {
+        var pos = e.target.getLatLng();
+        postLocation(pos.lat, pos.lng);
+      });
+      map.on('click', function(e) {
+        marker.setLatLng(e.latlng);
+        postLocation(e.latlng.lat, e.latlng.lng);
+      });
+      window.setMarker = function(newLat, newLng) {
+        marker.setLatLng([newLat, newLng]);
+        map.setView([newLat, newLng], 16);
+      };
+    }
+    var params = new URLSearchParams(window.location.search);
+    var lat = Number.parseFloat(params.get('lat'));
+    var lng = Number.parseFloat(params.get('lng'));
+    initMap(Number.isNaN(lat) ? -23.5505 : lat, Number.isNaN(lng) ? -46.6333 : lng);
+  </script>
+</body>
+</html>

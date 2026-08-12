@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">Presencial</string>
+    <string name="close">Fechar</string>
     <string name="widget_small_name">Presencial (Pequeno)</string>
     <string name="widget_medium_name">Presencial (Médio)</string>
     <string name="widget_large_name">Presencial (Grande)</string>

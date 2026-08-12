@@ -29,9 +29,4 @@ class FakeSmartMessageTextProvider : SmartMessageTextProvider {
 
     override fun remainingDays(count: Int): String =
         "📅 Faltam $count ${if (count == 1) "dia" else "dias"} para a meta."
-
-    override fun fallbackGoalCompleted(): String = "Meta concluída 🎉"
-
-    override fun fallbackRemainingDays(count: Int): String =
-        "Faltam $count ${if (count == 1) "dia" else "dias"}."
 }

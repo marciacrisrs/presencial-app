@@ -113,8 +113,11 @@ private fun CalendarDayCell(
                 }
             )
             .then(
-                if (isToday) Modifier.border(BORDER_WIDTH_TODAY.dp, MaterialTheme.colorScheme.secondary, CircleShape)
-                else Modifier
+                if (isToday) {
+                    Modifier.border(BORDER_WIDTH_TODAY.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.35f), CircleShape)
+                } else {
+                    Modifier
+                }
             )
             .then(
                 if (dayInfo.isEditable) Modifier.clickable { onDayClick(dayInfo) }
@@ -125,7 +128,7 @@ private fun CalendarDayCell(
         Text(
             text = dayInfo.date.dayOfMonth.toString(),
             style = MaterialTheme.typography.bodySmall,
-            fontWeight = if (isToday) FontWeight.Bold else FontWeight.Normal,
+            fontWeight = FontWeight.Normal,
             color = if (dayInfo.status == DayStatus.FUTURO || dayInfo.status == DayStatus.FIM_DE_SEMANA)
                 MaterialTheme.colorScheme.onSurface.copy(alpha = ALPHA_DAY_LABEL)
             else if (dayInfo.status == DayStatus.HOME_OFFICE)
@@ -143,7 +146,7 @@ fun CalendarLegend(modifier: Modifier = Modifier) {
         "🏠 Home Office" to Color(COLOR_GRAY),
         "❌ Faltou" to Color(COLOR_RED),
         "🧡 Ausência" to Color(COLOR_ORANGE),
-        "🔵 Hoje" to MaterialTheme.colorScheme.secondary,
+        "🔵 Hoje" to MaterialTheme.colorScheme.onSurface.copy(alpha = 0.45f),
         "🎉 Feriado" to Color(COLOR_YELLOW)
     )
     
@@ -186,7 +189,7 @@ fun CalendarLegend(modifier: Modifier = Modifier) {
 fun dayColor(status: DayStatus, isToday: Boolean): Color {
     val isMarked = status == DayStatus.PRESENCIAL || status == DayStatus.ABSENCE
     if (isToday && !isMarked) {
-        return Color(COLOR_BLUE_TODAY).copy(alpha = ALPHA_TODAY_BG)
+        return Color(COLOR_BLUE_TODAY).copy(alpha = 0.12f)
     }
     return when (status) {
         DayStatus.PRESENCIAL -> Color(COLOR_GREEN)
@@ -223,7 +226,6 @@ private const val ALPHA_GRID_LABEL = 0.6f
 private const val ALPHA_DAY_FUTURO = 0.5f
 private const val ALPHA_DAY_LABEL = 0.6f
 private const val ALPHA_LEGEND_BG = 0.3f
-private const val ALPHA_TODAY_BG = 0.3f
 private const val ALPHA_FALTOU = 0.7f
-private const val BORDER_WIDTH_TODAY = 2
+private const val BORDER_WIDTH_TODAY = 1
 private const val CORNER_RADIUS_LEGEND = 8

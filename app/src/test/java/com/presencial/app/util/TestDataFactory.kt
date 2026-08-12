@@ -138,7 +138,6 @@ object TestDataFactory {
         requiredPercentage,
         progressFraction,
         smartMessage,
-        false,
         countSaturdays,
         todayIsPresencial,
         todayIsWorkday,

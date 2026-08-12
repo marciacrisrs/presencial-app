@@ -68,27 +68,6 @@ class BackupManagerTest {
     }
 
     @Test
-    fun `when exportToStream, then JSON must not contain openai api key`() = runTest {
-        val settings = AppSettings(
-            requiredPercentage = 40,
-            countSaturdaysAsWorkdays = false,
-            openAiApiKey = "sk-secret-should-not-export"
-        )
-        every { settingsRepository.settings } returns flowOf(settings)
-        every { checkInDao.observeAll() } returns flowOf(emptyList())
-        every { monthlySummaryDao.observeAll() } returns flowOf(emptyList())
-        coEvery { workAddressDao.getAllAddressesSync() } returns emptyList()
-
-        val outputStream = ByteArrayOutputStream()
-        val result = backupManager.exportToStream(outputStream)
-
-        assertTrue(result.isSuccess)
-        val jsonString = outputStream.toString().lowercase()
-        assertTrue(!jsonString.contains("openai"))
-        assertTrue(!jsonString.contains("sk-secret"))
-    }
-
-    @Test
     fun `when exportToStream, then include presence policy v3`() = runTest {
         val policy = PresencePolicy(
             companyName = "Acme",
