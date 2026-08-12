@@ -21,9 +21,11 @@ class DashboardScreenTest {
 
     private val viewModel: DashboardViewModel = mockk(relaxed = true)
     private val dashboardData = MutableStateFlow<DashboardData?>(null)
+    private val workAddresses = MutableStateFlow(emptyList<com.presencial.app.domain.model.WorkAddress>())
 
     init {
         every { viewModel.dashboardData } returns dashboardData
+        every { viewModel.workAddresses } returns workAddresses
     }
 
     @Test

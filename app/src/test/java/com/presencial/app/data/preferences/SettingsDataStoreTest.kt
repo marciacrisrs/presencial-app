@@ -17,6 +17,7 @@ import io.mockk.mockkStatic
 import io.mockk.slot
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.test.runTest
+import com.presencial.app.domain.model.PresencePolicy
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
@@ -28,6 +29,7 @@ class SettingsDataStoreTest {
     private val dataStore: DataStore<Preferences> = mockk()
     private val sharedPrefs: SharedPreferences = mockk()
     private val sharedPrefsEditor: SharedPreferences.Editor = mockk(relaxed = true)
+    private val openAiApiKeyStore: OpenAiApiKeyStore = mockk(relaxed = true)
     
     private val dataStoreFlow = MutableStateFlow(preferencesOf())
     private lateinit var settingsDataStore: SettingsDataStore
@@ -37,8 +39,9 @@ class SettingsDataStoreTest {
         every { context.getSharedPreferences(any(), any()) } returns sharedPrefs
         every { sharedPrefs.edit() } returns sharedPrefsEditor
         every { dataStore.data } returns dataStoreFlow
+        every { openAiApiKeyStore.read() } returns ""
         
-        settingsDataStore = SettingsDataStore(context, dataStore)
+        settingsDataStore = SettingsDataStore(context, dataStore, openAiApiKeyStore)
     }
 
     @Test
@@ -79,9 +82,8 @@ class SettingsDataStoreTest {
     }
 
     @Test
-    fun `when updateRequiredPercentage with invalid value, then default value is used`() = runTest {
-        // Arrange
-        val percentage = 50 
+    fun `when updateRequiredPercentage with out of range value, then value is coerced`() = runTest {
+        val percentage = 150
         mockkStatic("androidx.datastore.preferences.core.PreferencesKt")
         val transform = slot<suspend (Preferences) -> Preferences>()
         coEvery { dataStore.updateData(capture(transform)) } coAnswers {
@@ -90,12 +92,30 @@ class SettingsDataStoreTest {
             mutablePrefs
         }
 
-        // Act
         settingsDataStore.updateRequiredPercentage(percentage)
 
-        // Assert
+        coVerify { sharedPrefsEditor.putInt("required_percentage", 100) }
+    }
+
+    @Test
+    fun `when updatePresencePolicy, then persist policy json`() = runTest {
+        val policy = PresencePolicy(
+            companyName = "Acme",
+            freePercentageEnabled = true,
+            freePercentage = 55
+        )
+        mockkStatic("androidx.datastore.preferences.core.PreferencesKt")
+        val transform = slot<suspend (Preferences) -> Preferences>()
+        coEvery { dataStore.updateData(capture(transform)) } coAnswers {
+            val mutablePrefs = mockk<MutablePreferences>(relaxed = true)
+            transform.captured(mutablePrefs)
+            mutablePrefs
+        }
+
+        settingsDataStore.updatePresencePolicy(policy)
+
         coVerify { dataStore.updateData(any()) }
-        coVerify { sharedPrefsEditor.putInt("required_percentage", 40) }
+        coVerify { sharedPrefsEditor.putInt("required_percentage", 55) }
     }
 
     @Test

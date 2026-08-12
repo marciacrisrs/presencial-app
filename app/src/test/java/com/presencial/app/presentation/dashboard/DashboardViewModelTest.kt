@@ -1,6 +1,7 @@
 package com.presencial.app.presentation.dashboard
 
 import app.cash.turbine.test
+import com.presencial.app.domain.repository.WorkAddressRepository
 import com.presencial.app.domain.usecase.GetDashboardDataUseCase
 import com.presencial.app.domain.usecase.ToggleTodayCheckInUseCase
 import com.presencial.app.domain.util.TimeProvider
@@ -28,6 +29,7 @@ class DashboardViewModelTest {
     private val getDashboardDataUseCase = mockk<GetDashboardDataUseCase>()
     private val toggleTodayCheckInUseCase = mockk<ToggleTodayCheckInUseCase>()
     private val timeProvider = mockk<TimeProvider>()
+    private val workAddressRepository = mockk<WorkAddressRepository>()
 
     private lateinit var viewModel: DashboardViewModel
 
@@ -38,7 +40,13 @@ class DashboardViewModelTest {
         every { timeProvider.today() } returns today
         every { timeProvider.currentMonth() } returns YearMonth.from(today)
         every { getDashboardDataUseCase(any()) } returns flowOf(TestDataFactory.createDashboardData())
-        viewModel = DashboardViewModel(getDashboardDataUseCase, toggleTodayCheckInUseCase, timeProvider)
+        every { workAddressRepository.getAllAddresses() } returns flowOf(emptyList())
+        viewModel = DashboardViewModel(
+            getDashboardDataUseCase,
+            toggleTodayCheckInUseCase,
+            timeProvider,
+            workAddressRepository
+        )
     }
 
     @Test
@@ -47,7 +55,12 @@ class DashboardViewModelTest {
         every { getDashboardDataUseCase(any()) } returns flowOf(data)
         
         // Re-init to use the new flow
-        viewModel = DashboardViewModel(getDashboardDataUseCase, toggleTodayCheckInUseCase, timeProvider)
+        viewModel = DashboardViewModel(
+            getDashboardDataUseCase,
+            toggleTodayCheckInUseCase,
+            timeProvider,
+            workAddressRepository
+        )
 
         viewModel.dashboardData.test {
             assertEquals(data, awaitItem())

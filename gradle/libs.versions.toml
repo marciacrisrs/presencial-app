@@ -39,6 +39,7 @@ json = "20260719"
 mapsCompose = "6.2.1"
 playServicesMaps = "19.2.0"
 sonar = "7.4.0.8496"
+securityCrypto = "1.1.0-alpha06"
 
 [libraries]
 # AndroidX
@@ -110,6 +111,7 @@ mockk = { group = "io.mockk", name = "mockk", version.ref = "mockk" }
 turbine = { group = "app.cash.turbine", name = "turbine", version.ref = "turbine" }
 junit-platform-launcher = { group = "org.junit.platform", name = "junit-platform-launcher", version.ref = "junit-platform" }
 json-library = { group = "org.json", name = "json", version.ref = "json" }
+androidx-security-crypto = { group = "androidx.security", name = "security-crypto", version.ref = "securityCrypto" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }

@@ -11,81 +11,103 @@ class WidgetInfoTest {
 
     private val locale = Locale.forLanguageTag("pt-BR")
 
+    private fun createInfo(
+        completed: Int = 5,
+        required: Int = 10,
+        remaining: Int = 5,
+        remainingWorkdays: Int = 8,
+        achievedPercentage: Int = 50,
+        todayIsPresencial: Boolean = false,
+        todayIsWorkday: Boolean = true,
+        yearMonth: YearMonth = YearMonth.of(2026, Month.AUGUST)
+    ) = WidgetInfo.create(
+        completed = completed,
+        required = required,
+        remaining = remaining,
+        remainingWorkdays = remainingWorkdays,
+        achievedPercentage = achievedPercentage,
+        todayIsPresencial = todayIsPresencial,
+        todayIsWorkday = todayIsWorkday,
+        yearMonth = yearMonth,
+        locale = locale
+    )
+
     @Test
     fun `should calculate progress fraction correctly`() {
-        val yearMonth = YearMonth.of(2026, Month.AUGUST)
-        val info = WidgetInfo.create(
-            completed = 5,
-            required = 10,
-            remaining = 5,
-            yearMonth = yearMonth,
-            locale = locale
-        )
+        val info = createInfo()
 
         assertEquals(0.5f, info.progressFraction)
         assertEquals(5, info.completed)
         assertEquals(10, info.required)
         assertEquals(5, info.remaining)
         assertEquals("AGOSTO", info.monthName)
+        assertEquals(WidgetStatus.ON_TRACK, info.status)
     }
 
     @Test
     fun `should handle zero required days`() {
-        val yearMonth = YearMonth.of(2026, Month.AUGUST)
-        val info = WidgetInfo.create(
-            completed = 5,
-            required = 0,
-            remaining = 0,
-            yearMonth = yearMonth,
-            locale = locale
-        )
+        val info = createInfo(required = 0, remaining = 0)
 
         assertEquals(1f, info.progressFraction)
-        assertEquals(0, info.required)
+        assertEquals(WidgetStatus.NO_GOAL, info.status)
+    }
+
+    @Test
+    fun `should mark goal met when remaining is zero`() {
+        val info = createInfo(completed = 10, required = 10, remaining = 0)
+
+        assertEquals(WidgetStatus.GOAL_MET, info.status)
+    }
+
+    @Test
+    fun `should mark behind when remaining exceeds workdays`() {
+        val info = createInfo(remaining = 8, remainingWorkdays = 3)
+
+        assertEquals(WidgetStatus.BEHIND, info.status)
     }
 
     @Test
     fun `should handle different month names for all 12 months`() {
-        val months = Month.entries.toTypedArray()
-        val locale = Locale.forLanguageTag("pt-BR")
-        
         val expected = listOf(
             "JANEIRO", "FEVEREIRO", "MARÇO", "ABRIL", "MAIO", "JUNHO",
             "JULHO", "AGOSTO", "SETEMBRO", "OUTUBRO", "NOVEMBRO", "DEZEMBRO"
         )
 
-        months.forEachIndexed { index, month ->
-            val yearMonth = YearMonth.of(2026, month)
-            val info = WidgetInfo.create(1, 1, 0, yearMonth, locale)
+        Month.entries.forEachIndexed { index, month ->
+            val info = createInfo(yearMonth = YearMonth.of(2026, month))
             assertEquals(expected[index], info.monthName)
         }
     }
 
     @Test
     fun `should handle different locales`() {
-        val yearMonth = YearMonth.of(2026, Month.AUGUST)
-        val info = WidgetInfo.create(1, 1, 0, yearMonth, Locale.US)
+        val info = WidgetInfo.create(
+            completed = 1,
+            required = 1,
+            remaining = 0,
+            remainingWorkdays = 1,
+            achievedPercentage = 100,
+            todayIsPresencial = true,
+            todayIsWorkday = true,
+            yearMonth = YearMonth.of(2026, Month.AUGUST),
+            locale = Locale.US
+        )
         assertEquals("AUGUST", info.monthName)
     }
 
     @Test
     fun `should cover WidgetSize enum`() {
         assertEquals(3, WidgetSize.entries.size)
-        assertEquals(WidgetSize.SMALL, WidgetSize.valueOf("SMALL"))
-        assertEquals(WidgetSize.MEDIUM, WidgetSize.valueOf("MEDIUM"))
-        assertEquals(WidgetSize.LARGE, WidgetSize.valueOf("LARGE"))
         WidgetSize.entries.forEach {
-            assertNotNull(it.name)
+            assertNotNull(it.displayName)
         }
     }
-    
+
     @Test
-    fun `should cover WidgetInfo data class copy and equals`() {
-        val info1 = WidgetInfo(1, 2, 1, 0.5f, "TEST")
-        val info2 = info1.copy(completed = 2)
-        assertEquals(2, info2.completed)
-        assertEquals(info1, info1)
-        assertEquals(info1.hashCode(), info1.hashCode())
-        assertNotNull(info1.toString())
+    fun `resolveStatus should cover all branches`() {
+        assertEquals(WidgetStatus.NO_GOAL, WidgetInfo.resolveStatus(0, 1, 5))
+        assertEquals(WidgetStatus.GOAL_MET, WidgetInfo.resolveStatus(10, 0, 5))
+        assertEquals(WidgetStatus.BEHIND, WidgetInfo.resolveStatus(10, 6, 3))
+        assertEquals(WidgetStatus.ON_TRACK, WidgetInfo.resolveStatus(10, 3, 8))
     }
 }

@@ -1,5 +1,6 @@
 package com.presencial.app.widget
 
+import android.content.Intent
 import android.content.Context
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.unit.dp
@@ -7,9 +8,11 @@ import androidx.compose.ui.unit.sp
 import androidx.glance.GlanceId
 import androidx.glance.GlanceModifier
 import androidx.glance.GlanceTheme
+import androidx.glance.action.clickable
 import androidx.glance.appwidget.GlanceAppWidget
 import androidx.glance.appwidget.GlanceAppWidgetReceiver
 import androidx.glance.appwidget.LinearProgressIndicator
+import androidx.glance.appwidget.action.actionStartActivity
 import androidx.glance.appwidget.cornerRadius
 import androidx.glance.appwidget.provideContent
 import androidx.glance.background
@@ -25,34 +28,12 @@ import androidx.glance.text.Text
 import androidx.glance.text.TextAlign
 import androidx.glance.text.TextStyle
 import androidx.glance.unit.ColorProvider
+import com.presencial.app.MainActivity
 import com.presencial.app.R
-import com.presencial.app.data.local.PresencialDatabase
-import com.presencial.app.domain.model.DayStatus
-import com.presencial.app.domain.util.GoalCalculator
-import com.presencial.app.domain.util.WorkdayCalculator
-import kotlinx.coroutines.flow.first
-import java.time.YearMonth
 
 abstract class BasePresencialWidget(private val widgetSize: WidgetSize) : GlanceAppWidget() {
     override suspend fun provideGlance(context: Context, id: GlanceId) {
-        val db = PresencialDatabase.getInstance(context)
-        val prefs = context.getSharedPreferences(WIDGET_PREFS, Context.MODE_PRIVATE)
-        val percentage = prefs.getInt(PREF_REQUIRED_PERCENTAGE, DEFAULT_REQUIRED_PERCENTAGE)
-        val countSaturdays = prefs.getBoolean(PREF_COUNT_SATURDAYS, false)
-
-        val yearMonth = YearMonth.now()
-
-        val workdays = WorkdayCalculator.countWorkdaysInMonth(yearMonth, countSaturdays)
-        val required = GoalCalculator.calculateRequiredDays(workdays, percentage)
-
-        val start = yearMonth.atDay(1).toEpochDay()
-        val end = yearMonth.atEndOfMonth().toEpochDay()
-
-        val checkIns = db.checkInDao().observeBetween(start, end).first()
-        val completed = checkIns.count { it.status == DayStatus.PRESENCIAL.name }
-        val remaining = GoalCalculator.calculateRemainingDays(completed, required)
-
-        val info = WidgetInfo.create(completed, required, remaining, yearMonth)
+        val info = WidgetInfoLoader.load(context)
 
         provideContent {
             GlanceTheme {
@@ -68,18 +49,19 @@ class PresencialWidgetLarge : BasePresencialWidget(WidgetSize.LARGE)
 
 @Composable
 private fun WidgetContent(context: Context, widgetSize: WidgetSize, info: WidgetInfo) {
-    val successColor = androidx.compose.ui.graphics.Color(context.getColor(R.color.widget_success))
-    val secondaryColor = androidx.compose.ui.graphics.Color(context.getColor(R.color.widget_text_secondary))
-
-    val successProvider = androidx.glance.color.ColorProvider(day = successColor, night = successColor)
-    val secondaryTextProvider = androidx.glance.color.ColorProvider(day = secondaryColor, night = secondaryColor)
-
-    val colors = WidgetColors(successProvider, secondaryTextProvider)
+    val colors = WidgetColors.from(context)
 
     val modifier = GlanceModifier
         .fillMaxSize()
         .background(R.color.widget_background)
         .cornerRadius(WIDGET_CORNER_RADIUS.dp)
+        .clickable(
+            actionStartActivity(
+                Intent(context, MainActivity::class.java).apply {
+                    flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP
+                }
+            )
+        )
         .padding(WIDGET_PADDING.dp)
 
     when (widgetSize) {
@@ -95,24 +77,37 @@ private fun SmallLayout(
     colors: WidgetColors,
     modifier: GlanceModifier
 ) {
+    val context = androidx.glance.LocalContext.current
+
     Column(
         modifier = modifier,
         verticalAlignment = Alignment.Vertical.CenterVertically,
         horizontalAlignment = Alignment.Horizontal.CenterHorizontally
     ) {
         Text(
-            text = androidx.glance.LocalContext.current.getString(
-                R.string.widget_progress_format,
-                info.completed,
-                info.required
-            ),
+            text = headlineFor(info, context),
             style = TextStyle(
-                color = colors.success,
-                fontSize = 16.sp,
+                color = colors.headline(info.status),
+                fontSize = 15.sp,
                 fontWeight = FontWeight.Bold,
                 textAlign = TextAlign.Center
             )
         )
+        if (info.status != WidgetStatus.GOAL_MET && info.required > 0) {
+            Spacer(modifier = GlanceModifier.height(4.dp))
+            Text(
+                text = context.getString(
+                    R.string.widget_compact_progress,
+                    info.completed,
+                    info.required
+                ),
+                style = TextStyle(
+                    color = colors.secondaryText,
+                    fontSize = 12.sp,
+                    textAlign = TextAlign.Center
+                )
+            )
+        }
     }
 }
 
@@ -122,34 +117,53 @@ private fun MediumLayout(
     colors: WidgetColors,
     modifier: GlanceModifier
 ) {
+    val context = androidx.glance.LocalContext.current
+
     Column(
         modifier = modifier,
         verticalAlignment = Alignment.Vertical.CenterVertically,
         horizontalAlignment = Alignment.Horizontal.CenterHorizontally
     ) {
         Text(
-            text = androidx.glance.LocalContext.current.getString(
+            text = context.getString(
                 R.string.widget_progress_format,
                 info.completed,
                 info.required
             ),
             style = TextStyle(
                 color = colors.success,
-                fontSize = 22.sp,
+                fontSize = 24.sp,
                 fontWeight = FontWeight.Bold,
                 textAlign = TextAlign.Center
             )
         )
+
+        if (info.required > 0) {
+            Spacer(modifier = GlanceModifier.height(8.dp))
+            LinearProgressIndicator(
+                progress = info.progressFraction,
+                modifier = GlanceModifier.fillMaxWidth().height(5.dp),
+                color = colors.accent(info.status),
+                backgroundColor = colors.secondaryText
+            )
+            Spacer(modifier = GlanceModifier.height(8.dp))
+            Text(
+                text = context.getString(R.string.widget_percentage_format, info.achievedPercentage),
+                style = TextStyle(
+                    color = colors.secondaryText,
+                    fontSize = 12.sp,
+                    textAlign = TextAlign.Center
+                )
+            )
+        }
+
         Spacer(modifier = GlanceModifier.height(4.dp))
         Text(
-            text = androidx.glance.LocalContext.current.resources.getQuantityString(
-                R.plurals.widget_remaining_days,
-                info.remaining,
-                info.remaining
-            ),
+            text = headlineFor(info, context),
             style = TextStyle(
-                color = colors.secondaryText,
+                color = colors.headline(info.status),
                 fontSize = 13.sp,
+                fontWeight = FontWeight.Medium,
                 textAlign = TextAlign.Center
             )
         )
@@ -162,81 +176,139 @@ private fun LargeLayout(
     colors: WidgetColors,
     modifier: GlanceModifier
 ) {
+    val context = androidx.glance.LocalContext.current
+
     Column(
         modifier = modifier,
         verticalAlignment = Alignment.Vertical.CenterVertically,
         horizontalAlignment = Alignment.Horizontal.CenterHorizontally
     ) {
         Text(
-            text = androidx.glance.LocalContext.current.getString(
-                R.string.widget_title_month,
-                info.monthName
-            ),
+            text = context.getString(R.string.widget_title_month, info.monthName),
             style = TextStyle(
                 color = colors.secondaryText,
                 fontSize = 11.sp,
                 fontWeight = FontWeight.Medium
             )
         )
-        
-        Spacer(modifier = GlanceModifier.height(8.dp))
-        
+
+        Spacer(modifier = GlanceModifier.height(6.dp))
+
         Text(
-            text = androidx.glance.LocalContext.current.getString(
+            text = context.getString(
                 R.string.widget_progress_format,
                 info.completed,
                 info.required
             ),
             style = TextStyle(
                 color = colors.success,
-                fontSize = 30.sp,
+                fontSize = 32.sp,
                 fontWeight = FontWeight.Bold
             )
         )
 
-        Spacer(modifier = GlanceModifier.height(10.dp))
+        if (info.required > 0) {
+            Spacer(modifier = GlanceModifier.height(10.dp))
+            LinearProgressIndicator(
+                progress = info.progressFraction,
+                modifier = GlanceModifier.fillMaxWidth().height(6.dp),
+                color = colors.accent(info.status),
+                backgroundColor = colors.secondaryText
+            )
+            Spacer(modifier = GlanceModifier.height(8.dp))
+            Text(
+                text = context.getString(R.string.widget_percentage_format, info.achievedPercentage),
+                style = TextStyle(
+                    color = colors.secondaryText,
+                    fontSize = 13.sp
+                )
+            )
+        }
 
-        LinearProgressIndicator(
-            progress = info.progressFraction,
-            modifier = GlanceModifier.fillMaxWidth().height(6.dp),
-            color = colors.success,
-            backgroundColor = colors.secondaryText
-        )
-
-        Spacer(modifier = GlanceModifier.height(10.dp))
-
+        Spacer(modifier = GlanceModifier.height(8.dp))
         Text(
-            text = androidx.glance.LocalContext.current.resources.getQuantityString(
-                R.plurals.widget_remaining_days,
-                info.remaining,
-                info.remaining
-            ),
+            text = headlineFor(info, context),
             style = TextStyle(
-                color = colors.secondaryText,
-                fontSize = 13.sp
+                color = colors.headline(info.status),
+                fontSize = 13.sp,
+                fontWeight = FontWeight.Medium,
+                textAlign = TextAlign.Center
             )
         )
+
+        if (info.todayIsWorkday) {
+            Spacer(modifier = GlanceModifier.height(6.dp))
+            Text(
+                text = if (info.todayIsPresencial) {
+                    context.getString(R.string.widget_today_presencial)
+                } else {
+                    context.getString(R.string.widget_today_pending)
+                },
+                style = TextStyle(
+                    color = if (info.todayIsPresencial) colors.success else colors.secondaryText,
+                    fontSize = 12.sp
+                )
+            )
+        }
     }
+}
+
+private fun headlineFor(info: WidgetInfo, context: Context): String = when (info.status) {
+    WidgetStatus.GOAL_MET -> context.getString(R.string.widget_goal_met)
+    WidgetStatus.NO_GOAL -> context.getString(R.string.widget_configure_goal)
+    else -> context.resources.getQuantityString(
+        R.plurals.widget_remaining_days,
+        info.remaining,
+        info.remaining
+    )
 }
 
 private data class WidgetColors(
     val success: ColorProvider,
+    val warning: ColorProvider,
+    val primaryText: ColorProvider,
     val secondaryText: ColorProvider
-)
+) {
+    fun headline(status: WidgetStatus): ColorProvider = when (status) {
+        WidgetStatus.BEHIND -> warning
+        WidgetStatus.GOAL_MET -> success
+        else -> primaryText
+    }
+
+    fun accent(status: WidgetStatus): ColorProvider = when (status) {
+        WidgetStatus.BEHIND -> warning
+        WidgetStatus.GOAL_MET -> success
+        else -> success
+    }
+
+    companion object {
+        fun from(context: Context): WidgetColors {
+            fun provider(colorRes: Int): ColorProvider {
+                val color = androidx.compose.ui.graphics.Color(context.getColor(colorRes))
+                return androidx.glance.color.ColorProvider(day = color, night = color)
+            }
+
+            return WidgetColors(
+                success = provider(R.color.widget_success),
+                warning = provider(R.color.widget_warning),
+                primaryText = provider(R.color.widget_primary_text),
+                secondaryText = provider(R.color.widget_text_secondary)
+            )
+        }
+    }
+}
 
 private const val WIDGET_CORNER_RADIUS = 24
 private const val WIDGET_PADDING = 12
-private const val WIDGET_PREFS = "presencial_settings"
-private const val PREF_REQUIRED_PERCENTAGE = "required_percentage"
-private const val PREF_COUNT_SATURDAYS = "count_saturdays_as_workdays"
-private const val DEFAULT_REQUIRED_PERCENTAGE = 40
 
 class PresencialWidgetReceiverSmall : GlanceAppWidgetReceiver() {
     override val glanceAppWidget: GlanceAppWidget = PresencialWidgetSmall()
 }
+
 class PresencialWidgetReceiverMedium : GlanceAppWidgetReceiver() {
     override val glanceAppWidget: GlanceAppWidget = PresencialWidgetMedium()
 }
+
 class PresencialWidgetReceiverLarge : GlanceAppWidgetReceiver() {
     override val glanceAppWidget: GlanceAppWidget = PresencialWidgetLarge()
 }

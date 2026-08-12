@@ -8,6 +8,7 @@ import com.presencial.app.domain.repository.AbsenceRepository
 import com.presencial.app.domain.repository.CheckInRepository
 import com.presencial.app.domain.repository.SettingsRepository
 import com.presencial.app.domain.util.HolidayCalculator
+import com.presencial.app.domain.util.PresencePolicyCalculator
 import com.presencial.app.domain.util.TimeProvider
 import com.presencial.app.domain.util.WorkdayCalculator
 import kotlinx.coroutines.flow.Flow
@@ -28,7 +29,13 @@ class GetMonthCalendarUseCase @Inject constructor(
             absenceRepository.getAbsencesInRange(yearMonth.atDay(1), yearMonth.atEndOfMonth()),
             settingsRepository.settings
         ) { checkIns, absences, settings ->
-            buildCalendar(yearMonth, checkIns, absences, settings.countSaturdaysAsWorkdays)
+            buildCalendar(
+                yearMonth,
+                checkIns,
+                absences,
+                settings.countSaturdaysAsWorkdays,
+                settings.presencePolicy
+            )
         }
     }
 
@@ -36,7 +43,8 @@ class GetMonthCalendarUseCase @Inject constructor(
         yearMonth: YearMonth,
         checkIns: List<CheckIn>,
         absences: List<Absence>,
-        countSaturdays: Boolean
+        countSaturdays: Boolean,
+        policy: com.presencial.app.domain.model.PresencePolicy
     ): List<DayInfo> {
         val today = timeProvider.today()
         val checkInMap = checkIns.associateBy { it.date }
@@ -55,6 +63,12 @@ class GetMonthCalendarUseCase @Inject constructor(
             val isAbsent = absences.any { absence ->
                 !current.isBefore(absence.startDate) && !current.isAfter(absence.endDate) && absence.isFullDay
             }
+            val isPolicyRequired = PresencePolicyCalculator.isPolicyRequired(
+                current,
+                countSaturdays,
+                absences,
+                policy
+            )
 
             val status = when {
                 isAbsent -> DayStatus.ABSENCE
@@ -74,7 +88,8 @@ class GetMonthCalendarUseCase @Inject constructor(
                     isHoliday = isHoliday,
                     holidayName = holiday?.name,
                     isEditable = !current.isAfter(today) || isAbsent,
-                    source = savedSource
+                    source = savedSource,
+                    isPolicyRequired = isPolicyRequired
                 )
             )
             current = current.plusDays(1)

@@ -106,6 +106,13 @@ private fun CalendarDayCell(
             .clip(CircleShape)
             .background(backgroundColor)
             .then(
+                if (dayInfo.isPolicyRequired && dayInfo.isWorkday) {
+                    Modifier.border(1.5.dp, MaterialTheme.colorScheme.primary, CircleShape)
+                } else {
+                    Modifier
+                }
+            )
+            .then(
                 if (isToday) Modifier.border(BORDER_WIDTH_TODAY.dp, MaterialTheme.colorScheme.secondary, CircleShape)
                 else Modifier
             )
@@ -131,6 +138,7 @@ private fun CalendarDayCell(
 @Composable
 fun CalendarLegend(modifier: Modifier = Modifier) {
     val items = listOf(
+        "📌 Obrigatório" to MaterialTheme.colorScheme.primary,
         "🏢 Presencial" to Color(COLOR_GREEN),
         "🏠 Home Office" to Color(COLOR_GRAY),
         "❌ Faltou" to Color(COLOR_RED),

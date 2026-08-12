@@ -10,10 +10,10 @@ Aplicativo Android para controle de comparecimento presencial no trabalho. Calcu
 - **Calendário mensal** — visualização colorida por status com edição de dias passados
 - **Histórico** — resumo de todos os meses registrados com compartilhamento
 - **Estatísticas** — gráficos de evolução, média anual, sequências e exportação PDF
-- **Configurações** — percentual de presença, sábados como dias úteis, backup/restauração JSON
+- **Configurações** — política de presença (percentual livre, dias fixos, semanas alternadas), sábados como dias úteis, backup/restauração JSON
 - **Ausências** — registro de férias, day off, licenças e ausências com desconto automático na meta mensal
 - **Notificações** — lembrete às 18h em dias úteis (se ainda não confirmou presença) e aviso de check-in automático
-- **Widget** — exibe "Faltam X dias presenciais" diretamente na tela inicial
+- **Widget** — progresso mensal, status do dia, alerta quando a meta exige atenção e toque para abrir o app
 - **Sobre** — versão do app, política de privacidade (dados locais) e link para o desenvolvedor
 - **Tema claro/escuro** — Material Design 3 com suporte a Dynamic Color (Material You)
 
@@ -56,7 +56,7 @@ UI (Compose) → ViewModel → UseCase → Repository → Room / DataStore / Rem
 
 ### Regras de negócio principais
 
-1. **Meta mensal:** `ceil(dias_úteis_líquidos × percentual / 100)`
+1. **Meta mensal:** calculada pela política de presença — percentual livre (`ceil(dias × % / 100)`), dias fixos obrigatórios, semanas alternadas, ou combinação (prioridade configurável)
 2. **Dias úteis líquidos:** exclui domingos, feriados nacionais, sábados (configurável) e períodos de ausência registrados (férias, licenças, etc.)
 3. **Feriados móveis:** calculados a partir da Páscoa (algoritmo de Meeus/Jones/Butcher)
 4. **Geofencing:** check-in automático via dwell de 30 s dentro do raio configurado; geofences restauradas no boot, startup e após restore de backup. Localização definida por mapa interativo (OpenStreetMap), geocoding ou GPS.

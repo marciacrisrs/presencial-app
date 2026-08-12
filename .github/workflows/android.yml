@@ -42,8 +42,18 @@ jobs:
       - name: Grant execute permission
         run: chmod +x gradlew
 
-      - name: Build
+      - name: Build Debug
         run: ./gradlew assembleDebug
+
+      - name: Build Release
+        run: ./gradlew assembleRelease
+
+      - name: Upload Debug APK
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: app-debug
+          path: app/build/outputs/apk/debug/app-debug.apk
 
       - name: Run Android Lint
         run: ./gradlew lintDebug

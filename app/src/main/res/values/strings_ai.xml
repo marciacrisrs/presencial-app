@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="ai_section_title">Inteligência</string>
+    <string name="ai_settings_title">Inteligência (ChatGPT)</string>
+    <string name="ai_settings_description">Opcional. Informe sua chave OpenAI para mensagens contextuais no dashboard. Sem chave, o app usa recomendações locais.</string>
+    <string name="ai_settings_api_key_label">Chave da API OpenAI</string>
+    <string name="ai_message_loading">Gerando mensagem inteligente…</string>
+    <string name="ai_message_content_description">Mensagem inteligente de presença</string>
+</resources>

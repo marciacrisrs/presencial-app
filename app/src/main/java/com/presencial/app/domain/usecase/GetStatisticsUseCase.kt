@@ -7,7 +7,7 @@ import com.presencial.app.domain.model.MonthlySummary
 import com.presencial.app.domain.repository.AbsenceRepository
 import com.presencial.app.domain.repository.CheckInRepository
 import com.presencial.app.domain.repository.SettingsRepository
-import com.presencial.app.domain.util.GoalCalculator
+import com.presencial.app.domain.util.PresencePolicyCalculator
 import com.presencial.app.domain.util.WorkdayCalculator
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
@@ -34,20 +34,27 @@ class GetStatisticsUseCase @Inject constructor(
             absenceRepository.getAllAbsences(),
             settingsRepository.settings
         ) { checkIns, absences, settings ->
-            buildStatistics(checkIns, absences, settings.requiredPercentage, settings.countSaturdaysAsWorkdays)
+            buildStatistics(checkIns, absences, settings)
         }
     }
 
     private fun buildStatistics(
         checkIns: List<CheckIn>,
         absences: List<Absence>,
-        requiredPercentage: Int,
-        countSaturdays: Boolean
+        settings: com.presencial.app.domain.model.AppSettings
     ): StatisticsData {
+        val requiredPercentage = settings.requiredPercentage
+        val countSaturdays = settings.countSaturdaysAsWorkdays
+        val policy = settings.presencePolicy
         val grouped = checkIns.groupBy { YearMonth.from(it.date) }
         val summaries = grouped.map { (yearMonth, monthCheckIns) ->
             val workdays = WorkdayCalculator.countLiquidWorkdaysInMonth(yearMonth, countSaturdays, absences)
-            val required = GoalCalculator.calculateRequiredDays(workdays, requiredPercentage)
+            val required = PresencePolicyCalculator.calculateRequiredDays(
+                yearMonth,
+                countSaturdays,
+                absences,
+                policy
+            )
             val completed = monthCheckIns.count { it.status == DayStatus.PRESENCIAL }
             val homeOffice = monthCheckIns.count { it.status == DayStatus.HOME_OFFICE }
             MonthlySummary(
@@ -57,7 +64,8 @@ class GetStatisticsUseCase @Inject constructor(
                 completedDays = completed,
                 homeOfficeDays = homeOffice,
                 requiredPercentage = requiredPercentage,
-                achievedPercentage = GoalCalculator.calculateAchievedPercentage(completed, required)
+                achievedPercentage = com.presencial.app.domain.util.GoalCalculator
+                    .calculateAchievedPercentage(completed, required)
             )
         }.sortedByDescending { it.yearMonth }
 

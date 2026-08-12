@@ -7,8 +7,11 @@ import com.presencial.app.domain.model.DayStatus
 import com.presencial.app.domain.repository.AbsenceRepository
 import com.presencial.app.domain.repository.CheckInRepository
 import com.presencial.app.domain.repository.SettingsRepository
+import com.presencial.app.domain.model.AppSettings
 import com.presencial.app.domain.util.GoalCalculator
-import com.presencial.app.domain.util.SmartMessageGenerator
+import com.presencial.app.domain.util.PresencePolicyCalculator
+import com.presencial.app.domain.util.SmartMessageFallback
+import com.presencial.app.domain.util.SmartMessageMetricsCalculator
 import com.presencial.app.domain.util.TimeProvider
 import com.presencial.app.domain.util.WorkdayCalculator
 import kotlinx.coroutines.flow.Flow
@@ -23,6 +26,7 @@ class GetDashboardDataUseCase @Inject constructor(
     private val absenceRepository: AbsenceRepository,
     private val settingsRepository: SettingsRepository,
     private val getAiSmartMessageUseCase: GetAiSmartMessageUseCase,
+    private val smartMessageFallback: SmartMessageFallback,
     private val timeProvider: TimeProvider
 ) {
     operator fun invoke(yearMonth: YearMonth = timeProvider.currentMonth()): Flow<DashboardData> {
@@ -31,26 +35,30 @@ class GetDashboardDataUseCase @Inject constructor(
             absenceRepository.getAbsencesInRange(yearMonth.atDay(1), yearMonth.atEndOfMonth()),
             settingsRepository.settings
         ) { checkIns, absences, settings ->
-            buildDashboard(
-                yearMonth, 
-                checkIns, 
-                absences, 
-                settings.requiredPercentage, 
-                settings.countSaturdaysAsWorkdays
+            Triple(checkIns, absences, settings)
+        }.transform { (checkIns, absences, settings) ->
+            val dashboard = buildDashboard(
+                yearMonth,
+                checkIns,
+                absences,
+                settings
             )
-        }.transform { dashboard ->
             emit(dashboard.copy(isLoadingAi = true))
-            val aiMessage = getAiSmartMessageUseCase(
-                SmartMessageParams(
-                    completedDays = dashboard.completedDays,
-                    requiredDays = dashboard.requiredDays,
-                    remainingDays = dashboard.remainingDays,
-                    achievedPercentage = dashboard.achievedPercentage,
-                    today = timeProvider.today(),
-                    yearMonth = dashboard.yearMonth,
-                    countSaturdays = dashboard.countSaturdays
-                )
+            val baseParams = SmartMessageParams(
+                completedDays = dashboard.completedDays,
+                requiredDays = dashboard.requiredDays,
+                remainingDays = dashboard.remainingDays,
+                achievedPercentage = dashboard.achievedPercentage,
+                today = timeProvider.today(),
+                yearMonth = dashboard.yearMonth,
+                countSaturdays = dashboard.countSaturdays
             )
+            val enrichedParams = SmartMessageMetricsCalculator.enrich(
+                params = baseParams,
+                checkIns = checkIns,
+                today = timeProvider.today()
+            )
+            val aiMessage = getAiSmartMessageUseCase(enrichedParams)
             emit(dashboard.copy(smartMessage = aiMessage, isLoadingAi = false))
         }
     }
@@ -59,12 +67,18 @@ class GetDashboardDataUseCase @Inject constructor(
         yearMonth: YearMonth,
         checkIns: List<CheckIn>,
         absences: List<Absence>,
-        requiredPercentage: Int,
-        countSaturdays: Boolean
+        settings: AppSettings
     ): DashboardData {
+        val countSaturdays = settings.countSaturdaysAsWorkdays
+        val policy = settings.presencePolicy
         val today = timeProvider.today()
         val workdays = WorkdayCalculator.countLiquidWorkdaysInMonth(yearMonth, countSaturdays, absences)
-        val requiredDays = GoalCalculator.calculateRequiredDays(workdays, requiredPercentage)
+        val requiredDays = PresencePolicyCalculator.calculateRequiredDays(
+            yearMonth,
+            countSaturdays,
+            absences,
+            policy
+        )
         val completedDays = checkIns.count { it.status == DayStatus.PRESENCIAL }
         val homeOfficeDays = checkIns.count { it.status == DayStatus.HOME_OFFICE }
         val remainingDays = GoalCalculator.calculateRemainingDays(completedDays, requiredDays)
@@ -78,14 +92,18 @@ class GetDashboardDataUseCase @Inject constructor(
         
         val streak = calculateStreak(checkIns, today)
 
-        val params = SmartMessageParams(
-            completedDays = completedDays,
-            requiredDays = requiredDays,
-            remainingDays = remainingDays,
-            achievedPercentage = achievedPercentage,
-            today = today,
-            yearMonth = yearMonth,
-            countSaturdays = countSaturdays
+        val params = SmartMessageMetricsCalculator.enrich(
+            params = SmartMessageParams(
+                completedDays = completedDays,
+                requiredDays = requiredDays,
+                remainingDays = remainingDays,
+                achievedPercentage = achievedPercentage,
+                today = today,
+                yearMonth = yearMonth,
+                countSaturdays = countSaturdays
+            ),
+            checkIns = checkIns,
+            today = today
         )
 
         return DashboardData(
@@ -97,14 +115,15 @@ class GetDashboardDataUseCase @Inject constructor(
             remainingDays = remainingDays,
             homeOfficeDays = homeOfficeDays,
             achievedPercentage = achievedPercentage,
-            requiredPercentage = requiredPercentage,
+            requiredPercentage = settings.requiredPercentage,
             progressFraction = progressFraction,
-            smartMessage = SmartMessageGenerator.generate(params),
+            smartMessage = smartMessageFallback.generate(params),
             countSaturdays = countSaturdays,
             todayIsPresencial = todayCheckIn?.status == DayStatus.PRESENCIAL,
             todayIsWorkday = WorkdayCalculator.isWorkday(today, countSaturdays),
             yesterdayIsPending = yesterdayIsPending,
-            streak = streak
+            streak = streak,
+            policyCompanyName = policy.companyName
         )
     }
 

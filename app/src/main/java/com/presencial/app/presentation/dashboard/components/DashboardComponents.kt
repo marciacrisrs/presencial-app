@@ -13,10 +13,14 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.hapticfeedback.HapticFeedback
 import androidx.compose.ui.unit.dp
 import com.presencial.app.domain.model.DashboardData
+import com.presencial.app.presentation.components.MonitoringStatusBanner
 
 @Composable
 fun DashboardContent(
     dashboard: DashboardData,
+    activeWorkAddressCount: Int,
+    foregroundGranted: Boolean,
+    backgroundGranted: Boolean,
     onToggleTodayCheckIn: () -> Unit,
     onMarkYesterdayPresencial: () -> Unit,
     haptic: HapticFeedback
@@ -29,6 +33,12 @@ fun DashboardContent(
         verticalArrangement = Arrangement.spacedBy(CONTENT_SPACING)
     ) {
         DashboardHeader(dashboard)
+
+        MonitoringStatusBanner(
+            activeAddressCount = activeWorkAddressCount,
+            foregroundGranted = foregroundGranted,
+            backgroundGranted = backgroundGranted
+        )
 
         DashboardSmartMessageSection(dashboard)
 

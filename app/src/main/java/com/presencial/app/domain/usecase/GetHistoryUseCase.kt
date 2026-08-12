@@ -6,7 +6,7 @@ import com.presencial.app.domain.model.MonthlySummary
 import com.presencial.app.domain.repository.CheckInRepository
 import com.presencial.app.domain.repository.MonthlySummaryRepository
 import com.presencial.app.domain.repository.SettingsRepository
-import com.presencial.app.domain.util.GoalCalculator
+import com.presencial.app.domain.util.PresencePolicyCalculator
 import com.presencial.app.domain.util.TimeProvider
 import com.presencial.app.domain.util.WorkdayCalculator
 import kotlinx.coroutines.flow.Flow
@@ -49,7 +49,12 @@ class GetHistoryUseCase @Inject constructor(
             current,
             settings.countSaturdaysAsWorkdays
         )
-        val required = GoalCalculator.calculateRequiredDays(workdays, settings.requiredPercentage)
+        val required = PresencePolicyCalculator.calculateRequiredDays(
+            current,
+            settings.countSaturdaysAsWorkdays,
+            emptyList(),
+            settings.presencePolicy
+        )
         return summaries + MonthlySummary(
             yearMonth = current,
             workdays = workdays,

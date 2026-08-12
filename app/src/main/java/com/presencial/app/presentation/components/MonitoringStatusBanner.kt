@@ -1,15 +1,26 @@
 package com.presencial.app.presentation.components
 
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.CheckCircle
+import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.pluralStringResource
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
+import com.presencial.app.R
 
 @Composable
 fun MonitoringStatusBanner(
@@ -26,31 +37,55 @@ fun MonitoringStatusBanner(
     } else {
         MaterialTheme.colorScheme.errorContainer
     }
+    val contentDescription = stringResource(
+        if (isFullyConfigured) {
+            R.string.monitoring_content_description_active
+        } else {
+            R.string.monitoring_content_description_incomplete
+        }
+    )
+    val title = if (isFullyConfigured) {
+        pluralStringResource(
+            R.plurals.monitoring_active_title,
+            activeAddressCount,
+            activeAddressCount
+        )
+    } else {
+        stringResource(R.string.monitoring_incomplete_title)
+    }
+    val description = when {
+        isFullyConfigured -> stringResource(R.string.monitoring_active_description)
+        !foregroundGranted -> stringResource(R.string.monitoring_need_foreground)
+        else -> stringResource(R.string.monitoring_need_background)
+    }
 
     Card(
-        modifier = modifier.fillMaxWidth(),
+        modifier = modifier
+            .fillMaxWidth()
+            .semantics { this.contentDescription = contentDescription },
         colors = CardDefaults.cardColors(containerColor = containerColor)
     ) {
-        Column(modifier = Modifier.padding(16.dp)) {
-            Text(
-                text = if (isFullyConfigured) {
-                    "Monitoramento ativo ($activeAddressCount local${if (activeAddressCount > 1) "is" else ""})"
+        Row(
+            modifier = Modifier.padding(16.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Icon(
+                imageVector = if (isFullyConfigured) {
+                    Icons.Default.CheckCircle
                 } else {
-                    "Check-in automático incompleto"
+                    Icons.Default.Warning
                 },
-                style = MaterialTheme.typography.titleSmall
+                contentDescription = null,
+                tint = if (isFullyConfigured) {
+                    MaterialTheme.colorScheme.primary
+                } else {
+                    MaterialTheme.colorScheme.error
+                }
             )
-            Text(
-                text = when {
-                    isFullyConfigured ->
-                        "O app pode registrar sua presença ao permanecer no raio configurado."
-                    !foregroundGranted ->
-                        "Conceda permissão de localização para ativar o monitoramento."
-                    else ->
-                        "Permita localização \"O tempo todo\" para check-in em background."
-                },
-                style = MaterialTheme.typography.bodySmall
-            )
+            Column(modifier = Modifier.padding(start = 12.dp)) {
+                Text(text = title, style = MaterialTheme.typography.titleSmall)
+                Text(text = description, style = MaterialTheme.typography.bodySmall)
+            }
         }
     }
 }

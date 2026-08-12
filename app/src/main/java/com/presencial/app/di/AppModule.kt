@@ -24,6 +24,10 @@ import com.presencial.app.domain.location.GeocodingHelper
 import com.presencial.app.domain.repository.WorkAddressRepository
 import com.presencial.app.domain.util.DefaultTimeProvider
 import com.presencial.app.domain.util.TimeProvider
+import com.presencial.app.data.local.AndroidSmartMessageTextProvider
+import com.presencial.app.domain.util.SmartMessageTextProvider
+import com.presencial.app.domain.widget.WidgetRefresher
+import com.presencial.app.widget.AndroidWidgetRefresher
 import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.preferencesDataStore
@@ -138,4 +142,12 @@ interface RepositoryModule {
     @Binds
     @Singleton
     fun bindGeocodingHelper(impl: AndroidGeocodingHelper): GeocodingHelper
+
+    @Binds
+    @Singleton
+    fun bindWidgetRefresher(impl: AndroidWidgetRefresher): WidgetRefresher
+
+    @Binds
+    @Singleton
+    fun bindSmartMessageTextProvider(impl: AndroidSmartMessageTextProvider): SmartMessageTextProvider
 }

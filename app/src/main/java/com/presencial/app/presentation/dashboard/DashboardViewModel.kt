@@ -3,6 +3,8 @@ package com.presencial.app.presentation.dashboard
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.presencial.app.domain.model.DashboardData
+import com.presencial.app.domain.model.WorkAddress
+import com.presencial.app.domain.repository.WorkAddressRepository
 import com.presencial.app.domain.usecase.GetDashboardDataUseCase
 import com.presencial.app.domain.usecase.ToggleTodayCheckInUseCase
 import com.presencial.app.domain.util.TimeProvider
@@ -17,11 +19,15 @@ import javax.inject.Inject
 class DashboardViewModel @Inject constructor(
     getDashboardDataUseCase: GetDashboardDataUseCase,
     private val toggleTodayCheckInUseCase: ToggleTodayCheckInUseCase,
-    private val timeProvider: TimeProvider
+    private val timeProvider: TimeProvider,
+    workAddressRepository: WorkAddressRepository
 ) : ViewModel() {
 
     val dashboardData: StateFlow<DashboardData?> = getDashboardDataUseCase(timeProvider.currentMonth())
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(STOP_TIMEOUT_MS), null)
+
+    val workAddresses: StateFlow<List<WorkAddress>> = workAddressRepository.getAllAddresses()
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(STOP_TIMEOUT_MS), emptyList())
 
     fun toggleTodayCheckIn(markPresencial: Boolean) {
         viewModelScope.launch {

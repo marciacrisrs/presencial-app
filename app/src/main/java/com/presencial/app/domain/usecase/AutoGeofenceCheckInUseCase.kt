@@ -7,6 +7,7 @@ import com.presencial.app.domain.repository.MonthlySummaryRepository
 import com.presencial.app.domain.repository.SettingsRepository
 import com.presencial.app.domain.util.TimeProvider
 import com.presencial.app.domain.util.WorkdayCalculator
+import com.presencial.app.domain.widget.WidgetRefresher
 import kotlinx.coroutines.flow.first
 import java.time.YearMonth
 import javax.inject.Inject
@@ -21,7 +22,8 @@ class AutoGeofenceCheckInUseCase @Inject constructor(
     private val checkInRepository: CheckInRepository,
     private val monthlySummaryRepository: MonthlySummaryRepository,
     private val settingsRepository: SettingsRepository,
-    private val timeProvider: TimeProvider
+    private val timeProvider: TimeProvider,
+    private val widgetRefresher: WidgetRefresher
 ) {
     suspend operator fun invoke(workAddressId: Long?): AutoCheckInResult {
         val today = timeProvider.today()
@@ -43,6 +45,7 @@ class AutoGeofenceCheckInUseCase @Inject constructor(
             workAddressId = workAddressId
         )
         monthlySummaryRepository.refreshSummary(YearMonth.from(today))
+        widgetRefresher.refresh()
         return AutoCheckInResult.Success
     }
 }
