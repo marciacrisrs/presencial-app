@@ -11,5 +11,7 @@ data class WorkAddressEntity(
     val latitude: Double,
     val longitude: Double,
     val radius: Float = 50f,
-    val isActive: Boolean = true
+    val isActive: Boolean = true,
+    val stateCode: String? = null,
+    val cityName: String? = null
 )

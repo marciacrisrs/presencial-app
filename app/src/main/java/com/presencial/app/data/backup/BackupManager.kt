@@ -82,6 +82,8 @@ class BackupManager @Inject constructor(
                         put("longitude", wa.longitude)
                         put("radius", wa.radius.toDouble())
                         put("isActive", wa.isActive)
+                        wa.stateCode?.let { put("stateCode", it) }
+                        wa.cityName?.let { put("cityName", it) }
                     })
                 }
             })
@@ -147,7 +149,9 @@ class BackupManager @Inject constructor(
                 latitude = obj.getDouble("latitude"),
                 longitude = obj.getDouble("longitude"),
                 radius = obj.getDouble("radius").toFloat(),
-                isActive = obj.optBoolean("isActive", true)
+                isActive = obj.optBoolean("isActive", true),
+                stateCode = obj.optString("stateCode").takeIf { it.isNotBlank() },
+                cityName = obj.optString("cityName").takeIf { it.isNotBlank() }
             )
         }
         workAddressDao.insertAll(workAddressEntities)

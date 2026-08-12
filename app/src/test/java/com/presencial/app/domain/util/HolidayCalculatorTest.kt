@@ -1,5 +1,7 @@
 package com.presencial.app.domain.util
 
+import com.presencial.app.domain.model.RegionalLocation
+import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertFalse
 import org.junit.jupiter.api.Assertions.assertNotNull
@@ -8,6 +10,11 @@ import org.junit.jupiter.api.Test
 import java.time.LocalDate
 
 class HolidayCalculatorTest {
+
+    @AfterEach
+    fun tearDown() {
+        HolidayCalculator.clearRegionalHolidays()
+    }
 
     @Test
     fun `todos feriados fixos estao presentes`() {
@@ -56,5 +63,38 @@ class HolidayCalculatorTest {
         assertNotNull(HolidayCalculator.getHoliday(easter.minusDays(47))) // Carnaval Ter
         assertNotNull(HolidayCalculator.getHoliday(easter.minusDays(2))) // Sexta-feira Santa
         assertNotNull(HolidayCalculator.getHoliday(easter.plusDays(60))) // Corpus Christi
+    }
+
+    @Test
+    fun `includes state and municipal holidays when regional scope is configured`() {
+        HolidayCalculator.configureRegionalHolidays(
+            lookup = RegionalHolidayLookup { year, location ->
+                buildList {
+                    if (location.stateCode == "SP") {
+                        add(HolidayCalculator.Holiday(LocalDate.of(year, 7, 9), "Revolução Constitucionalista (SP)"))
+                    }
+                    if (location.stateCode == "SP" && location.cityName == "São Paulo") {
+                        add(HolidayCalculator.Holiday(LocalDate.of(year, 1, 25), "Aniversário de São Paulo"))
+                    }
+                }
+            },
+            locations = setOf(RegionalLocation("SP", "São Paulo"))
+        )
+
+        assertTrue(HolidayCalculator.isHoliday(LocalDate.of(2026, 7, 9)))
+        assertTrue(HolidayCalculator.isHoliday(LocalDate.of(2026, 1, 25)))
+        assertEquals(
+            "Aniversário de São Paulo",
+            HolidayCalculator.getHoliday(LocalDate.of(2026, 1, 25))?.name
+        )
+    }
+
+    @Test
+    fun `without work address scope only national holidays apply`() {
+        HolidayCalculator.clearRegionalHolidays()
+
+        assertFalse(HolidayCalculator.isHoliday(LocalDate.of(2026, 1, 25)))
+        assertFalse(HolidayCalculator.isHoliday(LocalDate.of(2026, 7, 9)))
+        assertTrue(HolidayCalculator.isHoliday(LocalDate.of(2026, 1, 1)))
     }
 }

@@ -20,11 +20,14 @@ import com.presencial.app.domain.repository.MonthlySummaryRepository
 import com.presencial.app.domain.repository.SettingsRepository
 import com.presencial.app.data.location.AndroidGeocodingHelper
 import com.presencial.app.data.local.migration.MIGRATION_3_4
+import com.presencial.app.data.local.migration.MIGRATION_4_5
 import com.presencial.app.domain.location.GeocodingHelper
 import com.presencial.app.domain.repository.WorkAddressRepository
 import com.presencial.app.domain.util.DefaultTimeProvider
 import com.presencial.app.domain.util.TimeProvider
+import com.presencial.app.data.holidays.RegionalHolidayCatalog
 import com.presencial.app.data.local.AndroidSmartMessageTextProvider
+import com.presencial.app.domain.util.RegionalHolidayLookup
 import com.presencial.app.domain.util.SmartMessageTextProvider
 import com.presencial.app.domain.widget.WidgetRefresher
 import com.presencial.app.widget.AndroidWidgetRefresher
@@ -78,7 +81,7 @@ object DatabaseModule {
     @Singleton
     fun provideDatabase(@ApplicationContext context: Context): PresencialDatabase =
         Room.databaseBuilder(context, PresencialDatabase::class.java, "presencial.db")
-            .addMigrations(MIGRATION_3_4)
+            .addMigrations(MIGRATION_3_4, MIGRATION_4_5)
             .fallbackToDestructiveMigration(dropAllTables = false)
             .build()
 
@@ -150,4 +153,8 @@ interface RepositoryModule {
     @Binds
     @Singleton
     fun bindSmartMessageTextProvider(impl: AndroidSmartMessageTextProvider): SmartMessageTextProvider
+
+    @Binds
+    @Singleton
+    fun bindRegionalHolidayLookup(impl: RegionalHolidayCatalog): RegionalHolidayLookup
 }
