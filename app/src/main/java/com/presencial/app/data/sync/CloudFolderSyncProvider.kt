@@ -66,13 +66,21 @@ class CloudFolderSyncProvider @Inject constructor(
 
     suspend fun connectFolder(treeUri: Uri, selectedProvider: CloudStorageProvider) {
         val flags = Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_GRANT_WRITE_URI_PERMISSION
-        context.contentResolver.takePersistableUriPermission(treeUri, flags)
+        runCatching {
+            context.contentResolver.takePersistableUriPermission(treeUri, flags)
+        }.getOrElse { error("Não foi possível acessar a pasta selecionada") }
+        require(hasPersistedPermission(treeUri)) { "Permissão da pasta não concedida" }
         val label = readTreeDisplayName(treeUri) ?: selectedProvider.displayName
         dataStore.edit { prefs ->
             prefs[Keys.TREE_URI] = treeUri.toString()
             prefs[Keys.PROVIDER] = selectedProvider.name
             prefs[Keys.FOLDER_LABEL] = label
         }
+    }
+
+    suspend fun isFolderAccessible(): Boolean {
+        val treeUri = getTreeUri() ?: return false
+        return hasPersistedPermission(treeUri) && readTreeDisplayName(treeUri) != null
     }
 
     suspend fun selectedProvider(): CloudStorageProvider {
@@ -104,7 +112,15 @@ class CloudFolderSyncProvider @Inject constructor(
         }
     }.getOrNull()
 
+    private fun hasPersistedPermission(treeUri: Uri): Boolean =
+        context.contentResolver.persistedUriPermissions.any { permission ->
+            permission.uri == treeUri &&
+                permission.isReadPermission &&
+                permission.isWritePermission
+        }
+
     private fun findBackupUri(resolver: ContentResolver, treeUri: Uri, fileName: String): Uri? {
+        require(fileName == BACKUP_FILE_NAME) { "Nome de arquivo inválido" }
         val docId = DocumentsContract.getTreeDocumentId(treeUri)
         val childrenUri = DocumentsContract.buildChildDocumentsUriUsingTree(treeUri, docId)
         resolver.query(
@@ -141,5 +157,6 @@ class CloudFolderSyncProvider @Inject constructor(
 
     companion object {
         private const val MIME_JSON = "application/json"
+        const val BACKUP_FILE_NAME = "presencial_backup.json"
     }
 }

@@ -70,19 +70,22 @@ class CloudSyncRepositoryImpl @Inject constructor(
     }
 
     override suspend fun refreshState() {
+        if (folderSyncProvider.isSignedIn() && !folderSyncProvider.isFolderAccessible()) {
+            folderSyncProvider.signOut()
+            cloudSyncPreferences.clearLastSyncEpochMillis()
+        }
         _syncState.update {
             CloudSyncState(
                 provider = folderSyncProvider.selectedProvider(),
                 isSignedIn = folderSyncProvider.isSignedIn(),
                 accountEmail = folderSyncProvider.getAccountEmail(),
                 lastSyncEpochMillis = cloudSyncPreferences.getLastSyncEpochMillis(),
-                isSyncing = it.isSyncing,
-                isConfigured = true
+                isSyncing = it.isSyncing
             )
         }
     }
 
     companion object {
-        const val BACKUP_FILE_NAME = "presencial_backup.json"
+        const val BACKUP_FILE_NAME = CloudFolderSyncProvider.BACKUP_FILE_NAME
     }
 }

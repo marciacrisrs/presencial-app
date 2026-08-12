@@ -5,6 +5,5 @@ data class CloudSyncState(
     val isSignedIn: Boolean = false,
     val accountEmail: String? = null,
     val lastSyncEpochMillis: Long? = null,
-    val isSyncing: Boolean = false,
-    val isConfigured: Boolean = true
+    val isSyncing: Boolean = false
 )

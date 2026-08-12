@@ -11,4 +11,8 @@
     <string name="cloud_sync_sign_out">Desconectar pasta</string>
     <string name="cloud_sync_upload">Enviar backup para nuvem</string>
     <string name="cloud_sync_restore">Restaurar da nuvem</string>
+    <string name="cloud_sync_upload_icon">Enviar backup</string>
+    <string name="cloud_sync_restore_icon">Restaurar backup</string>
+    <string name="cloud_sync_connect_icon">Conectar pasta</string>
+    <string name="cloud_sync_syncing">Sincronizando…</string>
 </resources>

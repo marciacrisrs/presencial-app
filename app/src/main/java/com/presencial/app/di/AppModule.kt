@@ -27,8 +27,10 @@ import com.presencial.app.domain.util.DefaultTimeProvider
 import com.presencial.app.domain.util.TimeProvider
 import com.presencial.app.data.holidays.RegionalHolidayCatalog
 import com.presencial.app.data.local.AndroidSmartMessageTextProvider
+import com.presencial.app.data.sync.CloudFolderSyncProvider
 import com.presencial.app.data.sync.CloudSyncRepositoryImpl
 import com.presencial.app.domain.repository.CloudSyncRepository
+import com.presencial.app.domain.sync.CloudSyncProvider
 import com.presencial.app.domain.util.RegionalHolidayLookup
 import com.presencial.app.domain.util.SmartMessageTextProvider
 import com.presencial.app.domain.widget.WidgetRefresher
@@ -159,6 +161,10 @@ interface RepositoryModule {
     @Binds
     @Singleton
     fun bindRegionalHolidayLookup(impl: RegionalHolidayCatalog): RegionalHolidayLookup
+
+    @Binds
+    @Singleton
+    fun bindCloudSyncProvider(impl: CloudFolderSyncProvider): CloudSyncProvider
 
     @Binds
     @Singleton

@@ -1,5 +1,6 @@
 package com.presencial.app.data.backup
 
+import com.presencial.app.data.local.dao.AbsenceDao
 import com.presencial.app.data.local.dao.CheckInDao
 import com.presencial.app.data.local.dao.MonthlySummaryDao
 import com.presencial.app.data.local.dao.WorkAddressDao
@@ -28,6 +29,7 @@ class BackupManagerTest {
     private val checkInDao: CheckInDao = mockk()
     private val monthlySummaryDao: MonthlySummaryDao = mockk()
     private val workAddressDao: WorkAddressDao = mockk()
+    private val absenceDao: AbsenceDao = mockk()
     private val settingsRepository: SettingsRepository = mockk()
     private val ioDispatcher = Dispatchers.IO
 
@@ -39,9 +41,13 @@ class BackupManagerTest {
             checkInDao,
             monthlySummaryDao,
             workAddressDao,
+            absenceDao,
             settingsRepository,
             ioDispatcher
         )
+        every { absenceDao.getAllAbsences() } returns flowOf(emptyList())
+        coEvery { absenceDao.deleteAll() } returns Unit
+        coEvery { absenceDao.insertAll(any()) } returns Unit
     }
 
     @Test
@@ -68,7 +74,7 @@ class BackupManagerTest {
     }
 
     @Test
-    fun `when exportToStream, then include presence policy v3`() = runTest {
+    fun `when exportToStream, then include presence policy v4`() = runTest {
         val policy = PresencePolicy(
             companyName = "Acme",
             freePercentageEnabled = true,
@@ -93,7 +99,7 @@ class BackupManagerTest {
 
         assertTrue(result.isSuccess)
         val jsonString = outputStream.toString()
-        assertTrue(jsonString.contains("\"version\": 3"))
+        assertTrue(jsonString.contains("\"version\": 4"))
         assertTrue(jsonString.contains("\"presencePolicy\""))
         assertTrue(jsonString.contains("\"companyName\": \"Acme\""))
     }
@@ -126,6 +132,7 @@ class BackupManagerTest {
         coEvery { checkInDao.deleteAll() } returns Unit
         coEvery { monthlySummaryDao.deleteAll() } returns Unit
         coEvery { workAddressDao.deleteAll() } returns Unit
+        coEvery { absenceDao.deleteAll() } returns Unit
         coEvery { checkInDao.insertAll(any()) } returns Unit
         coEvery { monthlySummaryDao.insertAll(any()) } returns Unit
         coEvery { settingsRepository.updateRequiredPercentage(35) } returns Unit
@@ -172,7 +179,7 @@ class BackupManagerTest {
     fun `when importFromFile, then restore check-ins work addresses and settings`() = runTest {
         val json = """
             {
-              "version": 2,
+              "version": 3,
               "requiredPercentage": 60,
               "countSaturdaysAsWorkdays": true,
               "checkIns": [
@@ -215,6 +222,7 @@ class BackupManagerTest {
         coEvery { checkInDao.deleteAll() } returns Unit
         coEvery { monthlySummaryDao.deleteAll() } returns Unit
         coEvery { workAddressDao.deleteAll() } returns Unit
+        coEvery { absenceDao.deleteAll() } returns Unit
         coEvery { checkInDao.insertAll(any()) } returns Unit
         coEvery { monthlySummaryDao.insertAll(any()) } returns Unit
         coEvery { workAddressDao.insertAll(any()) } returns Unit
@@ -227,6 +235,58 @@ class BackupManagerTest {
         coVerify { workAddressDao.deleteAll() }
         coVerify { workAddressDao.insertAll(match { it.size == 1 }) }
         coVerify { checkInDao.insertAll(match { it.first().source == CheckInSource.AUTO_GEOFENCE }) }
+        tempFile.delete()
+    }
+
+    @Test
+    fun `when exportToBytes, then return JSON payload`() = runTest {
+        val settings = AppSettings(requiredPercentage = 40, countSaturdaysAsWorkdays = false)
+        every { settingsRepository.settings } returns flowOf(settings)
+        every { checkInDao.observeAll() } returns flowOf(emptyList())
+        every { monthlySummaryDao.observeAll() } returns flowOf(emptyList())
+        coEvery { workAddressDao.getAllAddressesSync() } returns emptyList()
+
+        val result = backupManager.exportToBytes()
+
+        assertTrue(result.isSuccess)
+        assertTrue(result.getOrNull()?.decodeToString()?.contains("\"version\": 4") == true)
+        assertTrue(result.getOrNull()?.decodeToString()?.contains("\"absences\"") == true)
+    }
+
+    @Test
+    fun `when exportToStream, then include absences in v4 backup`() = runTest {
+        val settings = AppSettings()
+        every { settingsRepository.settings } returns flowOf(settings)
+        every { checkInDao.observeAll() } returns flowOf(emptyList())
+        every { monthlySummaryDao.observeAll() } returns flowOf(emptyList())
+        coEvery { workAddressDao.getAllAddressesSync() } returns emptyList()
+        every { absenceDao.getAllAbsences() } returns flowOf(listOf(TestDataFactory.createAbsenceEntity()))
+
+        val outputStream = ByteArrayOutputStream()
+        val result = backupManager.exportToStream(outputStream)
+
+        assertTrue(result.isSuccess)
+        assertTrue(outputStream.toString().contains("\"absences\""))
+    }
+
+    @Test
+    fun `when importFromFile with unsupported version, then return failure`() = runTest {
+        val tempFile = File.createTempFile("backup_v2", ".json")
+        tempFile.writeText(
+            """
+            {
+              "version": 2,
+              "requiredPercentage": 40,
+              "countSaturdaysAsWorkdays": false,
+              "checkIns": [],
+              "summaries": []
+            }
+            """.trimIndent()
+        )
+
+        val result = backupManager.importFromFile(tempFile)
+
+        assertTrue(result.isFailure)
         tempFile.delete()
     }
 
@@ -250,7 +310,7 @@ class BackupManagerTest {
     @Test
     fun `when importFromFile and dao fails, then return failure`() = runTest {
         val json = """
-            {"version":2,"requiredPercentage":40,"countSaturdaysAsWorkdays":false,"checkIns":[],"summaries":[]}
+            {"version":3,"requiredPercentage":40,"countSaturdaysAsWorkdays":false,"checkIns":[],"summaries":[]}
         """.trimIndent()
         val tempFile = File.createTempFile("dao_fail", ".json")
         tempFile.writeText(json)

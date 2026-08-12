@@ -24,6 +24,7 @@ class CloudSyncRepositoryImplTest {
         coEvery { folderSyncProvider.selectedProvider() } returns
             com.presencial.app.domain.model.CloudStorageProvider.GOOGLE_DRIVE
         coEvery { preferences.getLastSyncEpochMillis() } returns null
+        coEvery { folderSyncProvider.isFolderAccessible() } returns true
         repository = CloudSyncRepositoryImpl(folderSyncProvider, backupManager, preferences)
     }
 
@@ -65,5 +66,21 @@ class CloudSyncRepositoryImplTest {
 
         assertTrue(result.isFailure)
         assertEquals("Selecione uma pasta na nuvem primeiro", result.exceptionOrNull()?.message)
+    }
+
+    @Test
+    fun `refreshState clears connection when folder is no longer accessible`() = runTest {
+        coEvery { folderSyncProvider.isSignedIn() } returnsMany listOf(true, false)
+        coEvery { folderSyncProvider.isFolderAccessible() } returns false
+        coEvery { folderSyncProvider.signOut() } returns Unit
+        coEvery { preferences.clearLastSyncEpochMillis() } returns Unit
+        coEvery { folderSyncProvider.selectedProvider() } returns
+            com.presencial.app.domain.model.CloudStorageProvider.GOOGLE_DRIVE
+        coEvery { folderSyncProvider.getAccountEmail() } returns null
+
+        repository.refreshState()
+
+        coVerify { folderSyncProvider.signOut() }
+        assertTrue(!repository.syncState.value.isSignedIn)
     }
 }

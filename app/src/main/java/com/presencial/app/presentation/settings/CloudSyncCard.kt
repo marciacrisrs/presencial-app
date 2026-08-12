@@ -23,6 +23,8 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import com.presencial.app.R
 import com.presencial.app.domain.model.CloudStorageProvider
@@ -73,8 +75,14 @@ fun CloudSyncCard(
 
             StatusText(state)
 
+            val syncingDescription = stringResource(R.string.cloud_sync_syncing)
+
             if (state.isSyncing) {
-                CircularProgressIndicator(modifier = Modifier.padding(top = 4.dp))
+                CircularProgressIndicator(
+                    modifier = Modifier
+                        .padding(top = 4.dp)
+                        .semantics { contentDescription = syncingDescription }
+                )
             }
 
             if (state.isSignedIn) {
@@ -82,16 +90,25 @@ fun CloudSyncCard(
                     Text(stringResource(R.string.cloud_sync_sign_out))
                 }
                 Button(onClick = onUpload, enabled = !state.isSyncing, modifier = Modifier.fillMaxWidth()) {
-                    Icon(Icons.Default.CloudUpload, contentDescription = null)
+                    Icon(
+                        Icons.Default.CloudUpload,
+                        contentDescription = stringResource(R.string.cloud_sync_upload_icon)
+                    )
                     Text("  ${stringResource(R.string.cloud_sync_upload)}")
                 }
                 Button(onClick = onRestore, enabled = !state.isSyncing, modifier = Modifier.fillMaxWidth()) {
-                    Icon(Icons.Default.CloudDownload, contentDescription = null)
+                    Icon(
+                        Icons.Default.CloudDownload,
+                        contentDescription = stringResource(R.string.cloud_sync_restore_icon)
+                    )
                     Text("  ${stringResource(R.string.cloud_sync_restore)}")
                 }
             } else {
                 Button(onClick = onConnectFolder, enabled = !state.isSyncing, modifier = Modifier.fillMaxWidth()) {
-                    Icon(Icons.Default.FolderOpen, contentDescription = null)
+                    Icon(
+                        Icons.Default.FolderOpen,
+                        contentDescription = stringResource(R.string.cloud_sync_connect_icon)
+                    )
                     Text("  ${stringResource(R.string.cloud_sync_connect_folder, state.provider.displayName)}")
                 }
             }

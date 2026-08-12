@@ -86,7 +86,6 @@ O Presencial já exporta/importa backup JSON v3 (`BackupManager`) via Storage Ac
 |--------|------------|
 | WorkManager sync periódico + toggle “sync automático” | 1 d |
 | Incluir `absences` no backup v4 | 0,5 d |
-| Criptografia AES-GCM opcional antes do upload | 1 d |
 | Validar `version` na importação + migração | 0,5 d |
 | Atualizar política de privacidade | 0,25 d |
 
