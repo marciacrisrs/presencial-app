@@ -39,7 +39,7 @@ jobs:
           cache: gradle
 
       - name: Setup Node.js
-        uses: actions/setup-node@03ad4de0992f5dab5e18fcb136590ce7c4a0ac95
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
         with:
           node-version: 20
 
