@@ -34,11 +34,6 @@ object WidgetInfoLoader {
             .first()
             .map { it.toDomain() }
 
-        val workdays = WorkdayCalculator.countLiquidWorkdaysInMonth(
-            yearMonth,
-            countSaturdays,
-            absences
-        )
         val required = PresencePolicyCalculator.calculateRequiredDays(
             yearMonth,
             countSaturdays,

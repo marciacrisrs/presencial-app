@@ -153,7 +153,7 @@ private fun DayInfoDetails(day: com.presencial.app.domain.model.DayInfo) {
     }
     if (CheckInSource.isAutoGeofence(day.source)) {
         Text(
-            "📍 ${CheckInSource.autoGeofenceLabel()}",
+            "📍 ${CheckInSource.AUTO_GEOFENCE_LABEL}",
             style = MaterialTheme.typography.bodySmall,
             color = MaterialTheme.colorScheme.secondary
         )

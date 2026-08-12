@@ -94,64 +94,73 @@ class BackupManager @Inject constructor(
             checkInDao.deleteAll()
             monthlySummaryDao.deleteAll()
             workAddressDao.deleteAll()
+            restoreCheckIns(json.getJSONArray("checkIns"))
+            restoreSummaries(json.getJSONArray("summaries"))
+            restoreWorkAddresses(json)
+            restoreSettings(json)
+        }
+    }
 
-            val checkInsArray = json.getJSONArray("checkIns")
-            val checkInEntities = (0 until checkInsArray.length()).map { i ->
-                val obj = checkInsArray.getJSONObject(i)
-                CheckInEntity(
-                    dateEpochDay = obj.getLong("dateEpochDay"),
-                    status = obj.getString("status"),
-                    updatedAt = obj.getLong("updatedAt"),
-                    source = obj.optString("source", CheckInSource.MANUAL),
-                    workAddressId = if (obj.has("workAddressId") && !obj.isNull("workAddressId")) {
-                        obj.getLong("workAddressId")
-                    } else {
-                        null
-                    }
-                )
-            }
-            checkInDao.insertAll(checkInEntities)
-
-            val summariesArray = json.getJSONArray("summaries")
-            val summaryEntities = (0 until summariesArray.length()).map { i ->
-                val obj = summariesArray.getJSONObject(i)
-                MonthlySummaryEntity(
-                    yearMonthKey = obj.getString("yearMonthKey"),
-                    workdays = obj.getInt("workdays"),
-                    requiredDays = obj.getInt("requiredDays"),
-                    completedDays = obj.getInt("completedDays"),
-                    homeOfficeDays = obj.getInt("homeOfficeDays"),
-                    requiredPercentage = obj.getInt("requiredPercentage"),
-                    achievedPercentage = obj.getDouble("achievedPercentage").toFloat()
-                )
-            }
-            monthlySummaryDao.insertAll(summaryEntities)
-
-            if (json.has("workAddresses")) {
-                val workAddressesArray = json.getJSONArray("workAddresses")
-                val workAddressEntities = (0 until workAddressesArray.length()).map { i ->
-                    val obj = workAddressesArray.getJSONObject(i)
-                    WorkAddressEntity(
-                        id = obj.getLong("id"),
-                        name = obj.getString("name"),
-                        addressText = obj.optString("addressText", ""),
-                        latitude = obj.getDouble("latitude"),
-                        longitude = obj.getDouble("longitude"),
-                        radius = obj.getDouble("radius").toFloat(),
-                        isActive = obj.optBoolean("isActive", true)
-                    )
+    private suspend fun restoreCheckIns(checkInsArray: org.json.JSONArray) {
+        val checkInEntities = (0 until checkInsArray.length()).map { i ->
+            val obj = checkInsArray.getJSONObject(i)
+            CheckInEntity(
+                dateEpochDay = obj.getLong("dateEpochDay"),
+                status = obj.getString("status"),
+                updatedAt = obj.getLong("updatedAt"),
+                source = obj.optString("source", CheckInSource.MANUAL),
+                workAddressId = if (obj.has("workAddressId") && !obj.isNull("workAddressId")) {
+                    obj.getLong("workAddressId")
+                } else {
+                    null
                 }
-                workAddressDao.insertAll(workAddressEntities)
-            }
+            )
+        }
+        checkInDao.insertAll(checkInEntities)
+    }
 
-            settingsRepository.updateRequiredPercentage(json.getInt("requiredPercentage"))
-            settingsRepository.updateCountSaturdaysAsWorkdays(json.getBoolean("countSaturdaysAsWorkdays"))
-            if (json.has("presencePolicy")) {
-                val policyJson = json.getJSONObject("presencePolicy")
-                settingsRepository.updatePresencePolicy(
-                    PresencePolicyMapper.fromJson(policyJson.toString(), json.getInt("requiredPercentage"))
-                )
-            }
+    private suspend fun restoreSummaries(summariesArray: org.json.JSONArray) {
+        val summaryEntities = (0 until summariesArray.length()).map { i ->
+            val obj = summariesArray.getJSONObject(i)
+            MonthlySummaryEntity(
+                yearMonthKey = obj.getString("yearMonthKey"),
+                workdays = obj.getInt("workdays"),
+                requiredDays = obj.getInt("requiredDays"),
+                completedDays = obj.getInt("completedDays"),
+                homeOfficeDays = obj.getInt("homeOfficeDays"),
+                requiredPercentage = obj.getInt("requiredPercentage"),
+                achievedPercentage = obj.getDouble("achievedPercentage").toFloat()
+            )
+        }
+        monthlySummaryDao.insertAll(summaryEntities)
+    }
+
+    private suspend fun restoreWorkAddresses(json: JSONObject) {
+        if (!json.has("workAddresses")) return
+        val workAddressesArray = json.getJSONArray("workAddresses")
+        val workAddressEntities = (0 until workAddressesArray.length()).map { i ->
+            val obj = workAddressesArray.getJSONObject(i)
+            WorkAddressEntity(
+                id = obj.getLong("id"),
+                name = obj.getString("name"),
+                addressText = obj.optString("addressText", ""),
+                latitude = obj.getDouble("latitude"),
+                longitude = obj.getDouble("longitude"),
+                radius = obj.getDouble("radius").toFloat(),
+                isActive = obj.optBoolean("isActive", true)
+            )
+        }
+        workAddressDao.insertAll(workAddressEntities)
+    }
+
+    private suspend fun restoreSettings(json: JSONObject) {
+        settingsRepository.updateRequiredPercentage(json.getInt("requiredPercentage"))
+        settingsRepository.updateCountSaturdaysAsWorkdays(json.getBoolean("countSaturdaysAsWorkdays"))
+        if (json.has("presencePolicy")) {
+            val policyJson = json.getJSONObject("presencePolicy")
+            settingsRepository.updatePresencePolicy(
+                PresencePolicyMapper.fromJson(policyJson.toString(), json.getInt("requiredPercentage"))
+            )
         }
     }
 

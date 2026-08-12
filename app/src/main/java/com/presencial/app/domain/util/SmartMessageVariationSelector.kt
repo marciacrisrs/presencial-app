@@ -23,7 +23,7 @@ object SmartMessageVariationSelector {
 
     private fun score(message: String): Int {
         var points = 0
-        if (emojiRegex.containsMatchIn(message.take(4))) points += PRIORITY_EMOJI
+        if (emojiRegex.containsMatchIn(message.take(EMOJI_PREFIX_LENGTH))) points += PRIORITY_EMOJI
         if (message.contains("meta", ignoreCase = true)) points += PRIORITY_KEYWORD
         if (message.contains("semana", ignoreCase = true)) points += PRIORITY_KEYWORD
         if (message.contains("ritmo", ignoreCase = true)) points += PRIORITY_KEYWORD
@@ -36,4 +36,5 @@ object SmartMessageVariationSelector {
     private const val TARGET_LENGTH = 60
     private const val PRIORITY_EMOJI = 20
     private const val PRIORITY_KEYWORD = 5
+    private const val EMOJI_PREFIX_LENGTH = 4
 }

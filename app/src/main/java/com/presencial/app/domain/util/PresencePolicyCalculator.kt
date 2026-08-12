@@ -132,8 +132,8 @@ object PresencePolicyCalculator {
 
         val summaries = mutableListOf<WeeklyPolicySummary>()
         while (!weekStart.isAfter(monthEnd)) {
-            val weekEnd = weekStart.plusDays(6)
-            val requiredDates = (0..6).map { weekStart.plusDays(it.toLong()) }
+            val weekEnd = weekStart.plusDays(WEEK_LAST_DAY_OFFSET)
+            val requiredDates = (0 until DAYS_IN_WEEK).map { weekStart.plusDays(it.toLong()) }
                 .filter { date ->
                     !date.isBefore(monthStart) &&
                         !date.isAfter(monthEnd) &&
@@ -143,7 +143,7 @@ object PresencePolicyCalculator {
             summaries += WeeklyPolicySummary(
                 weekStart = weekStart,
                 weekEnd = weekEnd,
-                isOnSiteWeek = isOnSiteWeek(weekStart.plusDays(3), normalized),
+                isOnSiteWeek = isOnSiteWeek(weekStart.plusDays(MID_WEEK_OFFSET), normalized),
                 requiredDates = requiredDates,
                 requiredCount = requiredDates.size
             )
@@ -172,4 +172,8 @@ object PresencePolicyCalculator {
                 absence.isFullDay &&
                 !absence.isCounted
         }
+
+    private const val WEEK_LAST_DAY_OFFSET = 6L
+    private const val DAYS_IN_WEEK = 7
+    private const val MID_WEEK_OFFSET = 3L
 }

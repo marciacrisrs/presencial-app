@@ -320,14 +320,20 @@ private fun BackupRestoreCard(
                 onClick = onExport,
                 modifier = Modifier.fillMaxWidth()
             ) {
-                Icon(Icons.Default.Backup, contentDescription = stringResource(R.string.backup_export_content_description))
+                Icon(
+                    Icons.Default.Backup,
+                    contentDescription = stringResource(R.string.backup_export_content_description)
+                )
                 Text("  Exportar backup JSON")
             }
             Button(
                 onClick = onRestore,
                 modifier = Modifier.fillMaxWidth()
             ) {
-                Icon(Icons.Default.Restore, contentDescription = stringResource(R.string.backup_restore_content_description))
+                Icon(
+                    Icons.Default.Restore,
+                    contentDescription = stringResource(R.string.backup_restore_content_description)
+                )
                 Text("  Restaurar backup")
             }
         }
@@ -388,7 +394,6 @@ private fun OtherSettingsCard(
 private const val PADDING_SCREEN = 20
 private const val SPACING_ITEMS = 20
 private const val SPACING_CARD_CONTENT = 12
-private const val SPACING_CHIPS = 16
 private const val CORNER_RADIUS_CARD = 20
 private const val ALPHA_SURFACE_VARIANT = 0.4f
 private const val ALPHA_ON_SURFACE_MEDIUM = 0.6f
