@@ -4,7 +4,7 @@
     <string name="policy_card_description">Configure as regras da sua empresa: percentual livre, dias fixos e semanas alternadas.</string>
     <string name="policy_company_name_label">Nome da empresa</string>
     <string name="policy_free_percentage_title">Percentual livre</string>
-    <string name="policy_free_percentage_description">Percentual mínimo de dias presenciais no mês.</string>
+    <string name="policy_free_percentage_description">Ligado: escolha qualquer percentual. Desligado: use 20%%, 40%%, 60%% ou 80%%.</string>
     <string name="policy_fixed_weekdays_title">Dias fixos presenciais</string>
     <string name="policy_fixed_weekdays_description">Dias da semana sempre obrigatórios (ex.: terça e quinta).</string>
     <string name="policy_alternating_weeks_title">Semanas alternadas</string>

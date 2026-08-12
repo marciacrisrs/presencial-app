@@ -4,11 +4,8 @@ import app.cash.turbine.test
 import com.presencial.app.data.backup.BackupManager
 import com.presencial.app.domain.model.AppSettings
 import com.presencial.app.domain.model.PresencePolicy
-import com.presencial.app.domain.repository.AbsenceRepository
 import com.presencial.app.domain.repository.SettingsRepository
 import com.presencial.app.domain.repository.WorkAddressRepository
-import com.presencial.app.domain.usecase.GetWeeklyPolicySummaryUseCase
-import com.presencial.app.util.FakeTimeProvider
 import com.presencial.app.domain.usecase.SyncGeofencesUseCase
 import com.presencial.app.domain.widget.WidgetRefresher
 import com.presencial.app.util.MainDispatcherExtension
@@ -36,21 +33,13 @@ class SettingsViewModelTest {
     private val backupManager = mockk<BackupManager>()
     private val syncGeofencesUseCase = mockk<SyncGeofencesUseCase>()
     private val workAddressRepository = mockk<WorkAddressRepository>()
-    private val absenceRepository = mockk<AbsenceRepository>()
     private val widgetRefresher = mockk<WidgetRefresher>()
-    private lateinit var getWeeklyPolicySummaryUseCase: GetWeeklyPolicySummaryUseCase
     private lateinit var viewModel: SettingsViewModel
 
     @BeforeEach
     fun setup() {
         every { settingsRepository.settings } returns flowOf(AppSettings())
         every { workAddressRepository.getAllAddresses() } returns flowOf(emptyList())
-        every { absenceRepository.getAbsencesInRange(any(), any()) } returns flowOf(emptyList())
-        getWeeklyPolicySummaryUseCase = GetWeeklyPolicySummaryUseCase(
-            absenceRepository = absenceRepository,
-            settingsRepository = settingsRepository,
-            timeProvider = FakeTimeProvider()
-        )
         coEvery { syncGeofencesUseCase() } returns Unit
         coEvery { widgetRefresher.refresh() } returns Unit
         viewModel = SettingsViewModel(
@@ -58,32 +47,21 @@ class SettingsViewModelTest {
             backupManager,
             syncGeofencesUseCase,
             workAddressRepository,
-            widgetRefresher,
-            getWeeklyPolicySummaryUseCase
+            widgetRefresher
         )
-    }
-
-    @Test
-    fun `updateOpenAiApiKey should call repository`() = runTest {
-        coEvery { settingsRepository.updateOpenAiApiKey("sk-test") } returns Unit
-
-        viewModel.updateOpenAiApiKey("sk-test")
-
-        coVerify { settingsRepository.updateOpenAiApiKey("sk-test") }
     }
 
     @Test
     fun `settings should reflect repository flow`() = runTest {
         val appSettings = AppSettings(requiredPercentage = 50, countSaturdaysAsWorkdays = true)
         every { settingsRepository.settings } returns flowOf(appSettings)
-        
+
         viewModel = SettingsViewModel(
             settingsRepository,
             backupManager,
             syncGeofencesUseCase,
             workAddressRepository,
-            widgetRefresher,
-            getWeeklyPolicySummaryUseCase
+            widgetRefresher
         )
 
         viewModel.settings.test {
@@ -104,9 +82,9 @@ class SettingsViewModelTest {
     @Test
     fun `updateSaturdays should call repository`() = runTest {
         coEvery { settingsRepository.updateCountSaturdaysAsWorkdays(true) } returns Unit
-        
+
         viewModel.updateSaturdays(true)
-        
+
         coVerify { settingsRepository.updateCountSaturdaysAsWorkdays(true) }
     }
 
@@ -165,9 +143,9 @@ class SettingsViewModelTest {
         val file = mockk<File>()
         coEvery { backupManager.importFromFile(file) } returns Result.success(Unit)
         viewModel.importBackup(file)
-        
+
         viewModel.clearMessage()
-        
+
         assertNull(viewModel.message.value)
     }
 }

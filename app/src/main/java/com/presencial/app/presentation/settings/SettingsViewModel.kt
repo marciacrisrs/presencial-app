@@ -6,18 +6,16 @@ import com.presencial.app.data.backup.BackupManager
 import com.presencial.app.domain.model.AppSettings
 import com.presencial.app.domain.model.PolicyValidationResult
 import com.presencial.app.domain.model.PresencePolicy
-import com.presencial.app.domain.model.WeeklyPolicySummary
 import com.presencial.app.domain.model.WorkAddress
 import com.presencial.app.domain.repository.SettingsRepository
 import com.presencial.app.domain.repository.WorkAddressRepository
-import com.presencial.app.domain.usecase.GetWeeklyPolicySummaryUseCase
 import com.presencial.app.domain.usecase.SyncGeofencesUseCase
 import com.presencial.app.domain.util.PresencePolicyCalculator
 import com.presencial.app.domain.widget.WidgetRefresher
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
@@ -31,8 +29,7 @@ class SettingsViewModel @Inject constructor(
     private val backupManager: BackupManager,
     private val syncGeofencesUseCase: SyncGeofencesUseCase,
     workAddressRepository: WorkAddressRepository,
-    private val widgetRefresher: WidgetRefresher,
-    getWeeklyPolicySummaryUseCase: GetWeeklyPolicySummaryUseCase
+    private val widgetRefresher: WidgetRefresher
 ) : ViewModel() {
 
     val settings: StateFlow<AppSettings> = settingsRepository.settings
@@ -49,10 +46,7 @@ class SettingsViewModel @Inject constructor(
             PolicyValidationResult(isValid = true)
         )
 
-    val weeklySummaries: StateFlow<List<WeeklyPolicySummary>> = getWeeklyPolicySummaryUseCase()
-        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(STOP_TIMEOUT_MS), emptyList())
-
-    private val _message = kotlinx.coroutines.flow.MutableStateFlow<String?>(null)
+    private val _message = MutableStateFlow<String?>(null)
     val message: StateFlow<String?> = _message
 
     fun updatePresencePolicy(policy: PresencePolicy) {
@@ -71,12 +65,6 @@ class SettingsViewModel @Inject constructor(
         viewModelScope.launch {
             settingsRepository.updateCountSaturdaysAsWorkdays(count)
             widgetRefresher.refresh()
-        }
-    }
-
-    fun updateOpenAiApiKey(apiKey: String) {
-        viewModelScope.launch {
-            settingsRepository.updateOpenAiApiKey(apiKey)
         }
     }
 

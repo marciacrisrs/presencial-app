@@ -6,8 +6,6 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.hapticfeedback.HapticFeedback
@@ -28,7 +26,6 @@ fun DashboardContent(
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .verticalScroll(rememberScrollState())
             .padding(SCREEN_PADDING),
         verticalArrangement = Arrangement.spacedBy(CONTENT_SPACING)
     ) {
@@ -48,17 +45,16 @@ fun DashboardContent(
 
         DashboardProgressBarSection(dashboard)
 
+        Spacer(modifier = Modifier.weight(1f))
+
         DashboardActionSection(
             dashboard = dashboard,
             onToggleTodayCheckIn = onToggleTodayCheckIn,
             onMarkYesterdayPresencial = onMarkYesterdayPresencial,
             haptic = haptic
         )
-
-        Spacer(modifier = Modifier.height(BOTTOM_SPACER))
     }
 }
 
 private val SCREEN_PADDING = 16.dp
-private val CONTENT_SPACING = 12.dp
-private val BOTTOM_SPACER = 8.dp
+private val CONTENT_SPACING = 8.dp

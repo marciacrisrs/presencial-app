@@ -4,6 +4,7 @@ import android.content.Context
 import android.content.SharedPreferences
 import androidx.security.crypto.EncryptedSharedPreferences
 import androidx.security.crypto.MasterKey
+import com.presencial.app.BuildConfig
 import dagger.hilt.android.qualifiers.ApplicationContext
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -22,7 +23,11 @@ class OpenAiApiKeyStore @Inject constructor(
         EncryptedSharedPreferences.PrefValueEncryptionScheme.AES256_GCM
     )
 
-    fun read(): String = encryptedPrefs.getString(KEY_OPENAI_API, "").orEmpty()
+    fun read(): String {
+        val buildKey = BuildConfig.OPENAI_API_KEY.trim()
+        if (buildKey.isNotEmpty()) return buildKey
+        return encryptedPrefs.getString(KEY_OPENAI_API, "").orEmpty()
+    }
 
     fun save(apiKey: String) {
         encryptedPrefs.edit().putString(KEY_OPENAI_API, apiKey.trim()).apply()

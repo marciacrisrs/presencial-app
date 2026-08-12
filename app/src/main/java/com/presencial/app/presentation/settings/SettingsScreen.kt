@@ -36,10 +36,6 @@ import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.material3.OutlinedTextField
-import androidx.compose.ui.text.input.KeyboardType
-import androidx.compose.ui.text.input.PasswordVisualTransformation
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.presencial.app.presentation.components.MonitoringStatusBanner
 import com.presencial.app.presentation.location.rememberWorkLocationPermissions
@@ -58,7 +54,6 @@ fun SettingsScreen(
     val workAddresses by viewModel.workAddresses.collectAsStateWithLifecycle()
     val message by viewModel.message.collectAsStateWithLifecycle()
     val policyValidation by viewModel.policyValidation.collectAsStateWithLifecycle()
-    val weeklySummaries by viewModel.weeklySummaries.collectAsStateWithLifecycle()
     val (foregroundPermissions, backgroundPermission) = rememberWorkLocationPermissions()
     val context = LocalContext.current
     val snackbarHostState = remember { SnackbarHostState() }
@@ -81,9 +76,7 @@ fun SettingsScreen(
             backgroundGranted = backgroundPermission.allPermissionsGranted,
             onPresencePolicyChange = viewModel::updatePresencePolicy,
             policyValidation = policyValidation,
-            weeklySummaries = weeklySummaries,
             onToggleSaturdays = viewModel::updateSaturdays,
-            onOpenAiApiKeyChange = viewModel::updateOpenAiApiKey,
             onExport = { exportLauncher.launch("presencial_backup.json") },
             onRestore = { importLauncher.launch(arrayOf("application/json")) },
             onNavigateToAbsences = onNavigateToAbsences,
@@ -130,9 +123,7 @@ private data class SettingsScaffoldParams(
     val backgroundGranted: Boolean,
     val onPresencePolicyChange: (com.presencial.app.domain.model.PresencePolicy) -> Unit,
     val policyValidation: com.presencial.app.domain.model.PolicyValidationResult,
-    val weeklySummaries: List<com.presencial.app.domain.model.WeeklyPolicySummary>,
     val onToggleSaturdays: (Boolean) -> Unit,
-    val onOpenAiApiKeyChange: (String) -> Unit,
     val onExport: () -> Unit,
     val onRestore: () -> Unit,
     val onNavigateToAbsences: () -> Unit,
@@ -154,9 +145,7 @@ private fun SettingsScaffold(
                 backgroundGranted = params.backgroundGranted,
                 onPresencePolicyChange = params.onPresencePolicyChange,
                 policyValidation = params.policyValidation,
-                weeklySummaries = params.weeklySummaries,
                 onToggleSaturdays = params.onToggleSaturdays,
-                onOpenAiApiKeyChange = params.onOpenAiApiKeyChange,
                 onExport = params.onExport,
                 onRestore = params.onRestore,
                 onNavigateToAbsences = params.onNavigateToAbsences,
@@ -175,9 +164,7 @@ private data class SettingsContentParams(
     val backgroundGranted: Boolean,
     val onPresencePolicyChange: (com.presencial.app.domain.model.PresencePolicy) -> Unit,
     val policyValidation: com.presencial.app.domain.model.PolicyValidationResult,
-    val weeklySummaries: List<com.presencial.app.domain.model.WeeklyPolicySummary>,
     val onToggleSaturdays: (Boolean) -> Unit,
-    val onOpenAiApiKeyChange: (String) -> Unit,
     val onExport: () -> Unit,
     val onRestore: () -> Unit,
     val onNavigateToAbsences: () -> Unit,
@@ -205,18 +192,12 @@ private fun SettingsContent(params: SettingsContentParams) {
         PresencePolicyCard(
             policy = params.settings.presencePolicy,
             validation = params.policyValidation,
-            weeklySummaries = params.weeklySummaries,
             onPolicyChange = params.onPresencePolicyChange
         )
 
         SaturdaysConfigCard(
             countSaturdays = params.settings.countSaturdaysAsWorkdays,
             onToggle = params.onToggleSaturdays
-        )
-
-        AiConfigCard(
-            apiKey = params.settings.openAiApiKey,
-            onApiKeyChange = params.onOpenAiApiKeyChange
         )
 
         BackupRestoreCard(
@@ -267,40 +248,6 @@ private fun SaturdaysConfigCard(
 }
 
 @Composable
-private fun AiConfigCard(
-    apiKey: String,
-    onApiKeyChange: (String) -> Unit
-) {
-    Card(
-        shape = RoundedCornerShape(CORNER_RADIUS_CARD.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = ALPHA_SURFACE_VARIANT)
-        )
-    ) {
-        Column(
-            modifier = Modifier.padding(PADDING_SCREEN.dp),
-            verticalArrangement = Arrangement.spacedBy(SPACING_CARD_CONTENT.dp)
-        ) {
-            Text(stringResource(R.string.ai_settings_title), style = MaterialTheme.typography.titleLarge)
-            Text(
-                stringResource(R.string.ai_settings_description),
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurface.copy(alpha = ALPHA_ON_SURFACE_MEDIUM)
-            )
-            OutlinedTextField(
-                value = apiKey,
-                onValueChange = onApiKeyChange,
-                modifier = Modifier.fillMaxWidth(),
-                label = { Text(stringResource(R.string.ai_settings_api_key_label)) },
-                visualTransformation = PasswordVisualTransformation(),
-                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
-                singleLine = true
-            )
-        }
-    }
-}
-
-@Composable
 private fun BackupRestoreCard(
     onExport: () -> Unit,
     onRestore: () -> Unit
@@ -312,7 +259,7 @@ private fun BackupRestoreCard(
         )
     ) {
         Column(
-            modifier = Modifier.padding(PADDING_SCREEN.dp), 
+            modifier = Modifier.padding(PADDING_SCREEN.dp),
             verticalArrangement = Arrangement.spacedBy(SPACING_CARD_CONTENT.dp)
         ) {
             Text("Backup e restauração", style = MaterialTheme.typography.titleLarge)
@@ -353,7 +300,7 @@ private fun OtherSettingsCard(
         )
     ) {
         Column(
-            modifier = Modifier.padding(PADDING_SCREEN.dp), 
+            modifier = Modifier.padding(PADDING_SCREEN.dp),
             verticalArrangement = Arrangement.spacedBy(SPACING_CARD_CONTENT.dp)
         ) {
             Text("Outros", style = MaterialTheme.typography.titleLarge)

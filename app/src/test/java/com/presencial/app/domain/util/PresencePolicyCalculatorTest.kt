@@ -90,15 +90,16 @@ class PresencePolicyCalculatorTest {
     }
 
     @Test
-    fun `validate should fail when no rule enabled`() {
+    fun `validate should pass with default percentage presets`() {
         val result = PresencePolicyCalculator.validate(
             PresencePolicy(
                 freePercentageEnabled = false,
+                freePercentage = 40,
                 fixedWeekdaysEnabled = false,
                 alternatingWeeksEnabled = false
             )
         )
-        assertFalse(result.isValid)
+        assertTrue(result.isValid)
     }
 
     @Test

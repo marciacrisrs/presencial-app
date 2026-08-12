@@ -13,7 +13,7 @@ import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.RadioButton
+import androidx.compose.material3.Slider
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -22,11 +22,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.presencial.app.R
-import com.presencial.app.domain.model.PolicyConflictPriority
 import com.presencial.app.domain.model.PolicyValidationResult
 import com.presencial.app.domain.model.PresencePolicy
 import com.presencial.app.domain.model.WeekParity
-import com.presencial.app.domain.model.WeeklyPolicySummary
 import java.time.DayOfWeek
 import java.time.format.TextStyle
 import java.util.Locale
@@ -36,7 +34,6 @@ import java.util.Locale
 fun PresencePolicyCard(
     policy: PresencePolicy,
     validation: PolicyValidationResult,
-    weeklySummaries: List<WeeklyPolicySummary>,
     onPolicyChange: (PresencePolicy) -> Unit,
     modifier: Modifier = Modifier
 ) {
@@ -66,23 +63,28 @@ fun PresencePolicyCard(
                 singleLine = true
             )
 
-            PolicyToggleSection(
-                title = stringResource(R.string.policy_free_percentage_title),
-                description = stringResource(R.string.policy_free_percentage_description),
-                checked = policy.freePercentageEnabled,
-                onCheckedChange = { onPolicyChange(policy.copy(freePercentageEnabled = it)) }
-            ) {
-                PercentagePicker(
-                    current = policy.freePercentage,
-                    onSelected = { onPolicyChange(policy.copy(freePercentage = it)) }
-                )
-            }
+            PercentageSection(
+                policy = policy,
+                onPolicyChange = onPolicyChange
+            )
 
             PolicyToggleSection(
                 title = stringResource(R.string.policy_fixed_weekdays_title),
                 description = stringResource(R.string.policy_fixed_weekdays_description),
                 checked = policy.fixedWeekdaysEnabled,
-                onCheckedChange = { onPolicyChange(policy.copy(fixedWeekdaysEnabled = it)) }
+                onCheckedChange = { enabled ->
+                    val weekdays = if (enabled && policy.mandatoryWeekdays.isEmpty()) {
+                        setOf(DayOfWeek.TUESDAY, DayOfWeek.THURSDAY)
+                    } else {
+                        policy.mandatoryWeekdays
+                    }
+                    onPolicyChange(
+                        policy.copy(
+                            fixedWeekdaysEnabled = enabled,
+                            mandatoryWeekdays = weekdays
+                        )
+                    )
+                }
             ) {
                 FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     weekdayOptions.forEach { (day, label) ->
@@ -105,37 +107,18 @@ fun PresencePolicyCard(
                 checked = policy.alternatingWeeksEnabled,
                 onCheckedChange = { onPolicyChange(policy.copy(alternatingWeeksEnabled = it)) }
             ) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    RadioButton(
+                FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    FilterChip(
                         selected = policy.onSiteWeekParity == WeekParity.EVEN,
-                        onClick = { onPolicyChange(policy.copy(onSiteWeekParity = WeekParity.EVEN)) }
+                        onClick = { onPolicyChange(policy.copy(onSiteWeekParity = WeekParity.EVEN)) },
+                        label = { Text(stringResource(R.string.policy_even_weeks_on_site)) }
                     )
-                    Text(
-                        stringResource(R.string.policy_even_weeks_on_site),
-                        modifier = Modifier.padding(end = 12.dp)
-                    )
-                    RadioButton(
+                    FilterChip(
                         selected = policy.onSiteWeekParity == WeekParity.ODD,
-                        onClick = { onPolicyChange(policy.copy(onSiteWeekParity = WeekParity.ODD)) }
+                        onClick = { onPolicyChange(policy.copy(onSiteWeekParity = WeekParity.ODD)) },
+                        label = { Text(stringResource(R.string.policy_odd_weeks_on_site)) }
                     )
-                    Text(stringResource(R.string.policy_odd_weeks_on_site))
                 }
-            }
-
-            Text(stringResource(R.string.policy_conflict_priority_title), style = MaterialTheme.typography.titleSmall)
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                RadioButton(
-                    selected = policy.conflictPriority == PolicyConflictPriority.UNION_MAX,
-                    onClick = { onPolicyChange(policy.copy(conflictPriority = PolicyConflictPriority.UNION_MAX)) }
-                )
-                Text(stringResource(R.string.policy_conflict_union_max))
-            }
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                RadioButton(
-                    selected = policy.conflictPriority == PolicyConflictPriority.FIXED_FIRST,
-                    onClick = { onPolicyChange(policy.copy(conflictPriority = PolicyConflictPriority.FIXED_FIRST)) }
-                )
-                Text(stringResource(R.string.policy_conflict_fixed_first))
             }
 
             validation.errors.forEach {
@@ -152,24 +135,59 @@ fun PresencePolicyCard(
                     style = MaterialTheme.typography.bodySmall
                 )
             }
+        }
+    }
+}
 
-            if (weeklySummaries.isNotEmpty()) {
-                Text(stringResource(R.string.policy_weekly_summary_title), style = MaterialTheme.typography.titleSmall)
-                weeklySummaries.forEach { week ->
-                    val mode = stringResource(
-                        if (week.isOnSiteWeek) R.string.policy_week_on_site else R.string.policy_week_remote
-                    )
-                    Text(
-                        stringResource(
-                            R.string.policy_weekly_summary_line,
-                            week.weekStart.dayOfMonth,
-                            week.weekStart.monthValue,
-                            week.weekEnd.dayOfMonth,
-                            week.weekEnd.monthValue,
-                            mode,
-                            week.requiredCount
-                        ),
-                        style = MaterialTheme.typography.bodySmall
+@OptIn(ExperimentalLayoutApi::class)
+@Composable
+private fun PercentageSection(
+    policy: PresencePolicy,
+    onPolicyChange: (PresencePolicy) -> Unit
+) {
+    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Column(modifier = Modifier.weight(1f)) {
+                Text(
+                    stringResource(R.string.policy_free_percentage_title),
+                    style = MaterialTheme.typography.titleSmall
+                )
+                Text(
+                    stringResource(R.string.policy_free_percentage_description),
+                    style = MaterialTheme.typography.bodySmall
+                )
+            }
+            Switch(
+                checked = policy.freePercentageEnabled,
+                onCheckedChange = { onPolicyChange(policy.copy(freePercentageEnabled = it)) }
+            )
+        }
+
+        if (policy.freePercentageEnabled) {
+            Text(
+                text = "${policy.freePercentage}%",
+                style = MaterialTheme.typography.titleMedium
+            )
+            Slider(
+                value = policy.freePercentage.toFloat(),
+                onValueChange = { value ->
+                    onPolicyChange(policy.copy(freePercentage = value.toInt()))
+                },
+                valueRange = PresencePolicy.MIN_PERCENTAGE.toFloat()..PresencePolicy.MAX_PERCENTAGE.toFloat(),
+                steps = 98,
+                modifier = Modifier.fillMaxWidth()
+            )
+        } else {
+            FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                listOf(20, 40, 60, 80).forEach { pct ->
+                    FilterChip(
+                        selected = policy.freePercentage == pct,
+                        onClick = { onPolicyChange(policy.copy(freePercentage = pct)) },
+                        label = { Text("$pct%") }
                     )
                 }
             }
@@ -199,31 +217,6 @@ private fun PolicyToggleSection(
         }
         if (checked) content()
     }
-}
-
-@Composable
-private fun PercentagePicker(
-    current: Int,
-    onSelected: (Int) -> Unit
-) {
-    FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-        listOf(20, 40, 60, 80).forEach { pct ->
-            FilterChip(
-                selected = current == pct,
-                onClick = { onSelected(pct) },
-                label = { Text("$pct%") }
-            )
-        }
-    }
-    OutlinedTextField(
-        value = current.toString(),
-        onValueChange = { raw ->
-            raw.toIntOrNull()?.let { onSelected(it.coerceIn(1, 100)) }
-        },
-        modifier = Modifier.fillMaxWidth(),
-        label = { Text(stringResource(R.string.policy_custom_percentage_label)) },
-        singleLine = true
-    )
 }
 
 private val weekdayOptions = listOf(

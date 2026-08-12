@@ -8,6 +8,14 @@ val versionProperties = Properties().apply {
     }
 }
 
+val localProperties = Properties().apply {
+    val file = rootProject.file("local.properties")
+    if (file.exists()) {
+        load(file.inputStream())
+    }
+}
+val openAiApiKey = localProperties.getProperty("OPENAI_API_KEY", "")
+
 val versionMajor = (versionProperties.getProperty("VERSION_MAJOR") ?: "1").toInt()
 val versionMinor = (versionProperties.getProperty("VERSION_MINOR") ?: "0").toInt()
 val versionPatch = (versionProperties.getProperty("VERSION_PATCH") ?: "4").toInt()
@@ -119,6 +127,8 @@ android {
 
         versionCode = appVersionCode
         versionName = appVersionName
+
+        buildConfigField("String", "OPENAI_API_KEY", "\"$openAiApiKey\"")
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
