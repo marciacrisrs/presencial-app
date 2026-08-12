@@ -19,17 +19,44 @@ val minSdkVer = (versionProperties.getProperty("MIN_SDK") ?: "26").toInt()
 val appVersionName = "$versionMajor.$versionMinor.$versionPatch"
 val appVersionCode = versionMajor * 10000 + versionMinor * 100 + versionPatch
 
+fun readVersionProperties(): Properties = Properties().apply {
+    rootProject.file("version.properties").inputStream().use { load(it) }
+}
+
+fun formatVersionName(props: Properties): String =
+    "${props.getProperty("VERSION_MAJOR")}.${props.getProperty("VERSION_MINOR")}.${props.getProperty("VERSION_PATCH")}"
+
+fun writeVersionProperties(props: Properties) {
+    val file = rootProject.file("version.properties")
+    file.writeText(
+        buildString {
+            appendLine("VERSION_MAJOR=${props.getProperty("VERSION_MAJOR")}")
+            appendLine("VERSION_MINOR=${props.getProperty("VERSION_MINOR")}")
+            appendLine("VERSION_PATCH=${props.getProperty("VERSION_PATCH")}")
+            appendLine("COMPILE_SDK=${props.getProperty("COMPILE_SDK")}")
+            appendLine("TARGET_SDK=${props.getProperty("TARGET_SDK")}")
+            appendLine("MIN_SDK=${props.getProperty("MIN_SDK")}")
+        }
+    )
+}
+
+tasks.register("printVersion") {
+    group = "versioning"
+    description = "Imprime versionName lido de version.properties"
+    doLast {
+        println(formatVersionName(readVersionProperties()))
+    }
+}
+
 tasks.register("incrementPatch") {
     group = "versioning"
     description = "Incrementa a versão patch no arquivo version.properties"
     doLast {
-        val props = Properties()
-        val file = rootProject.file("version.properties")
-        props.load(file.inputStream())
-        val currentPatch = props.getProperty("VERSION_PATCH").toInt()
-        props.setProperty("VERSION_PATCH", (currentPatch + 1).toString())
-        props.store(file.writer(), "Gerado automaticamente")
-        println("Versão atualizada para Patch: ${currentPatch + 1}")
+        val props = readVersionProperties()
+        val newPatch = props.getProperty("VERSION_PATCH").toInt() + 1
+        props.setProperty("VERSION_PATCH", newPatch.toString())
+        writeVersionProperties(props)
+        println("VERSION_NAME=${formatVersionName(props)}")
     }
 }
 

@@ -33,8 +33,8 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.core.net.toUri
+import com.presencial.app.BuildConfig
 import com.presencial.app.R
-
 import androidx.compose.ui.tooling.preview.Preview
 import com.presencial.app.ui.theme.PresencialTheme
 
@@ -103,7 +103,7 @@ private fun AboutHeader() {
     )
 
     Text(
-        text = "Versão ${com.presencial.app.BuildConfig.VERSION_NAME}",
+        text = "Versão ${BuildConfig.VERSION_NAME}",
         style = MaterialTheme.typography.bodyMedium,
         color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
     )
@@ -126,7 +126,10 @@ private fun PrivacyPolicyCard() {
             )
             Spacer(modifier = Modifier.height(8.dp))
             Text(
-                text = "Todos os dados permanecem exclusivamente no dispositivo do usuário.",
+                text = "Todos os dados permanecem exclusivamente no dispositivo do usuário. " +
+                    "A busca de endereço usa o serviço de geocodificação do sistema operacional " +
+                    "(pode enviar o texto do endereço ao Google/Apple conforme o dispositivo). " +
+                    "O mapa interativo carrega tiles do OpenStreetMap via internet.",
                 style = MaterialTheme.typography.bodyMedium
             )
         }

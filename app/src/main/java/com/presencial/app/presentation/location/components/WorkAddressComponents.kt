@@ -34,6 +34,7 @@ import androidx.compose.ui.unit.dp
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.MultiplePermissionsState
 import com.presencial.app.domain.model.WorkAddress
+import com.presencial.app.presentation.components.MonitoringStatusBanner
 import com.presencial.app.presentation.location.model.WorkAddressViewModel
 
 @OptIn(ExperimentalPermissionsApi::class)
@@ -107,9 +108,10 @@ fun WorkAddressContent(params: WorkAddressContentParams) {
         )
 
         MonitoringStatusBanner(
-            addresses = params.addresses,
+            activeAddressCount = params.addresses.count { it.isActive },
             foregroundGranted = params.foregroundPermissions.allPermissionsGranted,
-            backgroundGranted = params.backgroundPermission.allPermissionsGranted
+            backgroundGranted = params.backgroundPermission.allPermissionsGranted,
+            modifier = Modifier.padding(horizontal = SPACING_MEDIUM, vertical = SPACING_SMALL)
         )
 
         WorkAddressList(
@@ -135,52 +137,6 @@ fun WorkAddressTopBar(onBack: () -> Unit) {
             }
         }
     )
-}
-
-@Composable
-private fun MonitoringStatusBanner(
-    addresses: List<WorkAddress>,
-    foregroundGranted: Boolean,
-    backgroundGranted: Boolean
-) {
-    val activeCount = addresses.count { it.isActive }
-    if (activeCount == 0) return
-
-    val isFullyConfigured = foregroundGranted && backgroundGranted
-    val containerColor = if (isFullyConfigured) {
-        MaterialTheme.colorScheme.primaryContainer
-    } else {
-        MaterialTheme.colorScheme.errorContainer
-    }
-
-    Card(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(horizontal = SPACING_MEDIUM, vertical = SPACING_SMALL),
-        colors = CardDefaults.cardColors(containerColor = containerColor)
-    ) {
-        Column(modifier = Modifier.padding(SPACING_MEDIUM)) {
-            Text(
-                text = if (isFullyConfigured) {
-                    "Monitoramento ativo ($activeCount local${if (activeCount > 1) "is" else ""})"
-                } else {
-                    "Check-in automático incompleto"
-                },
-                style = MaterialTheme.typography.titleSmall
-            )
-            Text(
-                text = when {
-                    isFullyConfigured ->
-                        "O app pode registrar sua presença ao permanecer no raio configurado."
-                    !foregroundGranted ->
-                        "Conceda permissão de localização para ativar o monitoramento."
-                    else ->
-                        "Permita localização \"O tempo todo\" para check-in em background."
-                },
-                style = MaterialTheme.typography.bodySmall
-            )
-        }
-    }
 }
 
 @Composable

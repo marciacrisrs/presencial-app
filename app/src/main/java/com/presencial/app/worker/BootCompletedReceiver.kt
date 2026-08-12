@@ -3,7 +3,7 @@ package com.presencial.app.worker
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
-import com.presencial.app.domain.usecase.SyncGeofencesUseCase
+import com.presencial.app.domain.location.BootCompletedHandler
 import dagger.hilt.android.EntryPointAccessors
 import dagger.hilt.EntryPoint
 import dagger.hilt.InstallIn
@@ -18,21 +18,21 @@ class BootCompletedReceiver : BroadcastReceiver() {
     @EntryPoint
     @InstallIn(SingletonComponent::class)
     interface BootEntryPoint {
-        fun syncGeofencesUseCase(): SyncGeofencesUseCase
+        fun bootCompletedHandler(): BootCompletedHandler
     }
 
     override fun onReceive(context: Context, intent: Intent) {
         if (intent.action != Intent.ACTION_BOOT_COMPLETED) return
 
         val pendingResult = goAsync()
-        val entryPoint = EntryPointAccessors.fromApplication(
+        val handler = EntryPointAccessors.fromApplication(
             context.applicationContext,
             BootEntryPoint::class.java
-        )
+        ).bootCompletedHandler()
 
         CoroutineScope(SupervisorJob() + Dispatchers.IO).launch {
             try {
-                entryPoint.syncGeofencesUseCase()()
+                handler.handleBootCompleted()
             } finally {
                 pendingResult.finish()
             }

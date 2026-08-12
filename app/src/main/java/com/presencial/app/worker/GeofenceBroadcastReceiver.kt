@@ -7,6 +7,7 @@ import android.util.Log
 import com.google.android.gms.location.Geofence
 import com.google.android.gms.location.GeofencingEvent
 import com.presencial.app.domain.location.GeofenceEventHandler
+import com.presencial.app.domain.location.GeofenceRequestParser
 import com.presencial.app.domain.usecase.AutoCheckInResult
 import dagger.hilt.android.EntryPointAccessors
 import dagger.hilt.EntryPoint
@@ -37,10 +38,9 @@ class GeofenceBroadcastReceiver : BroadcastReceiver() {
 
         if (geofencingEvent.geofenceTransition != Geofence.GEOFENCE_TRANSITION_DWELL) return
 
-        val workAddressId = geofencingEvent.triggeringGeofences
-            ?.firstOrNull()
-            ?.requestId
-            ?.toLongOrNull()
+        val workAddressId = GeofenceRequestParser.parseWorkAddressId(
+            geofencingEvent.triggeringGeofences?.firstOrNull()?.requestId
+        )
 
         val pendingResult = goAsync()
         val handler = EntryPointAccessors.fromApplication(

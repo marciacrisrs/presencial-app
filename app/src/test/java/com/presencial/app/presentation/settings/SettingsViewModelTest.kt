@@ -4,6 +4,7 @@ import app.cash.turbine.test
 import com.presencial.app.data.backup.BackupManager
 import com.presencial.app.domain.model.AppSettings
 import com.presencial.app.domain.repository.SettingsRepository
+import com.presencial.app.domain.repository.WorkAddressRepository
 import com.presencial.app.domain.usecase.SyncGeofencesUseCase
 import com.presencial.app.util.MainDispatcherExtension
 import io.mockk.coEvery
@@ -29,13 +30,20 @@ class SettingsViewModelTest {
     private val settingsRepository = mockk<SettingsRepository>()
     private val backupManager = mockk<BackupManager>()
     private val syncGeofencesUseCase = mockk<SyncGeofencesUseCase>()
+    private val workAddressRepository = mockk<WorkAddressRepository>()
     private lateinit var viewModel: SettingsViewModel
 
     @BeforeEach
     fun setup() {
         every { settingsRepository.settings } returns flowOf(AppSettings())
+        every { workAddressRepository.getAllAddresses() } returns flowOf(emptyList())
         coEvery { syncGeofencesUseCase() } returns Unit
-        viewModel = SettingsViewModel(settingsRepository, backupManager, syncGeofencesUseCase)
+        viewModel = SettingsViewModel(
+            settingsRepository,
+            backupManager,
+            syncGeofencesUseCase,
+            workAddressRepository
+        )
     }
 
     @Test
@@ -43,7 +51,12 @@ class SettingsViewModelTest {
         val appSettings = AppSettings(requiredPercentage = 50, countSaturdaysAsWorkdays = true)
         every { settingsRepository.settings } returns flowOf(appSettings)
         
-        viewModel = SettingsViewModel(settingsRepository, backupManager, syncGeofencesUseCase)
+        viewModel = SettingsViewModel(
+            settingsRepository,
+            backupManager,
+            syncGeofencesUseCase,
+            workAddressRepository
+        )
 
         viewModel.settings.test {
             assertEquals(appSettings, awaitItem())
