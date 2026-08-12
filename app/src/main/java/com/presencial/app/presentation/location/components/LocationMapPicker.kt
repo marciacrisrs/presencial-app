@@ -67,15 +67,66 @@ fun LocationMapPicker(
                         return true
                     }
                 }
-                loadUrl(buildMapUrl(initialLat, initialLng))
+                loadDataWithBaseURL(
+                    MAP_ORIGIN,
+                    buildOpenStreetMapHtml(initialLat, initialLng),
+                    "text/html",
+                    "UTF-8",
+                    null
+                )
                 webViewRef = this
             }
         }
     )
 }
 
-private fun buildMapUrl(latitude: Double, longitude: Double): String =
-    "file:///android_asset/osm_map.html?lat=$latitude&lng=$longitude"
+private fun buildOpenStreetMapHtml(latitude: Double, longitude: Double): String = """
+    <!DOCTYPE html>
+    <html lang="pt-BR">
+    <head>
+      <meta charset="utf-8"/>
+      <title>Mapa de localização</title>
+      <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+      <link rel="stylesheet"
+            href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+            integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
+            crossorigin="anonymous"/>
+      <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+              integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
+              crossorigin="anonymous"></script>
+      <style>
+        html, body, #map { height: 100%; margin: 0; padding: 0; }
+      </style>
+    </head>
+    <body>
+      <div id="map"></div>
+      <script>
+        function postLocation(lat, lng) {
+          window.location.href = 'presencial://location/' + lat + '/' + lng;
+        }
+        var map = L.map('map').setView([$latitude, $longitude], 16);
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+          maxZoom: 19,
+          attribution: '&copy; OpenStreetMap'
+        }).addTo(map);
+        var marker = L.marker([$latitude, $longitude], { draggable: true }).addTo(map);
+        marker.on('dragend', function(e) {
+          var pos = e.target.getLatLng();
+          postLocation(pos.lat, pos.lng);
+        });
+        map.on('click', function(e) {
+          marker.setLatLng(e.latlng);
+          postLocation(e.latlng.lat, e.latlng.lng);
+        });
+        function setMarker(lat, lng) {
+          marker.setLatLng([lat, lng]);
+          map.setView([lat, lng], 16);
+        }
+      </script>
+    </body>
+    </html>
+""".trimIndent()
 
+private const val MAP_ORIGIN = "https://localhost/"
 private const val DEFAULT_LAT = -23.5505
 private const val DEFAULT_LNG = -46.6333
