@@ -61,52 +61,48 @@ sonar {
 
         property(
             "sonar.coverage.exclusions",
-            """
-            **/BuildConfig.*
-            **/Manifest.*
-            **/R.*
-            **/R$*.*
-            **/PresencialApp.*
-            **/MainActivity.*
-        
-            **/di/**
-            **/*Hilt_*.*
-            **/*_HiltModules*.*
-            **/*_Factory.*
-            **/*_MembersInjector*.*
-        
-            **/data/local/dao/**
-            **/data/local/entity/**
-            **/data/local/mapper/**
-            **/data/local/converter/**
-            **/data/local/migration/**
-            **/data/preferences/**
-            **/data/location/**
-            **/domain/model/**
-            **/*Database*.*
-            **/*SettingsDataStore*.*
-        
-            **/ui/**
-            **/presentation/**
-            **/*ComposableSingletons*.*
-            **/*Preview*.*
-            **/*Screen*.*
-            **/*Activity*.*
-            **/*DialogState*.*
-        
-            **/notification/**
-            **/widget/**
-            **/*WidgetReceiver*.*
-            **/*BasePresencialWidget*.*
-            **/*WidgetSmall*.*
-            **/*WidgetMedium*.*
-            **/*WidgetLarge*.*
-            **/worker/**
-            **/data/export/**
-            **/domain/location/**
-            **/*_Impl*.*
-            **/*WidgetColors*.*
-            """.trimIndent()
+            listOf(
+                "**/BuildConfig.*",
+                "**/Manifest.*",
+                "**/R.*",
+                "**/R$*.*",
+                "**/PresencialApp.*",
+                "**/MainActivity.*",
+                "**/di/**",
+                "**/*Hilt_*.*",
+                "**/*_HiltModules*.*",
+                "**/*_Factory.*",
+                "**/*_MembersInjector*.*",
+                "**/data/local/dao/**",
+                "**/data/local/entity/**",
+                "**/data/local/mapper/**",
+                "**/data/local/converter/**",
+                "**/data/local/migration/**",
+                "**/data/preferences/**",
+                "**/data/location/**",
+                "**/domain/model/**",
+                "**/*Database*.*",
+                "**/*SettingsDataStore*.*",
+                "**/ui/**",
+                "**/presentation/**",
+                "**/*ComposableSingletons*.*",
+                "**/*Preview*.*",
+                "**/*Screen*.*",
+                "**/*Activity*.*",
+                "**/*DialogState*.*",
+                "**/notification/**",
+                "**/widget/**",
+                "**/*WidgetReceiver*.*",
+                "**/*BasePresencialWidget*.*",
+                "**/*WidgetSmall*.*",
+                "**/*WidgetMedium*.*",
+                "**/*WidgetLarge*.*",
+                "**/worker/**",
+                "**/data/export/**",
+                "**/domain/location/**",
+                "**/*_Impl*.*",
+                "**/*WidgetColors*.*"
+            ).joinToString(",")
         )
 
         property("sonar.sourceEncoding", "UTF-8")
