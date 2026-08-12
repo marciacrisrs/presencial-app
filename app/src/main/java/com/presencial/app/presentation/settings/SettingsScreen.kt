@@ -54,12 +54,18 @@ fun SettingsScreen(
     val workAddresses by viewModel.workAddresses.collectAsStateWithLifecycle()
     val message by viewModel.message.collectAsStateWithLifecycle()
     val policyValidation by viewModel.policyValidation.collectAsStateWithLifecycle()
+    val cloudSyncState by viewModel.cloudSyncState.collectAsStateWithLifecycle()
     val (foregroundPermissions, backgroundPermission) = rememberWorkLocationPermissions()
     val context = LocalContext.current
     val snackbarHostState = remember { SnackbarHostState() }
 
     val exportLauncher = rememberSettingsExportLauncher(context, viewModel)
     val importLauncher = rememberSettingsImportLauncher(context, viewModel)
+    val cloudFolderLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.OpenDocumentTree()
+    ) { uri ->
+        uri?.let { viewModel.connectCloudFolder(it) }
+    }
 
     LaunchedEffect(message) {
         message?.let {
@@ -77,6 +83,12 @@ fun SettingsScreen(
             onPresencePolicyChange = viewModel::updatePresencePolicy,
             policyValidation = policyValidation,
             onToggleSaturdays = viewModel::updateSaturdays,
+            cloudSyncState = cloudSyncState,
+            onCloudProviderSelected = viewModel::selectCloudProvider,
+            onCloudConnectFolder = { cloudFolderLauncher.launch(null) },
+            onCloudSignOut = viewModel::signOutCloud,
+            onCloudUpload = viewModel::uploadCloudBackup,
+            onCloudRestore = viewModel::restoreCloudBackup,
             onExport = { exportLauncher.launch("presencial_backup.json") },
             onRestore = { importLauncher.launch(arrayOf("application/json")) },
             onNavigateToAbsences = onNavigateToAbsences,
@@ -124,6 +136,12 @@ private data class SettingsScaffoldParams(
     val onPresencePolicyChange: (com.presencial.app.domain.model.PresencePolicy) -> Unit,
     val policyValidation: com.presencial.app.domain.model.PolicyValidationResult,
     val onToggleSaturdays: (Boolean) -> Unit,
+    val cloudSyncState: com.presencial.app.domain.model.CloudSyncState,
+    val onCloudProviderSelected: (com.presencial.app.domain.model.CloudStorageProvider) -> Unit,
+    val onCloudConnectFolder: () -> Unit,
+    val onCloudSignOut: () -> Unit,
+    val onCloudUpload: () -> Unit,
+    val onCloudRestore: () -> Unit,
     val onExport: () -> Unit,
     val onRestore: () -> Unit,
     val onNavigateToAbsences: () -> Unit,
@@ -146,6 +164,12 @@ private fun SettingsScaffold(
                 onPresencePolicyChange = params.onPresencePolicyChange,
                 policyValidation = params.policyValidation,
                 onToggleSaturdays = params.onToggleSaturdays,
+                cloudSyncState = params.cloudSyncState,
+                onCloudProviderSelected = params.onCloudProviderSelected,
+                onCloudConnectFolder = params.onCloudConnectFolder,
+                onCloudSignOut = params.onCloudSignOut,
+                onCloudUpload = params.onCloudUpload,
+                onCloudRestore = params.onCloudRestore,
                 onExport = params.onExport,
                 onRestore = params.onRestore,
                 onNavigateToAbsences = params.onNavigateToAbsences,
@@ -165,6 +189,12 @@ private data class SettingsContentParams(
     val onPresencePolicyChange: (com.presencial.app.domain.model.PresencePolicy) -> Unit,
     val policyValidation: com.presencial.app.domain.model.PolicyValidationResult,
     val onToggleSaturdays: (Boolean) -> Unit,
+    val cloudSyncState: com.presencial.app.domain.model.CloudSyncState,
+    val onCloudProviderSelected: (com.presencial.app.domain.model.CloudStorageProvider) -> Unit,
+    val onCloudConnectFolder: () -> Unit,
+    val onCloudSignOut: () -> Unit,
+    val onCloudUpload: () -> Unit,
+    val onCloudRestore: () -> Unit,
     val onExport: () -> Unit,
     val onRestore: () -> Unit,
     val onNavigateToAbsences: () -> Unit,
@@ -198,6 +228,15 @@ private fun SettingsContent(params: SettingsContentParams) {
         SaturdaysConfigCard(
             countSaturdays = params.settings.countSaturdaysAsWorkdays,
             onToggle = params.onToggleSaturdays
+        )
+
+        CloudSyncCard(
+            state = params.cloudSyncState,
+            onProviderSelected = params.onCloudProviderSelected,
+            onConnectFolder = params.onCloudConnectFolder,
+            onSignOut = params.onCloudSignOut,
+            onUpload = params.onCloudUpload,
+            onRestore = params.onCloudRestore
         )
 
         BackupRestoreCard(

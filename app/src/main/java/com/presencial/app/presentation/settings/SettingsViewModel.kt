@@ -1,12 +1,16 @@
 package com.presencial.app.presentation.settings
 
+import android.net.Uri
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.presencial.app.data.backup.BackupManager
 import com.presencial.app.domain.model.AppSettings
+import com.presencial.app.domain.model.CloudStorageProvider
+import com.presencial.app.domain.model.CloudSyncState
 import com.presencial.app.domain.model.PolicyValidationResult
 import com.presencial.app.domain.model.PresencePolicy
 import com.presencial.app.domain.model.WorkAddress
+import com.presencial.app.domain.repository.CloudSyncRepository
 import com.presencial.app.domain.repository.SettingsRepository
 import com.presencial.app.domain.repository.WorkAddressRepository
 import com.presencial.app.domain.usecase.SyncGeofencesUseCase
@@ -27,6 +31,7 @@ import javax.inject.Inject
 class SettingsViewModel @Inject constructor(
     private val settingsRepository: SettingsRepository,
     private val backupManager: BackupManager,
+    private val cloudSyncRepository: CloudSyncRepository,
     private val syncGeofencesUseCase: SyncGeofencesUseCase,
     workAddressRepository: WorkAddressRepository,
     private val widgetRefresher: WidgetRefresher
@@ -46,8 +51,16 @@ class SettingsViewModel @Inject constructor(
             PolicyValidationResult(isValid = true)
         )
 
+    val cloudSyncState: StateFlow<CloudSyncState> = cloudSyncRepository.syncState
+
     private val _message = MutableStateFlow<String?>(null)
     val message: StateFlow<String?> = _message
+
+    init {
+        viewModelScope.launch {
+            cloudSyncRepository.refreshState()
+        }
+    }
 
     fun updatePresencePolicy(policy: PresencePolicy) {
         viewModelScope.launch {
@@ -86,6 +99,48 @@ class SettingsViewModel @Inject constructor(
                     _message.value = "Backup restaurado com sucesso!"
                 }
                 .onFailure { _message.value = "Erro ao restaurar: ${it.message}" }
+        }
+    }
+
+    fun selectCloudProvider(provider: CloudStorageProvider) {
+        viewModelScope.launch {
+            cloudSyncRepository.setSelectedProvider(provider)
+        }
+    }
+
+    fun connectCloudFolder(treeUri: Uri) {
+        viewModelScope.launch {
+            val provider = cloudSyncState.value.provider
+            cloudSyncRepository.connectFolder(treeUri, provider)
+                .onSuccess { _message.value = "Pasta na nuvem conectada!" }
+                .onFailure { _message.value = "Erro ao conectar pasta: ${it.message}" }
+        }
+    }
+
+    fun signOutCloud() {
+        viewModelScope.launch {
+            cloudSyncRepository.signOut()
+            _message.value = "Pasta desconectada."
+        }
+    }
+
+    fun uploadCloudBackup() {
+        viewModelScope.launch {
+            cloudSyncRepository.uploadBackup()
+                .onSuccess { _message.value = "Backup enviado para a nuvem!" }
+                .onFailure { _message.value = "Erro na sincronização: ${it.message}" }
+        }
+    }
+
+    fun restoreCloudBackup() {
+        viewModelScope.launch {
+            cloudSyncRepository.restoreBackup()
+                .onSuccess {
+                    syncGeofencesUseCase()
+                    widgetRefresher.refresh()
+                    _message.value = "Backup restaurado da nuvem!"
+                }
+                .onFailure { _message.value = "Erro na sincronização: ${it.message}" }
         }
     }
 

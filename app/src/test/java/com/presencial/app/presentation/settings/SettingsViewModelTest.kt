@@ -3,7 +3,9 @@ package com.presencial.app.presentation.settings
 import app.cash.turbine.test
 import com.presencial.app.data.backup.BackupManager
 import com.presencial.app.domain.model.AppSettings
+import com.presencial.app.domain.model.CloudSyncState
 import com.presencial.app.domain.model.PresencePolicy
+import com.presencial.app.domain.repository.CloudSyncRepository
 import com.presencial.app.domain.repository.SettingsRepository
 import com.presencial.app.domain.repository.WorkAddressRepository
 import com.presencial.app.domain.usecase.SyncGeofencesUseCase
@@ -13,6 +15,7 @@ import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Assertions.assertEquals
@@ -31,6 +34,7 @@ class SettingsViewModelTest {
 
     private val settingsRepository = mockk<SettingsRepository>()
     private val backupManager = mockk<BackupManager>()
+    private val cloudSyncRepository = mockk<CloudSyncRepository>()
     private val syncGeofencesUseCase = mockk<SyncGeofencesUseCase>()
     private val workAddressRepository = mockk<WorkAddressRepository>()
     private val widgetRefresher = mockk<WidgetRefresher>()
@@ -40,29 +44,28 @@ class SettingsViewModelTest {
     fun setup() {
         every { settingsRepository.settings } returns flowOf(AppSettings())
         every { workAddressRepository.getAllAddresses() } returns flowOf(emptyList())
+        every { cloudSyncRepository.syncState } returns MutableStateFlow(CloudSyncState())
+        coEvery { cloudSyncRepository.refreshState() } returns Unit
         coEvery { syncGeofencesUseCase() } returns Unit
         coEvery { widgetRefresher.refresh() } returns Unit
-        viewModel = SettingsViewModel(
-            settingsRepository,
-            backupManager,
-            syncGeofencesUseCase,
-            workAddressRepository,
-            widgetRefresher
-        )
+        viewModel = createViewModel()
     }
+
+    private fun createViewModel() = SettingsViewModel(
+        settingsRepository,
+        backupManager,
+        cloudSyncRepository,
+        syncGeofencesUseCase,
+        workAddressRepository,
+        widgetRefresher
+    )
 
     @Test
     fun `settings should reflect repository flow`() = runTest {
         val appSettings = AppSettings(requiredPercentage = 50, countSaturdaysAsWorkdays = true)
         every { settingsRepository.settings } returns flowOf(appSettings)
 
-        viewModel = SettingsViewModel(
-            settingsRepository,
-            backupManager,
-            syncGeofencesUseCase,
-            workAddressRepository,
-            widgetRefresher
-        )
+        viewModel = createViewModel()
 
         viewModel.settings.test {
             assertEquals(appSettings, awaitItem())
@@ -136,6 +139,15 @@ class SettingsViewModelTest {
 
         coVerify(exactly = 0) { syncGeofencesUseCase() }
         assertEquals("Erro ao restaurar: Invalid file", viewModel.message.value)
+    }
+
+    @Test
+    fun `uploadCloudBackup should show success message`() = runTest {
+        coEvery { cloudSyncRepository.uploadBackup() } returns Result.success(Unit)
+
+        viewModel.uploadCloudBackup()
+
+        assertEquals("Backup enviado para a nuvem!", viewModel.message.value)
     }
 
     @Test

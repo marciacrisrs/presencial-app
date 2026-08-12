@@ -37,6 +37,12 @@ class BackupManager @Inject constructor(
         }
     }
 
+    suspend fun exportToBytes(): Result<ByteArray> = withContext(ioDispatcher) {
+        runCatching {
+            createBackupJson().toString(2).toByteArray(Charsets.UTF_8)
+        }
+    }
+
     private suspend fun createBackupJson(): JSONObject {
         val settings = settingsRepository.settings.first()
         val checkIns = checkInDao.observeAll().first()
@@ -92,15 +98,24 @@ class BackupManager @Inject constructor(
 
     suspend fun importFromFile(file: File): Result<Unit> = withContext(ioDispatcher) {
         runCatching {
-            val json = JSONObject(file.readText())
-            checkInDao.deleteAll()
-            monthlySummaryDao.deleteAll()
-            workAddressDao.deleteAll()
-            restoreCheckIns(json.getJSONArray("checkIns"))
-            restoreSummaries(json.getJSONArray("summaries"))
-            restoreWorkAddresses(json)
-            restoreSettings(json)
+            importFromJson(JSONObject(file.readText()))
         }
+    }
+
+    suspend fun importFromBytes(bytes: ByteArray): Result<Unit> = withContext(ioDispatcher) {
+        runCatching {
+            importFromJson(JSONObject(bytes.toString(Charsets.UTF_8)))
+        }
+    }
+
+    private suspend fun importFromJson(json: JSONObject) {
+        checkInDao.deleteAll()
+        monthlySummaryDao.deleteAll()
+        workAddressDao.deleteAll()
+        restoreCheckIns(json.getJSONArray("checkIns"))
+        restoreSummaries(json.getJSONArray("summaries"))
+        restoreWorkAddresses(json)
+        restoreSettings(json)
     }
 
     private suspend fun restoreCheckIns(checkInsArray: org.json.JSONArray) {
