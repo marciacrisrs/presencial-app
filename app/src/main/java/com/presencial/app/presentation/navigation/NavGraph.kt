@@ -24,6 +24,7 @@ import com.presencial.app.presentation.calendar.CalendarScreen
 import com.presencial.app.presentation.location.WorkAddressScreen
 import com.presencial.app.presentation.dashboard.DashboardScreen
 import com.presencial.app.presentation.history.HistoryScreen
+import com.presencial.app.presentation.notification.RequestNotificationPermissionOnLaunch
 import com.presencial.app.presentation.settings.SettingsScreen
 import com.presencial.app.presentation.statistics.StatisticsScreen
 
@@ -38,6 +39,8 @@ fun PresencialNavHost(
     val navController = rememberNavController()
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentRoute = navBackStackEntry?.destination?.route
+
+    RequestNotificationPermissionOnLaunch()
 
     HandleCheckInNavigation(
         openCheckIn = openCheckIn,

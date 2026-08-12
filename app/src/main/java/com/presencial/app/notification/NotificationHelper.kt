@@ -5,7 +5,10 @@ import android.app.NotificationManager
 import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
+import android.content.pm.PackageManager
+import android.os.Build
 import androidx.core.app.NotificationCompat
+import androidx.core.content.ContextCompat
 import com.presencial.app.MainActivity
 import com.presencial.app.R
 import dagger.hilt.android.qualifiers.ApplicationContext
@@ -31,11 +34,11 @@ class NotificationHelper @Inject constructor(
         ).apply {
             description = context.getString(R.string.notification_channel_desc)
         }
-        val manager = context.getSystemService(NotificationManager::class.java)
-        manager.createNotificationChannel(channel)
+        context.getSystemService(NotificationManager::class.java).createNotificationChannel(channel)
     }
 
     fun showCheckInReminder() {
+        if (!canPostNotifications()) return
         createChannel()
         val intent = Intent(context, MainActivity::class.java).apply {
             flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP
@@ -55,21 +58,33 @@ class NotificationHelper @Inject constructor(
             .setAutoCancel(true)
             .build()
 
-        val manager = context.getSystemService(NotificationManager::class.java)
-        manager.notify(NOTIFICATION_ID, notification)
+        context.getSystemService(NotificationManager::class.java).notify(NOTIFICATION_ID, notification)
     }
 
     fun showAutoCheckInNotification() {
+        if (!canPostNotifications()) return
         createChannel()
         val notification = NotificationCompat.Builder(context, CHANNEL_ID)
             .setSmallIcon(R.drawable.ic_notification)
-            .setContentTitle("Check-in Automático")
-            .setContentText("Sua presença foi registrada automaticamente ao chegar no trabalho.")
+            .setContentTitle(context.getString(R.string.notification_auto_checkin_title))
+            .setContentText(context.getString(R.string.notification_auto_checkin_message))
             .setPriority(NotificationCompat.PRIORITY_DEFAULT)
             .setAutoCancel(true)
             .build()
 
+        context.getSystemService(NotificationManager::class.java).notify(AUTO_NOTIFICATION_ID, notification)
+    }
+
+    private fun canPostNotifications(): Boolean {
         val manager = context.getSystemService(NotificationManager::class.java)
-        manager.notify(AUTO_NOTIFICATION_ID, notification)
+        if (!manager.areNotificationsEnabled()) return false
+        return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            ContextCompat.checkSelfPermission(
+                context,
+                android.Manifest.permission.POST_NOTIFICATIONS
+            ) == PackageManager.PERMISSION_GRANTED
+        } else {
+            true
+        }
     }
 }
