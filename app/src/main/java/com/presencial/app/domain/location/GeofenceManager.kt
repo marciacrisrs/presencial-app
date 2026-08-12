@@ -5,6 +5,7 @@ import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
 import android.os.Build
+import android.util.Log
 import com.google.android.gms.location.Geofence
 import com.google.android.gms.location.GeofencingRequest
 import com.google.android.gms.location.LocationServices
@@ -43,7 +44,7 @@ class GeofenceManager @Inject constructor(
                 .setCircularRegion(address.latitude, address.longitude, address.radius)
                 .setExpirationDuration(Geofence.NEVER_EXPIRE)
                 .setTransitionTypes(Geofence.GEOFENCE_TRANSITION_DWELL)
-                .setLoiteringDelay(LOITERING_DELAY_MS)
+                .setLoiteringDelay(LOITERING_DELAY_MS.toInt())
                 .build()
         }
 
@@ -57,16 +58,22 @@ class GeofenceManager @Inject constructor(
             addGeofences(geofences)
         }.build()
 
-        geofencingClient.addGeofences(request, geofencePendingIntent).addOnFailureListener {
-            // Log or handle failure
+        geofencingClient.addGeofences(request, geofencePendingIntent).addOnFailureListener { e ->
+            Log.e(TAG, "Falha ao registrar geofences: ${e.message}", e)
+        }.addOnSuccessListener {
+            Log.d(TAG, "Geofences registradas: ${geofences.size}")
         }
     }
 
     fun removeGeofences() {
         geofencingClient.removeGeofences(geofencePendingIntent)
+            .addOnFailureListener { e ->
+                Log.e(TAG, "Falha ao remover geofences: ${e.message}", e)
+            }
     }
 
     companion object {
-        private const val LOITERING_DELAY_MS = 30000
+        const val LOITERING_DELAY_MS = 30_000L
+        private const val TAG = "GeofenceManager"
     }
 }

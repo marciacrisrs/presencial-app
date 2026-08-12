@@ -28,4 +28,13 @@ interface WorkAddressDao {
 
     @Query("SELECT * FROM work_addresses WHERE id = :id")
     suspend fun getAddressById(id: Long): WorkAddressEntity?
+
+    @Query("SELECT * FROM work_addresses")
+    suspend fun getAllAddressesSync(): List<WorkAddressEntity>
+
+    @Query("DELETE FROM work_addresses")
+    suspend fun deleteAll()
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insertAll(addresses: List<WorkAddressEntity>)
 }

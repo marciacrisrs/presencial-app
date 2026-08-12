@@ -31,6 +31,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.presencial.app.domain.model.HistoryMonthData
 import com.presencial.app.domain.model.MonthlySummary
 import com.presencial.app.ui.components.ShimmerBox
 import java.time.format.TextStyle
@@ -38,7 +39,7 @@ import java.util.Locale
 
 @Composable
 fun HistoryScreen(viewModel: HistoryViewModel = hiltViewModel()) {
-    val summaries by viewModel.summaries.collectAsStateWithLifecycle()
+    val historyMonths by viewModel.historyMonths.collectAsStateWithLifecycle()
     val context = LocalContext.current
 
     Column(
@@ -47,14 +48,14 @@ fun HistoryScreen(viewModel: HistoryViewModel = hiltViewModel()) {
     ) {
         Text("Histórico", style = MaterialTheme.typography.headlineLarge)
 
-        if (summaries.isEmpty()) {
+        if (historyMonths.isEmpty()) {
             HistorySkeleton()
         } else {
             LazyColumn(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                 itemsIndexed(
-                    items = summaries.sortedByDescending { it.yearMonth },
-                    key = { _, summary -> summary.yearMonth }
-                ) { index, summary ->
+                    items = historyMonths.sortedByDescending { it.summary.yearMonth },
+                    key = { _, item -> item.summary.yearMonth }
+                ) { index, monthData ->
                     AnimatedVisibility(
                         visible = true,
                         enter = fadeIn(animationSpec = tween(ANIM_DURATION, index * ANIM_DELAY)) +
@@ -63,9 +64,9 @@ fun HistoryScreen(viewModel: HistoryViewModel = hiltViewModel()) {
                                 ) { it / 2 }
                     ) {
                         HistoryMonthCard(
-                            summary = summary,
+                            monthData = monthData,
                             onShare = {
-                                shareSummary(context, summary)
+                                shareSummary(context, monthData.summary)
                             }
                         )
                     }
@@ -110,7 +111,8 @@ private const val ANIM_DELAY = 100
 private const val SKELETON_COUNT = 3
 
 @Composable
-private fun HistoryMonthCard(summary: MonthlySummary, onShare: () -> Unit) {
+private fun HistoryMonthCard(monthData: HistoryMonthData, onShare: () -> Unit) {
+    val summary = monthData.summary
     val monthName = summary.yearMonth.month.getDisplayName(TextStyle.FULL, Locale.forLanguageTag("pt-BR"))
     val progress = if (summary.requiredDays > 0) {
         summary.completedDays.toFloat() / summary.requiredDays
@@ -136,6 +138,13 @@ private fun HistoryMonthCard(summary: MonthlySummary, onShare: () -> Unit) {
             }
             Text("Dias úteis: ${summary.workdays}  •  Meta: ${summary.requiredDays} dias")
             Text("Cumpridos: ${summary.completedDays}  •  ${"%.0f".format(summary.achievedPercentage)}%")
+            if (monthData.autoCheckInDays > 0) {
+                Text(
+                    "📍 ${monthData.autoCheckInDays} check-in(s) automático(s)",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.secondary
+                )
+            }
             LinearProgressIndicator(
                 progress = { progress.coerceIn(0f, 1f) },
                 modifier = Modifier.fillMaxWidth(),

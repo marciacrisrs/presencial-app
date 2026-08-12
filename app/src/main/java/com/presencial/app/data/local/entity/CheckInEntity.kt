@@ -8,5 +8,6 @@ data class CheckInEntity(
     @PrimaryKey val dateEpochDay: Long,
     val status: String,
     val updatedAt: Long,
-    val source: String = "MANUAL"
+    val source: String = "MANUAL",
+    val workAddressId: Long? = null
 )

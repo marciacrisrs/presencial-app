@@ -2,7 +2,7 @@ package com.presencial.app.presentation.history
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.presencial.app.domain.model.MonthlySummary
+import com.presencial.app.domain.model.HistoryMonthData
 import com.presencial.app.domain.usecase.GetHistoryUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.SharingStarted
@@ -15,7 +15,7 @@ class HistoryViewModel @Inject constructor(
     getHistoryUseCase: GetHistoryUseCase
 ) : ViewModel() {
 
-    val summaries: StateFlow<List<MonthlySummary>> = getHistoryUseCase()
+    val historyMonths: StateFlow<List<HistoryMonthData>> = getHistoryUseCase()
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(STOP_TIMEOUT_MS), emptyList())
 }
 

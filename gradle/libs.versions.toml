@@ -36,6 +36,8 @@ junit = "4.13.2"
 androidxTestCore = "1.7.0"
 robolectric = "4.14.1"
 json = "20260719"
+mapsCompose = "6.2.1"
+playServicesMaps = "19.2.0"
 sonar = "7.4.0.8496"
 
 [libraries]
@@ -88,6 +90,8 @@ hilt-work-compiler = { group = "androidx.hilt", name = "hilt-compiler", version.
 
 # Google Services & Accompanist
 play-services-location = { group = "com.google.android.gms", name = "play-services-location", version.ref = "playServicesLocation" }
+play-services-maps = { group = "com.google.android.gms", name = "play-services-maps", version.ref = "playServicesMaps" }
+maps-compose = { group = "com.google.maps.android", name = "maps-compose", version.ref = "mapsCompose" }
 accompanist-permissions = { group = "com.google.accompanist", name = "accompanist-permissions", version.ref = "accompanist" }
 
 # Widgets (Glance)

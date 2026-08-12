@@ -59,7 +59,7 @@ UI (Compose) → ViewModel → UseCase → Repository → Room / DataStore / Rem
 1. **Meta mensal:** `ceil(dias_úteis_líquidos × percentual / 100)`
 2. **Dias úteis líquidos:** exclui domingos, feriados nacionais, sábados (configurável) e períodos de ausência registrados (férias, licenças, etc.)
 3. **Feriados móveis:** calculados a partir da Páscoa (algoritmo de Meeus/Jones/Butcher)
-4. **Geofencing:** o check-in automático é disparado ao entrar num raio de X metros de um local ativo cadastrado.
+4. **Geofencing:** check-in automático via dwell de 30 s dentro do raio configurado; geofences restauradas no boot e na inicialização do app. A localização é definida por geocoding do endereço ou GPS.
 
 ## Como executar
 
@@ -109,9 +109,9 @@ Testes unitários abrangentes na camada de domínio e dados:
 
 ## Estrutura de entidades Room
 
-- **CheckIn** — `dateEpochDay`, `status`, `updatedAt`, `source` (MANUAL ou AUTOMATIC)
+- **CheckIn** — `dateEpochDay`, `status`, `updatedAt`, `source` (`MANUAL` ou `auto_geofence`), `workAddressId`
 - **Absence** — `id`, `type`, `startDate`, `endDate`, `notes` (períodos de afastamento)
-- **WorkAddress** — `id`, `name`, `latitude`, `longitude`, `radius`, `isActive`
+- **WorkAddress** — `id`, `name`, `addressText`, `latitude`, `longitude`, `radius` (padrão 50 m), `isActive`
 - **MonthlySummary** — agregado mensal cacheado para histórico rápido
 
 ## Licença

@@ -1,6 +1,7 @@
 package com.presencial.app.presentation.history
 
 import app.cash.turbine.test
+import com.presencial.app.domain.model.HistoryMonthData
 import com.presencial.app.domain.usecase.GetHistoryUseCase
 import com.presencial.app.util.MainDispatcherExtension
 import com.presencial.app.util.TestDataFactory
@@ -21,14 +22,19 @@ class HistoryViewModelTest {
     private val getHistoryUseCase = mockk<GetHistoryUseCase>()
 
     @Test
-    fun `summaries should reflect use case flow`() = runTest {
-        val summaries = listOf(TestDataFactory.createMonthlySummary())
-        every { getHistoryUseCase() } returns flowOf(summaries)
+    fun `historyMonths should reflect use case flow`() = runTest {
+        val historyData = listOf(
+            HistoryMonthData(
+                summary = TestDataFactory.createMonthlySummary(),
+                autoCheckInDays = 2
+            )
+        )
+        every { getHistoryUseCase() } returns flowOf(historyData)
 
         val viewModel = HistoryViewModel(getHistoryUseCase)
 
-        viewModel.summaries.test {
-            assertEquals(summaries, awaitItem())
+        viewModel.historyMonths.test {
+            assertEquals(historyData, awaitItem())
         }
     }
 }

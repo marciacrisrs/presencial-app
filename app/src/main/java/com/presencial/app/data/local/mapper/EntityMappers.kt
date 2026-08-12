@@ -17,14 +17,16 @@ fun CheckInEntity.toDomain(): CheckIn = CheckIn(
     date = LocalDate.ofEpochDay(dateEpochDay),
     status = DayStatus.valueOf(status),
     updatedAt = updatedAt,
-    source = source
+    source = source,
+    workAddressId = workAddressId
 )
 
 fun CheckIn.toEntity(): CheckInEntity = CheckInEntity(
     dateEpochDay = date.toEpochDay(),
     status = status.name,
     updatedAt = updatedAt,
-    source = source
+    source = source,
+    workAddressId = workAddressId
 )
 
 fun MonthlySummaryEntity.toDomain(): MonthlySummary = MonthlySummary(

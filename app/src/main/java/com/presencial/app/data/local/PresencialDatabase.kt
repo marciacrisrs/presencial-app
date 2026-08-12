@@ -12,10 +12,11 @@ import com.presencial.app.data.local.entity.AbsenceEntity
 import com.presencial.app.data.local.entity.CheckInEntity
 import com.presencial.app.data.local.entity.MonthlySummaryEntity
 import com.presencial.app.data.local.entity.WorkAddressEntity
+import com.presencial.app.data.local.migration.MIGRATION_3_4
 
 @Database(
     entities = [CheckInEntity::class, MonthlySummaryEntity::class, AbsenceEntity::class, WorkAddressEntity::class],
-    version = 3,
+    version = 4,
     exportSchema = false
 )
 abstract class PresencialDatabase : RoomDatabase() {

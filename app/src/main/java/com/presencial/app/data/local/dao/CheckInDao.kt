@@ -32,4 +32,18 @@ interface CheckInDao {
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertAll(entities: List<CheckInEntity>)
+
+    @Query(
+        """
+        SELECT COUNT(*) FROM check_ins
+        WHERE dateEpochDay >= :start AND dateEpochDay <= :end
+        AND (source = :autoSource OR source = :legacySource)
+        """
+    )
+    suspend fun countAutoGeofenceBetween(
+        start: Long,
+        end: Long,
+        autoSource: String,
+        legacySource: String
+    ): Int
 }

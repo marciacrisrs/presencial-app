@@ -3,6 +3,7 @@ package com.presencial.app.domain.usecase
 import app.cash.turbine.test
 import com.presencial.app.domain.model.AppSettings
 import com.presencial.app.domain.model.MonthlySummary
+import com.presencial.app.domain.repository.CheckInRepository
 import com.presencial.app.domain.repository.MonthlySummaryRepository
 import com.presencial.app.domain.repository.SettingsRepository
 import com.presencial.app.util.FakeTimeProvider
@@ -19,14 +20,17 @@ import org.junit.jupiter.api.Test
 class GetHistoryUseCaseTest {
 
     private val monthlySummaryRepository: MonthlySummaryRepository = mockk()
+    private val checkInRepository: CheckInRepository = mockk()
     private val settingsRepository: SettingsRepository = mockk()
     private val timeProvider = FakeTimeProvider()
     private lateinit var useCase: GetHistoryUseCase
 
     @BeforeEach
     fun setup() {
+        every { checkInRepository.observeAllCheckIns() } returns flowOf(emptyList())
         useCase = GetHistoryUseCase(
             monthlySummaryRepository,
+            checkInRepository,
             settingsRepository,
             timeProvider
         )
@@ -34,7 +38,6 @@ class GetHistoryUseCaseTest {
 
     @Test
     fun `given current month missing in summaries, when invoke, then include current month`() = runTest {
-        // Arrange
         val currentMonth = YearMonth.of(2026, 8)
         timeProvider.setNow(currentMonth.atDay(1).atStartOfDay())
 
@@ -44,21 +47,20 @@ class GetHistoryUseCaseTest {
         every { monthlySummaryRepository.observeAllSummaries() } returns flowOf(summaries)
         every { settingsRepository.settings } returns flowOf(settings)
 
-        // Act & Assert
         useCase().test {
             val result = awaitItem()
             assertEquals(1, result.size)
-            val added = result[0]
+            val added = result[0].summary
             assertEquals(currentMonth, added.yearMonth)
-            assertEquals(21, added.workdays) // Aug 2026 has 21 workdays (no sats)
-            assertEquals(9, added.requiredDays) // 40% of 21 is 8.4 -> 9
+            assertEquals(21, added.workdays)
+            assertEquals(9, added.requiredDays)
+            assertEquals(0, result[0].autoCheckInDays)
             cancelAndIgnoreRemainingEvents()
         }
     }
 
     @Test
     fun `given current month missing and saturdays count, when invoke, then calculate workdays correctly`() = runTest {
-        // Arrange
         val currentMonth = YearMonth.of(2026, 8)
         timeProvider.setNow(currentMonth.atDay(1).atStartOfDay())
 
@@ -68,20 +70,18 @@ class GetHistoryUseCaseTest {
         every { monthlySummaryRepository.observeAllSummaries() } returns flowOf(summaries)
         every { settingsRepository.settings } returns flowOf(settings)
 
-        // Act & Assert
         useCase().test {
             val result = awaitItem()
             assertEquals(1, result.size)
-            val added = result[0]
-            assertEquals(26, added.workdays) // Aug 2026 has 21 + 5 Saturdays = 26
-            assertEquals(11, added.requiredDays) // 40% of 26 is 10.4 -> 11
+            val added = result[0].summary
+            assertEquals(26, added.workdays)
+            assertEquals(11, added.requiredDays)
             cancelAndIgnoreRemainingEvents()
         }
     }
 
     @Test
     fun `given current month already in summaries, when invoke, then return summaries as is`() = runTest {
-        // Arrange
         val currentMonth = YearMonth.of(2026, 8)
         timeProvider.setNow(currentMonth.atDay(1).atStartOfDay())
 
@@ -92,11 +92,30 @@ class GetHistoryUseCaseTest {
         every { monthlySummaryRepository.observeAllSummaries() } returns flowOf(summaries)
         every { settingsRepository.settings } returns flowOf(settings)
 
-        // Act & Assert
         useCase().test {
             val result = awaitItem()
             assertEquals(1, result.size)
-            assertEquals(existingSummary, result[0])
+            assertEquals(existingSummary, result[0].summary)
+            cancelAndIgnoreRemainingEvents()
+        }
+    }
+
+    @Test
+    fun `when auto geofence check-ins exist, then count them per month`() = runTest {
+        val month = YearMonth.of(2026, 8)
+        val summary = TestDataFactory.createMonthlySummary(yearMonth = month)
+        val autoCheckIn = TestDataFactory.createCheckIn(
+            date = month.atDay(6),
+            source = com.presencial.app.domain.model.CheckInSource.AUTO_GEOFENCE
+        )
+
+        every { monthlySummaryRepository.observeAllSummaries() } returns flowOf(listOf(summary))
+        every { checkInRepository.observeAllCheckIns() } returns flowOf(listOf(autoCheckIn))
+        every { settingsRepository.settings } returns flowOf(AppSettings())
+
+        useCase().test {
+            val result = awaitItem()
+            assertEquals(1, result[0].autoCheckInDays)
             cancelAndIgnoreRemainingEvents()
         }
     }

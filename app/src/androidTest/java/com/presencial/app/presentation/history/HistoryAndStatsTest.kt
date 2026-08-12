@@ -3,6 +3,7 @@ package com.presencial.app.presentation.history
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithText
+import com.presencial.app.domain.model.HistoryMonthData
 import com.presencial.app.domain.model.MonthlySummary
 import com.presencial.app.domain.usecase.StatisticsData
 import com.presencial.app.presentation.statistics.StatisticsScreen
@@ -25,19 +26,22 @@ class HistoryAndStatsTest {
 
     @Test
     fun historyScreen_displaysSummaries() {
-        val summaries = listOf(
-            MonthlySummary(
-                yearMonth = YearMonth.of(2026, 8),
-                workdays = 21,
-                requiredDays = 12,
-                completedDays = 10,
-                homeOfficeDays = 0,
-                requiredPercentage = 60,
-                achievedPercentage = 83.3f
+        val historyMonths = listOf(
+            HistoryMonthData(
+                summary = MonthlySummary(
+                    yearMonth = YearMonth.of(2026, 8),
+                    workdays = 21,
+                    requiredDays = 12,
+                    completedDays = 10,
+                    homeOfficeDays = 0,
+                    requiredPercentage = 60,
+                    achievedPercentage = 83.3f
+                ),
+                autoCheckInDays = 3
             )
         )
-        val summariesFlow = MutableStateFlow(summaries)
-        every { historyViewModel.summaries } returns summariesFlow
+        val historyFlow = MutableStateFlow(historyMonths)
+        every { historyViewModel.historyMonths } returns historyFlow
 
         composeTestRule.setContent {
             PresencialTheme {

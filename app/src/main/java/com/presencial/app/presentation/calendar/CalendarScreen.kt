@@ -29,6 +29,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.presencial.app.domain.model.CheckInSource
 import com.presencial.app.domain.model.DayStatus
 import com.presencial.app.ui.components.MonthCalendarGrid
 import com.presencial.app.ui.components.formatMonthYear
@@ -150,9 +151,9 @@ private fun DayInfoDetails(day: com.presencial.app.domain.model.DayInfo) {
             color = MaterialTheme.colorScheme.primary
         )
     }
-    if (day.source == "AUTOMATICO") {
+    if (CheckInSource.isAutoGeofence(day.source)) {
         Text(
-            "📍 Registrado automaticamente via GPS",
+            "📍 ${CheckInSource.autoGeofenceLabel()}",
             style = MaterialTheme.typography.bodySmall,
             color = MaterialTheme.colorScheme.secondary
         )

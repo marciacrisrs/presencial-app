@@ -23,7 +23,7 @@ object TestDataFactory {
         addressText: String = "Rua Teste, 123",
         latitude: Double = -23.5505,
         longitude: Double = -46.6333,
-        radius: Float = 100f,
+        radius: Float = 50f,
         isActive: Boolean = true
     ) = WorkAddress(id, name, addressText, latitude, longitude, radius, isActive)
 
@@ -33,7 +33,7 @@ object TestDataFactory {
         addressText: String = "Rua Teste, 123",
         latitude: Double = -23.5505,
         longitude: Double = -46.6333,
-        radius: Float = 100f,
+        radius: Float = 50f,
         isActive: Boolean = true
     ) = WorkAddressEntity(id, name, addressText, latitude, longitude, radius, isActive)
 
