@@ -48,6 +48,21 @@ tasks.register("printVersion") {
     }
 }
 
+fun formatVersionCode(props: Properties): Int {
+    val major = props.getProperty("VERSION_MAJOR").toInt()
+    val minor = props.getProperty("VERSION_MINOR").toInt()
+    val patch = props.getProperty("VERSION_PATCH").toInt()
+    return major * 10000 + minor * 100 + patch
+}
+
+tasks.register("printVersionCode") {
+    group = "versioning"
+    description = "Imprime versionCode calculado de version.properties"
+    doLast {
+        println(formatVersionCode(readVersionProperties()))
+    }
+}
+
 tasks.register("incrementPatch") {
     group = "versioning"
     description = "Incrementa a versão patch no arquivo version.properties"
