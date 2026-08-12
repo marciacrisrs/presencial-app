@@ -7,6 +7,7 @@ import com.google.android.gms.location.FusedLocationProviderClient
 import com.presencial.app.domain.location.GeocodingHelper
 import com.presencial.app.domain.model.WorkAddress
 import com.presencial.app.domain.repository.WorkAddressRepository
+import com.presencial.app.domain.usecase.ResolveWorkAddressLocationUseCase
 import com.presencial.app.domain.usecase.SyncGeofencesUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -21,6 +22,7 @@ import javax.inject.Inject
 class WorkAddressViewModel @Inject constructor(
     private val repository: WorkAddressRepository,
     private val syncGeofencesUseCase: SyncGeofencesUseCase,
+    private val resolveWorkAddressLocationUseCase: ResolveWorkAddressLocationUseCase,
     private val geocodingHelper: GeocodingHelper,
     private val fusedLocationProviderClient: FusedLocationProviderClient
 ) : ViewModel() {
@@ -53,6 +55,7 @@ class WorkAddressViewModel @Inject constructor(
         isActive: Boolean
     ) {
         viewModelScope.launch {
+            val (stateCode, cityName) = resolveWorkAddressLocationUseCase.resolve(latitude, longitude)
             val address = WorkAddress(
                 id = id,
                 name = name,
@@ -60,7 +63,9 @@ class WorkAddressViewModel @Inject constructor(
                 latitude = latitude,
                 longitude = longitude,
                 radius = radius,
-                isActive = isActive
+                isActive = isActive,
+                stateCode = stateCode,
+                cityName = cityName
             )
             if (id == 0L) {
                 repository.insertAddress(address)

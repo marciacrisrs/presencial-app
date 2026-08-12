@@ -34,4 +34,7 @@ class WorkAddressRepositoryImpl @Inject constructor(
 
     override suspend fun getAddressById(id: Long): WorkAddress? =
         workAddressDao.getAddressById(id)?.toDomain()
+
+    override suspend fun getAllAddressesSnapshot(): List<WorkAddress> =
+        workAddressDao.getAllAddressesSync().map { it.toDomain() }
 }

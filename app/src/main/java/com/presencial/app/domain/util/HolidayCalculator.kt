@@ -1,16 +1,58 @@
 package com.presencial.app.domain.util
 
+import com.presencial.app.domain.model.RegionalLocation
 import java.time.LocalDate
 import java.time.Month
+import java.util.concurrent.atomic.AtomicReference
 
 /**
- * Calcula feriados nacionais brasileiros, incluindo móveis baseados na Páscoa.
+ * Calcula feriados nacionais brasileiros e, quando configurado, estaduais/municipais.
  */
 object HolidayCalculator {
 
     data class Holiday(val date: LocalDate, val name: String)
 
+    private val regionalLocations = AtomicReference<Set<RegionalLocation>>(emptySet())
+    private val regionalLookup = AtomicReference<RegionalHolidayLookup?>(null)
+
+    fun configureRegionalHolidays(
+        lookup: RegionalHolidayLookup,
+        locations: Set<RegionalLocation>
+    ) {
+        regionalLookup.set(lookup)
+        regionalLocations.set(locations)
+    }
+
+    fun clearRegionalHolidays() {
+        regionalLocations.set(emptySet())
+        regionalLookup.set(null)
+    }
+
+    fun currentRegionalLocations(): Set<RegionalLocation> = regionalLocations.get()
+
     fun getHolidaysForYear(year: Int): List<Holiday> {
+        val merged = linkedMapOf<LocalDate, Holiday>()
+        nationalHolidaysForYear(year).forEach { holiday ->
+            merged[holiday.date] = holiday
+        }
+        val lookup = regionalLookup.get() ?: return merged.values.sortedBy { it.date }
+        regionalLocations.get().forEach { location ->
+            lookup.holidaysForLocation(year, location).forEach { holiday ->
+                merged.merge(holiday.date, holiday) { existing, regional ->
+                    if (existing.name == regional.name) existing
+                    else existing.copy(name = "${existing.name} / ${regional.name}")
+                }
+            }
+        }
+        return merged.values.sortedBy { it.date }
+    }
+
+    fun getHoliday(date: LocalDate): Holiday? =
+        getHolidaysForYear(date.year).find { it.date == date }
+
+    fun isHoliday(date: LocalDate): Boolean = getHoliday(date) != null
+
+    private fun nationalHolidaysForYear(year: Int): List<Holiday> {
         val easter = EasterCalculator.calculateEaster(year)
         val fixed = listOf(
             Holiday(LocalDate.of(year, Month.JANUARY, DAY_01), "Confraternização Universal"),
@@ -44,9 +86,4 @@ object HolidayCalculator {
     private const val CARNIVAL_TUESDAY_OFFSET = 47L
     private const val GOOD_FRIDAY_OFFSET = 2L
     private const val CORPUS_CHRISTI_OFFSET = 60L
-
-    fun getHoliday(date: LocalDate): Holiday? =
-        getHolidaysForYear(date.year).find { it.date == date }
-
-    fun isHoliday(date: LocalDate): Boolean = getHoliday(date) != null
 }

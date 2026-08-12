@@ -3,7 +3,10 @@ package com.presencial.app
 import android.app.Application
 import androidx.hilt.work.HiltWorkerFactory
 import androidx.work.Configuration
+import com.presencial.app.domain.holidays.HolidayScopeManager
+import com.presencial.app.domain.usecase.ResolveWorkAddressLocationUseCase
 import com.presencial.app.domain.usecase.SyncGeofencesUseCase
+import com.presencial.app.domain.widget.WidgetRefresher
 import com.presencial.app.notification.NotificationScheduler
 import dagger.hilt.android.HiltAndroidApp
 import kotlinx.coroutines.CoroutineScope
@@ -18,7 +21,9 @@ class PresencialApp : Application(), Configuration.Provider {
     @Inject lateinit var workerFactory: HiltWorkerFactory
     @Inject lateinit var notificationScheduler: NotificationScheduler
     @Inject lateinit var syncGeofencesUseCase: SyncGeofencesUseCase
-    @Inject lateinit var widgetRefresher: com.presencial.app.domain.widget.WidgetRefresher
+    @Inject lateinit var widgetRefresher: WidgetRefresher
+    @Inject lateinit var holidayScopeManager: HolidayScopeManager
+    @Inject lateinit var resolveWorkAddressLocationUseCase: ResolveWorkAddressLocationUseCase
 
     private val appScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
 
@@ -29,8 +34,10 @@ class PresencialApp : Application(), Configuration.Provider {
 
     override fun onCreate() {
         super.onCreate()
+        holidayScopeManager
         notificationScheduler.scheduleDailyReminder()
         appScope.launch {
+            resolveWorkAddressLocationUseCase.backfillMissingLocations()
             syncGeofencesUseCase()
             widgetRefresher.refresh()
         }

@@ -10,4 +10,5 @@ interface WorkAddressRepository {
     suspend fun updateAddress(address: WorkAddress)
     suspend fun deleteAddress(address: WorkAddress)
     suspend fun getAddressById(id: Long): WorkAddress?
+    suspend fun getAllAddressesSnapshot(): List<WorkAddress>
 }

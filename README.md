@@ -6,7 +6,7 @@ Presencial nasceu de um problema real: acompanhar uma meta mensal de presença s
 
 
 
-Aplicativo Android para controle de comparecimento presencial no trabalho. Calcula automaticamente dias úteis, feriados nacionais brasileiros e a meta mensal de presença com base na política configurada.
+Aplicativo Android para controle de comparecimento presencial no trabalho. Calcula automaticamente dias úteis, feriados nacionais (e estaduais/municipais quando há local de trabalho cadastrado) e a meta mensal de presença com base na política configurada.
 
 
 
@@ -118,13 +118,15 @@ UI (Compose) → ViewModel → UseCase → Repository → Room / DataStore
 
 1. **Meta mensal:** calculada pela política de presença — percentual livre (`ceil(dias × % / 100)`), dias fixos obrigatórios, semanas alternadas, ou combinação
 
-2. **Dias úteis líquidos:** exclui domingos, feriados nacionais, sábados (configurável) e períodos de ausência registrados (férias, licenças, etc.)
+2. **Dias úteis líquidos:** exclui domingos, feriados (nacionais e, quando há local de trabalho cadastrado, estaduais/municipais da cidade), sábados (configurável) e períodos de ausência registrados (férias, licenças, etc.)
 
-3. **Feriados móveis:** calculados a partir da Páscoa (algoritmo de Meeus/Jones/Butcher)
+3. **Feriados:** nacionais sempre; estaduais e municipais entram automaticamente quando o usuário salva um endereço de trabalho (estado/cidade obtidos por geocoding reverso). Sem endereço cadastrado, vale só o calendário nacional.
 
-4. **Geofencing:** check-in automático via dwell de 30 s dentro do raio configurado; geofences restauradas no boot, startup e após restore de backup. Localização definida por mapa interativo (OpenStreetMap), geocoding ou GPS.
+4. **Feriados móveis:** calculados a partir da Páscoa (algoritmo de Meeus/Jones/Butcher)
 
-5. **Mensagens do dashboard:** templates fixos em `strings_smart_messages.xml`, escolhidos pelo `SmartMessageEngine` com base no progresso (dias restantes, meta da semana, etc.) — 100% offline, sem APIs externas
+5. **Geofencing:** check-in automático via dwell de 30 s dentro do raio configurado; geofences restauradas no boot, startup e após restore de backup. Localização definida por mapa interativo (OpenStreetMap), geocoding ou GPS.
+
+6. **Mensagens do dashboard:** templates fixos em `strings_smart_messages.xml`, escolhidos pelo `SmartMessageEngine` com base no progresso (dias restantes, meta da semana, etc.) — 100% offline, sem APIs externas
 
 
 
@@ -182,7 +184,8 @@ Testes unitários abrangentes na camada de domínio e dados:
 
 - `GoalCalculatorTest` — cálculos de meta e percentuais
 
-- `HolidayCalculatorTest` — feriados nacionais e móveis
+- `HolidayCalculatorTest` — feriados nacionais, móveis e escopo regional
+- `BrazilStateMapperTest` — mapeamento UF a partir do geocoder
 
 - `SmartMessageEngineTest` — mensagens contextuais do dashboard
 

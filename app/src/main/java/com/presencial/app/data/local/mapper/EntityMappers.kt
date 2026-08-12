@@ -78,7 +78,9 @@ fun WorkAddressEntity.toDomain() = WorkAddress(
     latitude = latitude,
     longitude = longitude,
     radius = radius,
-    isActive = isActive
+    isActive = isActive,
+    stateCode = stateCode,
+    cityName = cityName
 )
 
 fun WorkAddress.toEntity() = WorkAddressEntity(
@@ -88,6 +90,8 @@ fun WorkAddress.toEntity() = WorkAddressEntity(
     latitude = latitude,
     longitude = longitude,
     radius = radius,
-    isActive = isActive
+    isActive = isActive,
+    stateCode = stateCode,
+    cityName = cityName
 )
 

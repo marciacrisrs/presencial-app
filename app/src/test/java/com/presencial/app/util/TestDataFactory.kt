@@ -24,8 +24,12 @@ object TestDataFactory {
         latitude: Double = -23.5505,
         longitude: Double = -46.6333,
         radius: Float = 50f,
-        isActive: Boolean = true
-    ) = WorkAddress(id, name, addressText, latitude, longitude, radius, isActive)
+        isActive: Boolean = true,
+        stateCode: String? = "SP",
+        cityName: String? = "São Paulo"
+    ) = WorkAddress(
+        id, name, addressText, latitude, longitude, radius, isActive, stateCode, cityName
+    )
 
     fun createWorkAddressEntity(
         id: Long = 1L,
@@ -34,8 +38,12 @@ object TestDataFactory {
         latitude: Double = -23.5505,
         longitude: Double = -46.6333,
         radius: Float = 50f,
-        isActive: Boolean = true
-    ) = WorkAddressEntity(id, name, addressText, latitude, longitude, radius, isActive)
+        isActive: Boolean = true,
+        stateCode: String? = "SP",
+        cityName: String? = "São Paulo"
+    ) = WorkAddressEntity(
+        id, name, addressText, latitude, longitude, radius, isActive, stateCode, cityName
+    )
 
     fun createCheckIn(
         date: LocalDate = LocalDate.of(2026, 8, 6),

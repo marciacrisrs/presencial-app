@@ -16,7 +16,7 @@ import com.presencial.app.data.local.migration.MIGRATION_3_4
 
 @Database(
     entities = [CheckInEntity::class, MonthlySummaryEntity::class, AbsenceEntity::class, WorkAddressEntity::class],
-    version = 4,
+    version = 5,
     exportSchema = false
 )
 abstract class PresencialDatabase : RoomDatabase() {

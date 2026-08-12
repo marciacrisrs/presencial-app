@@ -5,6 +5,7 @@ import com.google.android.gms.location.FusedLocationProviderClient
 import com.presencial.app.domain.location.GeocodingHelper
 import com.presencial.app.domain.location.GeoCoordinates
 import com.presencial.app.domain.repository.WorkAddressRepository
+import com.presencial.app.domain.usecase.ResolveWorkAddressLocationUseCase
 import com.presencial.app.domain.usecase.SyncGeofencesUseCase
 import com.presencial.app.util.MainDispatcherExtension
 import com.presencial.app.util.TestDataFactory
@@ -28,6 +29,7 @@ class WorkAddressViewModelTest {
 
     private val repository = mockk<WorkAddressRepository>()
     private val syncGeofencesUseCase = mockk<SyncGeofencesUseCase>()
+    private val resolveWorkAddressLocationUseCase = mockk<ResolveWorkAddressLocationUseCase>()
     private val geocodingHelper = mockk<GeocodingHelper>()
     private val fusedLocationProviderClient = mockk<FusedLocationProviderClient>()
     private lateinit var viewModel: WorkAddressViewModel
@@ -36,9 +38,11 @@ class WorkAddressViewModelTest {
     fun setup() {
         every { repository.getAllAddresses() } returns flowOf(emptyList())
         coEvery { syncGeofencesUseCase() } returns Unit
+        coEvery { resolveWorkAddressLocationUseCase.resolve(any(), any()) } returns ("SP" to "São Paulo")
         viewModel = WorkAddressViewModel(
             repository,
             syncGeofencesUseCase,
+            resolveWorkAddressLocationUseCase,
             geocodingHelper,
             fusedLocationProviderClient
         )
@@ -52,6 +56,7 @@ class WorkAddressViewModelTest {
         viewModel = WorkAddressViewModel(
             repository,
             syncGeofencesUseCase,
+            resolveWorkAddressLocationUseCase,
             geocodingHelper,
             fusedLocationProviderClient
         )
@@ -78,7 +83,11 @@ class WorkAddressViewModelTest {
         coVerify {
             repository.insertAddress(
                 match {
-                    it.name == "Office" && it.latitude == -23.0 && it.longitude == -46.0
+                    it.name == "Office" &&
+                        it.latitude == -23.0 &&
+                        it.longitude == -46.0 &&
+                        it.stateCode == "SP" &&
+                        it.cityName == "São Paulo"
                 }
             )
         }
@@ -89,7 +98,7 @@ class WorkAddressViewModelTest {
     @Test
     fun `geocodeAddress should update geocoded location on success`() = runTest {
         coEvery { geocodingHelper.geocodeAddress("Rua A") } returns Result.success(
-            GeoCoordinates(-23.1, -46.1)
+            GeoCoordinates(-23.1, -46.1, "SP", "São Paulo")
         )
 
         viewModel.geocodeAddress("Rua A")

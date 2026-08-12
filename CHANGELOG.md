@@ -5,6 +5,11 @@ All notable changes to Presencial are documented in this file.
 ## [Unreleased]
 
 ### Added
+- Feriados estaduais e municipais com base no local de trabalho (issue #7)
+- Geocoding reverso para persistir UF e cidade ao salvar endereço
+- Catálogo offline `regional_holidays.json` para feriados regionais
+
+### Changed
 - Políticas de presença configuráveis (issue #5): percentual livre, dias fixos, semanas alternadas
 - Check-in automático por geofence com sync após boot e restore de backup
 - Mapa OSM (Leaflet) para seleção de endereço de trabalho
