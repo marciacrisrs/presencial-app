@@ -154,18 +154,37 @@ object TestDataFactory {
     )
 
     fun createStatisticsData(
+        selectedYear: Int = 2026,
         monthlySummaries: List<MonthlySummary> = emptyList(),
         averageAchieved: Float = 50f,
         totalPresencial: Int = 10,
         totalHomeOffice: Int = 10,
         longestStreak: Int = 5,
-        currentStreak: Int = 2
+        currentStreak: Int = 2,
+        weeklySummaries: List<com.presencial.app.domain.model.WeeklyAttendanceSummary> = emptyList(),
+        annualSummary: com.presencial.app.domain.model.AnnualSummary = createAnnualSummary(selectedYear),
+        heatmapDays: List<com.presencial.app.domain.model.DayInfo> = emptyList()
     ) = StatisticsData(
+        selectedYear,
         monthlySummaries,
         averageAchieved,
         totalPresencial,
         totalHomeOffice,
         longestStreak,
-        currentStreak
+        currentStreak,
+        weeklySummaries,
+        annualSummary,
+        heatmapDays
+    )
+
+    fun createAnnualSummary(year: Int = 2026) = com.presencial.app.domain.model.AnnualSummary(
+        year = year,
+        averageAchieved = 50f,
+        totalWorkdays = 220,
+        totalPresencial = 100,
+        goalsMetCount = 8,
+        totalMonthsWithData = 10,
+        bestMonth = null,
+        worstMonth = null
     )
 }

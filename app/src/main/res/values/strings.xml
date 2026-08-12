@@ -20,4 +20,17 @@
     <string name="notification_channel_desc">Lembretes diários para registrar presença presencial</string>
     <string name="notification_title">18h</string>
     <string name="notification_checkin_message">Você trabalhou presencialmente hoje?</string>
+    <string name="statistics_title">Estatísticas</string>
+    <string name="statistics_average_annual">Média anual</string>
+    <string name="statistics_current_streak">Sequência atual</string>
+    <string name="statistics_longest_streak">Maior sequência</string>
+    <string name="statistics_total_home_office">Home office</string>
+    <string name="statistics_total_presencial_label">Total presencial</string>
+    <string name="statistics_best_month">Melhor mês</string>
+    <string name="statistics_total_presencial">Total presencial: %1$d dias</string>
+    <string name="statistics_days_count">%1$d dias</string>
+    <string name="statistics_heatmap_title">Calendário %1$d</string>
+    <string name="statistics_no_data">Sem dados para exibir</string>
+    <string name="statistics_export_pdf">Exportar PDF</string>
+    <string name="statistics_export_pdf_content_description">Exportar estatísticas em PDF</string>
 </resources>
