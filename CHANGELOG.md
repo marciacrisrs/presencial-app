@@ -5,6 +5,7 @@ All notable changes to Presencial are documented in this file.
 ## [Unreleased]
 
 ### Added
+- Exportação de relatório mensal em **CSV** e **Excel (.xlsx)** na tela Estatísticas (issue #11)
 - Sincronização na nuvem (Google Drive / OneDrive / Dropbox) via pasta SAF em Configurações
 - Documento de pesquisa comparativa em `docs/cloud-sync-research.md`
 - Feriados estaduais e municipais com base no local de trabalho (issue #7)

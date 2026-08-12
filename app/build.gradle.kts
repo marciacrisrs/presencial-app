@@ -220,6 +220,7 @@ dependencies {
     // UI Libraries & Utils
     implementation(libs.json.library)
     implementation(libs.lottie.compose)
+    implementation(libs.fastexcel)
     implementation(libs.kotlinx.coroutines.android)
     implementation(libs.kotlinx.coroutines.play.services)
 
