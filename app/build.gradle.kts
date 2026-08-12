@@ -121,6 +121,13 @@ android {
         versionName = appVersionName
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+
+        val googleServicesFile = rootProject.file("app/google-services.json")
+        buildConfigField(
+            "Boolean",
+            "CRASHLYTICS_ENABLED",
+            googleServicesFile.exists().toString()
+        )
     }
 
     buildTypes {
@@ -248,6 +255,9 @@ dependencies {
     androidTestImplementation(libs.androidx.test.core)
     debugImplementation(libs.androidx.compose.ui.tooling)
     debugImplementation(libs.androidx.compose.ui.test.manifest)
+
+    implementation(platform(libs.firebase.bom))
+    implementation(libs.firebase.crashlytics)
 }
 
 tasks.withType<Test> {
@@ -293,4 +303,10 @@ kover {
             }
         }
     }
+}
+
+val googleServicesFile = layout.projectDirectory.file("google-services.json").asFile
+if (googleServicesFile.exists()) {
+    apply(plugin = "com.google.gms.google-services")
+    apply(plugin = "com.google.firebase.crashlytics")
 }

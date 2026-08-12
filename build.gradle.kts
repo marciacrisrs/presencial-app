@@ -20,6 +20,8 @@ plugins {
     alias(libs.plugins.kover)
     alias(libs.plugins.detekt) apply false
     alias(libs.plugins.sonarqube)
+    alias(libs.plugins.google.services) apply false
+    alias(libs.plugins.firebase.crashlytics) apply false
 }
 
 subprojects {

@@ -5,6 +5,12 @@ All notable changes to Presencial are documented in this file.
 ## [Unreleased]
 
 ### Added
+- Exportação de relatório mensal em CSV e Excel (.xlsx) na tela de estatísticas (issue #11)
+- Dashboard analítico: gráfico semanal, linha de evolução, resumo anual e heatmap anual (issue #12)
+- Integração Firebase Crashlytics (opt-in via `app/google-services.json`) (issue #13)
+- Job de testes instrumentados no GitHub Actions (issue #13)
+- Onboarding de localização na tela de endereços de trabalho (issue #15)
+- Configuração e documentação do CodeRabbit (issue #21)
 - Sincronização na nuvem (Google Drive / OneDrive / Dropbox) via pasta SAF em Configurações
 - Documento de pesquisa comparativa em `docs/cloud-sync-research.md`
 - Feriados estaduais e municipais com base no local de trabalho (issue #7)
