@@ -1,0 +1,10 @@
+{
+  "states": {
+    "SP": [{"month": 7, "day": 9, "name": "Revolução Constitucionalista (SP)"}],
+    "RJ": [{"month": 4, "day": 23, "name": "São Jorge (RJ)"}]
+  },
+  "cities": {
+    "SP|sao paulo": [{"month": 1, "day": 25, "name": "Aniversário de São Paulo"}],
+    "RJ|rio de janeiro": [{"month": 1, "day": 20, "name": "São Sebastião (Rio de Janeiro)"}]
+  }
+}
