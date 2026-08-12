@@ -54,8 +54,6 @@ fun LocationMapPicker(
                     loadsImagesAutomatically = true
                     useWideViewPort = true
                     loadWithOverviewMode = true
-                    allowFileAccess = true
-                    allowContentAccess = true
                 }
                 webViewClient = object : WebViewClient() {
                     override fun onPageFinished(view: WebView, url: String) {
