@@ -12,7 +12,6 @@ import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Slider
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
@@ -53,14 +52,6 @@ fun PresencePolicyCard(
                 stringResource(R.string.policy_card_description),
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
-            )
-
-            OutlinedTextField(
-                value = policy.companyName,
-                onValueChange = { onPolicyChange(policy.copy(companyName = it)) },
-                modifier = Modifier.fillMaxWidth(),
-                label = { Text(stringResource(R.string.policy_company_name_label)) },
-                singleLine = true
             )
 
             PercentageSection(
