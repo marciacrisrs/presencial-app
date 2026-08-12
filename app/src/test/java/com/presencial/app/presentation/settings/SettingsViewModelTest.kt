@@ -3,6 +3,7 @@ package com.presencial.app.presentation.settings
 import app.cash.turbine.test
 import com.presencial.app.data.backup.BackupManager
 import com.presencial.app.domain.model.AppSettings
+import com.presencial.app.domain.model.CloudStorageProvider
 import com.presencial.app.domain.model.CloudSyncState
 import com.presencial.app.domain.model.PresencePolicy
 import com.presencial.app.domain.repository.CloudSyncRepository
@@ -148,6 +149,47 @@ class SettingsViewModelTest {
         viewModel.uploadCloudBackup()
 
         assertEquals("Backup enviado para a nuvem!", viewModel.message.value)
+    }
+
+    @Test
+    fun `uploadCloudBackup should show error message on failure`() = runTest {
+        coEvery { cloudSyncRepository.uploadBackup() } returns Result.failure(Exception("Network error"))
+
+        viewModel.uploadCloudBackup()
+
+        assertEquals("Erro na sincronização: Network error", viewModel.message.value)
+    }
+
+    @Test
+    fun `restoreCloudBackup should sync geofences on success`() = runTest {
+        coEvery { cloudSyncRepository.restoreBackup() } returns Result.success(Unit)
+
+        viewModel.restoreCloudBackup()
+
+        coVerify { syncGeofencesUseCase() }
+        coVerify { widgetRefresher.refresh() }
+        assertEquals("Backup restaurado da nuvem!", viewModel.message.value)
+    }
+
+    @Test
+    fun `connectCloudFolder should show success message`() = runTest {
+        val uri = mockk<android.net.Uri>()
+        coEvery {
+            cloudSyncRepository.connectFolder(uri, CloudStorageProvider.GOOGLE_DRIVE)
+        } returns Result.success(Unit)
+
+        viewModel.connectCloudFolder(uri)
+
+        assertEquals("Pasta na nuvem conectada!", viewModel.message.value)
+    }
+
+    @Test
+    fun `signOutCloud should show disconnected message`() = runTest {
+        coEvery { cloudSyncRepository.signOut() } returns Unit
+
+        viewModel.signOutCloud()
+
+        assertEquals("Pasta desconectada.", viewModel.message.value)
     }
 
     @Test

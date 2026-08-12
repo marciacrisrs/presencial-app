@@ -83,4 +83,49 @@ class CloudSyncRepositoryImplTest {
         coVerify { folderSyncProvider.signOut() }
         assertTrue(!repository.syncState.value.isSignedIn)
     }
+
+    @Test
+    fun `restoreBackup fails when folder not connected`() = runTest {
+        coEvery { folderSyncProvider.isSignedIn() } returns false
+
+        val result = repository.restoreBackup()
+
+        assertTrue(result.isFailure)
+        assertEquals("Selecione uma pasta na nuvem primeiro", result.exceptionOrNull()?.message)
+    }
+
+    @Test
+    fun `signOut clears preferences and refreshes state`() = runTest {
+        coEvery { folderSyncProvider.signOut() } returns Unit
+        coEvery { preferences.clearLastSyncEpochMillis() } returns Unit
+        coEvery { folderSyncProvider.isSignedIn() } returns false
+        coEvery { folderSyncProvider.getAccountEmail() } returns null
+
+        repository.signOut()
+
+        coVerify { folderSyncProvider.signOut() }
+        coVerify { preferences.clearLastSyncEpochMillis() }
+    }
+
+    @Test
+    fun `setSelectedProvider delegates to folder provider`() = runTest {
+        val provider = com.presencial.app.domain.model.CloudStorageProvider.ONEDRIVE
+        coEvery { folderSyncProvider.setSelectedProvider(provider) } returns Unit
+
+        repository.setSelectedProvider(provider)
+
+        coVerify { folderSyncProvider.setSelectedProvider(provider) }
+    }
+
+    @Test
+    fun `connectFolder delegates to folder provider and refreshes state`() = runTest {
+        val uri = mockk<android.net.Uri>()
+        val provider = com.presencial.app.domain.model.CloudStorageProvider.DROPBOX
+        coEvery { folderSyncProvider.connectFolder(uri, provider) } returns Unit
+
+        val result = repository.connectFolder(uri, provider)
+
+        assertTrue(result.isSuccess)
+        coVerify { folderSyncProvider.connectFolder(uri, provider) }
+    }
 }

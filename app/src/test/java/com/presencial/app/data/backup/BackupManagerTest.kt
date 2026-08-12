@@ -322,4 +322,99 @@ class BackupManagerTest {
         assertTrue(result.isFailure)
         tempFile.delete()
     }
+
+    @Test
+    fun `when importFromBytes v4, then restore absences`() = runTest {
+        val json = """
+            {
+              "version": 4,
+              "requiredPercentage": 40,
+              "countSaturdaysAsWorkdays": false,
+              "checkIns": [],
+              "summaries": [],
+              "absences": [
+                {
+                  "id": 1,
+                  "type": "VACATION",
+                  "startDateEpochDay": 20672,
+                  "endDateEpochDay": 20676,
+                  "isFullDay": true,
+                  "hours": 8.0,
+                  "notes": "Férias",
+                  "isCounted": false
+                }
+              ]
+            }
+        """.trimIndent()
+        stubSuccessfulImport()
+
+        val result = backupManager.importFromBytes(json.toByteArray())
+
+        assertTrue(result.isSuccess)
+        coVerify {
+            absenceDao.insertAll(match { absences ->
+                absences.size == 1 &&
+                    absences.first().type == "VACATION" &&
+                    absences.first().notes == "Férias"
+            })
+        }
+    }
+
+    @Test
+    fun `when importFromBytes with invalid JSON, then return failure`() = runTest {
+        val result = backupManager.importFromBytes("invalid json".toByteArray())
+
+        assertTrue(result.isFailure)
+    }
+
+    @Test
+    fun `when importFromBytes with unsupported version, then return failure`() = runTest {
+        val json = """
+            {
+              "version": 2,
+              "requiredPercentage": 40,
+              "countSaturdaysAsWorkdays": false,
+              "checkIns": [],
+              "summaries": []
+            }
+        """.trimIndent()
+
+        val result = backupManager.importFromBytes(json.toByteArray())
+
+        assertTrue(result.isFailure)
+    }
+
+    @Test
+    fun `when importFromFile v4 without absences key, then skip absence restore`() = runTest {
+        val json = """
+            {
+              "version": 4,
+              "requiredPercentage": 40,
+              "countSaturdaysAsWorkdays": false,
+              "checkIns": [],
+              "summaries": []
+            }
+        """.trimIndent()
+        val tempFile = File.createTempFile("backup_v4_no_absences", ".json")
+        tempFile.writeText(json)
+        stubSuccessfulImport()
+
+        val result = backupManager.importFromFile(tempFile)
+
+        assertTrue(result.isSuccess)
+        coVerify(exactly = 0) { absenceDao.insertAll(any()) }
+        tempFile.delete()
+    }
+
+    private fun stubSuccessfulImport() {
+        coEvery { checkInDao.deleteAll() } returns Unit
+        coEvery { monthlySummaryDao.deleteAll() } returns Unit
+        coEvery { workAddressDao.deleteAll() } returns Unit
+        coEvery { absenceDao.deleteAll() } returns Unit
+        coEvery { checkInDao.insertAll(any()) } returns Unit
+        coEvery { monthlySummaryDao.insertAll(any()) } returns Unit
+        coEvery { settingsRepository.updateRequiredPercentage(any()) } returns Unit
+        coEvery { settingsRepository.updateCountSaturdaysAsWorkdays(any()) } returns Unit
+        coEvery { absenceDao.insertAll(any()) } returns Unit
+    }
 }
