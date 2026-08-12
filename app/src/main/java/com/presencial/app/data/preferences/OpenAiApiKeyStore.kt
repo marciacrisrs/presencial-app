@@ -2,6 +2,7 @@ package com.presencial.app.data.preferences
 
 import android.content.Context
 import android.content.SharedPreferences
+import androidx.core.content.edit
 import androidx.security.crypto.EncryptedSharedPreferences
 import androidx.security.crypto.MasterKey
 import dagger.hilt.android.qualifiers.ApplicationContext
@@ -25,11 +26,11 @@ class OpenAiApiKeyStore @Inject constructor(
     fun read(): String = encryptedPrefs.getString(KEY_OPENAI_API, "").orEmpty()
 
     fun save(apiKey: String) {
-        encryptedPrefs.edit().putString(KEY_OPENAI_API, apiKey.trim()).apply()
+        encryptedPrefs.edit { putString(KEY_OPENAI_API, apiKey.trim()) }
     }
 
     fun clear() {
-        encryptedPrefs.edit().remove(KEY_OPENAI_API).apply()
+        encryptedPrefs.edit { remove(KEY_OPENAI_API) }
     }
 
     companion object {

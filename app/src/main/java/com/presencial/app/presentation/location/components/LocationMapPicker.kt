@@ -1,6 +1,7 @@
 package com.presencial.app.presentation.location.components
 
 import android.annotation.SuppressLint
+import android.webkit.WebResourceRequest
 import android.webkit.WebView
 import android.webkit.WebViewClient
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -47,9 +48,11 @@ fun LocationMapPicker(
                 settings.javaScriptEnabled = true
                 settings.domStorageEnabled = true
                 webViewClient = object : WebViewClient() {
-                    @Deprecated("Deprecated in API 24")
-                    override fun shouldOverrideUrlLoading(view: WebView, url: String): Boolean {
-                        val location = LocationUrlParser.parse(url) ?: return false
+                    override fun shouldOverrideUrlLoading(
+                        view: WebView,
+                        request: WebResourceRequest
+                    ): Boolean {
+                        val location = LocationUrlParser.parse(request.url.toString()) ?: return false
                         onLocationChanged(location.first, location.second)
                         return true
                     }
