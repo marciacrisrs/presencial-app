@@ -99,6 +99,7 @@ sonar {
                 "**/*WidgetLarge*.*",
                 "**/worker/**",
                 "**/data/export/**",
+                "**/data/sync/**",
                 "**/domain/location/**",
                 "**/*_Impl*.*",
                 "**/*WidgetColors*.*"

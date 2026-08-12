@@ -281,7 +281,7 @@ kover {
                     "**.notification.**", "**.*WidgetReceiver*",
                     "**.*BasePresencialWidget*", "**.*WidgetSmall*",
                     "**.*WidgetMedium*", "**.*WidgetLarge*", "**.widget.**",
-                    "**.worker.**", "**.data.export.**", "**.domain.location.**",
+                    "**.worker.**", "**.data.export.**", "**.data.sync.**", "**.domain.location.**",
                     "**.data.location.**", "**.data.local.migration.**",
                     "**.*_Impl*", "**.*WidgetColors*"
                 )

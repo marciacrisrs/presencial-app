@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="privacy_policy_title">Política de Privacidade</string>
-    <string name="privacy_policy_body">Todos os dados permanecem exclusivamente no dispositivo do usuário. A busca de endereço usa o serviço de geocodificação do sistema operacional (pode enviar o texto do endereço ao Google/Apple conforme o dispositivo). O mapa interativo carrega tiles do OpenStreetMap via internet. As mensagens contextuais na home são geradas localmente a partir dos seus dados de presença, sem envio a serviços externos.</string>
+    <string name="privacy_policy_body">Por padrão, todos os dados permanecem no dispositivo. Se você conectar uma pasta na nuvem em Configurações, um backup JSON é enviado para essa pasta (Google Drive, OneDrive ou Dropbox). A busca de endereço usa geocodificação do sistema (pode enviar o texto do endereço ao Google/Apple). O mapa carrega tiles do OpenStreetMap via internet. Mensagens na home são geradas localmente, sem envio a serviços externos.</string>
     <string name="backup_export_content_description">Exportar backup</string>
     <string name="backup_restore_content_description">Restaurar backup</string>
 </resources>

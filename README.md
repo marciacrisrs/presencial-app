@@ -24,7 +24,7 @@ Aplicativo Android para controle de comparecimento presencial no trabalho. Calcu
 
 - **Estatísticas** — gráficos de evolução, média anual, sequências e exportação PDF
 
-- **Configurações** — política de presença (percentual livre, dias fixos, semanas alternadas), sábados como dias úteis, backup/restauração JSON
+- **Configurações** — política de presença (percentual livre, dias fixos, semanas alternadas), sábados como dias úteis, backup/restauração JSON e sincronização opcional com Google Drive
 
 - **Ausências** — registro de férias, day off, licenças e ausências com desconto automático na meta mensal
 
@@ -169,6 +169,14 @@ UI (Compose) → ViewModel → UseCase → Repository → Room / DataStore
 ./gradlew test
 
 ```
+
+
+
+### Sincronização na nuvem (opcional)
+
+Em **Configurações → Sincronização na nuvem**, escolha Google Drive, OneDrive ou Dropbox e conecte uma pasta. O app grava `presencial_backup.json` nessa pasta via Storage Access Framework (sem servidor próprio).
+
+Pesquisa comparativa e plano de evolução (OAuth nativo Google Drive): [`docs/cloud-sync-research.md`](docs/cloud-sync-research.md)
 
 
 

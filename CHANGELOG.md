@@ -5,6 +5,8 @@ All notable changes to Presencial are documented in this file.
 ## [Unreleased]
 
 ### Added
+- Sincronização na nuvem (Google Drive / OneDrive / Dropbox) via pasta SAF em Configurações
+- Documento de pesquisa comparativa em `docs/cloud-sync-research.md`
 - Feriados estaduais e municipais com base no local de trabalho (issue #7)
 - Geocoding reverso para persistir UF e cidade ao salvar endereço
 - Catálogo offline `regional_holidays.json` para feriados regionais
@@ -12,6 +14,7 @@ All notable changes to Presencial are documented in this file.
 - Acessibilidade no calendário: descrição por dia e ícone de presencial
 
 ### Changed
+- Backup JSON v4 inclui ausências; importação valida versões suportadas (3 e 4)
 - Home com scroll vertical para evitar clipping em telas pequenas
 - Botão de check-in com labels e contentDescription para TalkBack
 - CI executa `koverVerify` após testes unitários
