@@ -31,7 +31,7 @@ class AboutScreenTest {
 
         // Check Privacy Policy Card
         composeTestRule.onNodeWithText("Política de Privacidade").assertIsDisplayed()
-        composeTestRule.onNodeWithText("Todos os dados permanecem exclusivamente no dispositivo do usuário.").assertIsDisplayed()
+        composeTestRule.onNodeWithText("Todos os dados permanecem exclusivamente no dispositivo do usuário.", substring = true).assertIsDisplayed()
 
         // Check Developer Card
         composeTestRule.onNodeWithText("Desenvolvido por").assertIsDisplayed()

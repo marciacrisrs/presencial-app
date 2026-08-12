@@ -34,6 +34,7 @@ import androidx.compose.ui.unit.dp
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.MultiplePermissionsState
 import com.presencial.app.domain.model.WorkAddress
+import com.presencial.app.presentation.components.MonitoringStatusBanner
 import com.presencial.app.presentation.location.model.WorkAddressViewModel
 
 @OptIn(ExperimentalPermissionsApi::class)
@@ -104,6 +105,13 @@ fun WorkAddressContent(params: WorkAddressContentParams) {
                 params.foregroundPermissions.launchMultiplePermissionRequest()
             },
             onBackgroundPermission = params.onBackgroundClick
+        )
+
+        MonitoringStatusBanner(
+            activeAddressCount = params.addresses.count { it.isActive },
+            foregroundGranted = params.foregroundPermissions.allPermissionsGranted,
+            backgroundGranted = params.backgroundPermission.allPermissionsGranted,
+            modifier = Modifier.padding(horizontal = SPACING_MEDIUM, vertical = SPACING_SMALL)
         )
 
         WorkAddressList(

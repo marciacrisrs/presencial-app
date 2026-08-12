@@ -14,7 +14,7 @@ Aplicativo Android para controle de comparecimento presencial no trabalho. Calcu
 - **Ausências** — registro de férias, day off, licenças e ausências com desconto automático na meta mensal
 - **Notificações** — lembrete às 18h em dias úteis (se ainda não confirmou presença) e aviso de check-in automático
 - **Widget** — exibe "Faltam X dias presenciais" diretamente na tela inicial
-- **Sobre** — informações da versão 1.0.3, política de privacidade (dados locais) e link para o desenvolvedor
+- **Sobre** — versão do app, política de privacidade (dados locais) e link para o desenvolvedor
 - **Tema claro/escuro** — Material Design 3 com suporte a Dynamic Color (Material You)
 
 ## Tecnologias
@@ -59,7 +59,7 @@ UI (Compose) → ViewModel → UseCase → Repository → Room / DataStore / Rem
 1. **Meta mensal:** `ceil(dias_úteis_líquidos × percentual / 100)`
 2. **Dias úteis líquidos:** exclui domingos, feriados nacionais, sábados (configurável) e períodos de ausência registrados (férias, licenças, etc.)
 3. **Feriados móveis:** calculados a partir da Páscoa (algoritmo de Meeus/Jones/Butcher)
-4. **Geofencing:** check-in automático via dwell de 30 s dentro do raio configurado; geofences restauradas no boot e na inicialização do app. A localização é definida por geocoding do endereço ou GPS.
+4. **Geofencing:** check-in automático via dwell de 30 s dentro do raio configurado; geofences restauradas no boot, startup e após restore de backup. Localização definida por mapa interativo (OpenStreetMap), geocoding ou GPS.
 
 ## Como executar
 

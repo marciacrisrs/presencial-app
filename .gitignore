@@ -36,6 +36,7 @@ Thumbs.db
 
 # Logs
 *.log
+sonar-info.txt
 
 # Android-specific artifacts
 *.apk

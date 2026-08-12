@@ -4,7 +4,10 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.presencial.app.data.backup.BackupManager
 import com.presencial.app.domain.model.AppSettings
+import com.presencial.app.domain.model.WorkAddress
 import com.presencial.app.domain.repository.SettingsRepository
+import com.presencial.app.domain.repository.WorkAddressRepository
+import com.presencial.app.domain.usecase.SyncGeofencesUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -17,11 +20,16 @@ import javax.inject.Inject
 @HiltViewModel
 class SettingsViewModel @Inject constructor(
     private val settingsRepository: SettingsRepository,
-    private val backupManager: BackupManager
+    private val backupManager: BackupManager,
+    private val syncGeofencesUseCase: SyncGeofencesUseCase,
+    workAddressRepository: WorkAddressRepository
 ) : ViewModel() {
 
     val settings: StateFlow<AppSettings> = settingsRepository.settings
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(STOP_TIMEOUT_MS), AppSettings())
+
+    val workAddresses: StateFlow<List<WorkAddress>> = workAddressRepository.getAllAddresses()
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(STOP_TIMEOUT_MS), emptyList())
 
     private val _message = kotlinx.coroutines.flow.MutableStateFlow<String?>(null)
     val message: StateFlow<String?> = _message
@@ -50,7 +58,10 @@ class SettingsViewModel @Inject constructor(
     fun importBackup(file: File) {
         viewModelScope.launch {
             backupManager.importFromFile(file)
-                .onSuccess { _message.value = "Backup restaurado com sucesso!" }
+                .onSuccess {
+                    syncGeofencesUseCase()
+                    _message.value = "Backup restaurado com sucesso!"
+                }
                 .onFailure { _message.value = "Erro ao restaurar: ${it.message}" }
         }
     }

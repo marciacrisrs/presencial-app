@@ -1,6 +1,5 @@
 package com.presencial.app.presentation.location
 
-import android.Manifest
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -19,7 +18,6 @@ import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.MultiplePermissionsState
-import com.google.accompanist.permissions.rememberMultiplePermissionsState
 import com.presencial.app.presentation.location.components.WorkAddressContent
 import com.presencial.app.presentation.location.components.WorkAddressContentParams
 import com.presencial.app.presentation.location.components.WorkAddressDialogParams
@@ -27,6 +25,7 @@ import com.presencial.app.presentation.location.components.WorkAddressDialogs
 import com.presencial.app.presentation.location.components.WorkAddressDialogResult
 import com.presencial.app.presentation.location.components.WorkAddressTopBar
 import com.presencial.app.presentation.location.model.WorkAddressViewModel
+import com.presencial.app.presentation.location.rememberWorkLocationPermissions
 
 @OptIn(
     ExperimentalMaterial3Api::class,
@@ -46,16 +45,7 @@ fun WorkAddressScreen(
     val snackbarHostState = remember { SnackbarHostState() }
     var showBackgroundDialog by remember { mutableStateOf(false) }
 
-    val foregroundPermissions = rememberMultiplePermissionsState(
-        listOf(Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION)
-    )
-    val backgroundPermission = rememberMultiplePermissionsState(
-        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.Q) {
-            listOf(Manifest.permission.ACCESS_BACKGROUND_LOCATION)
-        } else {
-            emptyList()
-        }
-    )
+    val (foregroundPermissions, backgroundPermission) = rememberWorkLocationPermissions()
 
     LaunchedEffect(message) {
         message?.let {

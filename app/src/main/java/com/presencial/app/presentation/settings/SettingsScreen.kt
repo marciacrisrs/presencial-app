@@ -37,7 +37,11 @@ import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import com.google.accompanist.permissions.ExperimentalPermissionsApi
+import com.presencial.app.presentation.components.MonitoringStatusBanner
+import com.presencial.app.presentation.location.rememberWorkLocationPermissions
 
+@OptIn(ExperimentalPermissionsApi::class)
 @Composable
 fun SettingsScreen(
     viewModel: SettingsViewModel = hiltViewModel(),
@@ -46,7 +50,9 @@ fun SettingsScreen(
     onNavigateToWorkAddresses: () -> Unit = {}
 ) {
     val settings by viewModel.settings.collectAsStateWithLifecycle()
+    val workAddresses by viewModel.workAddresses.collectAsStateWithLifecycle()
     val message by viewModel.message.collectAsStateWithLifecycle()
+    val (foregroundPermissions, backgroundPermission) = rememberWorkLocationPermissions()
     val context = LocalContext.current
     val snackbarHostState = remember { SnackbarHostState() }
 
@@ -63,6 +69,9 @@ fun SettingsScreen(
     SettingsScaffold(
         params = SettingsScaffoldParams(
             settings = settings,
+            activeWorkAddressCount = workAddresses.count { it.isActive },
+            foregroundGranted = foregroundPermissions.allPermissionsGranted,
+            backgroundGranted = backgroundPermission.allPermissionsGranted,
             onPercentageSelected = viewModel::updatePercentage,
             onToggleSaturdays = viewModel::updateSaturdays,
             onExport = { exportLauncher.launch("presencial_backup.json") },
@@ -106,6 +115,9 @@ private fun rememberSettingsImportLauncher(
 
 private data class SettingsScaffoldParams(
     val settings: com.presencial.app.domain.model.AppSettings,
+    val activeWorkAddressCount: Int,
+    val foregroundGranted: Boolean,
+    val backgroundGranted: Boolean,
     val onPercentageSelected: (Int) -> Unit,
     val onToggleSaturdays: (Boolean) -> Unit,
     val onExport: () -> Unit,
@@ -124,6 +136,9 @@ private fun SettingsScaffold(
         SettingsContent(
             params = SettingsContentParams(
                 settings = params.settings,
+                activeWorkAddressCount = params.activeWorkAddressCount,
+                foregroundGranted = params.foregroundGranted,
+                backgroundGranted = params.backgroundGranted,
                 onPercentageSelected = params.onPercentageSelected,
                 onToggleSaturdays = params.onToggleSaturdays,
                 onExport = params.onExport,
@@ -139,6 +154,9 @@ private fun SettingsScaffold(
 
 private data class SettingsContentParams(
     val settings: com.presencial.app.domain.model.AppSettings,
+    val activeWorkAddressCount: Int,
+    val foregroundGranted: Boolean,
+    val backgroundGranted: Boolean,
     val onPercentageSelected: (Int) -> Unit,
     val onToggleSaturdays: (Boolean) -> Unit,
     val onExport: () -> Unit,
@@ -158,6 +176,12 @@ private fun SettingsContent(params: SettingsContentParams) {
         verticalArrangement = Arrangement.spacedBy(SPACING_ITEMS.dp)
     ) {
         Text("Configurações", style = MaterialTheme.typography.headlineLarge)
+
+        MonitoringStatusBanner(
+            activeAddressCount = params.activeWorkAddressCount,
+            foregroundGranted = params.foregroundGranted,
+            backgroundGranted = params.backgroundGranted
+        )
 
         PercentageConfigCard(
             currentPercentage = params.settings.requiredPercentage,
