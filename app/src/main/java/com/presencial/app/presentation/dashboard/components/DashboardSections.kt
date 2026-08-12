@@ -52,10 +52,17 @@ fun DashboardSmartMessageSection(dashboard: DashboardData) {
         visible = true,
         enter = fadeIn() + slideInVertically(initialOffsetY = { ANIM_OFFSET_SMART_MESSAGE })
     ) {
-        SmartMessageCard(
-            message = dashboard.smartMessage,
-            isLoading = dashboard.isLoadingAi
-        )
+        Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            Text(
+                text = "Inteligência",
+                style = MaterialTheme.typography.titleMedium,
+                modifier = Modifier.padding(horizontal = 4.dp)
+            )
+            SmartMessageCard(
+                message = dashboard.smartMessage,
+                isLoading = dashboard.isLoadingAi
+            )
+        }
     }
 }
 

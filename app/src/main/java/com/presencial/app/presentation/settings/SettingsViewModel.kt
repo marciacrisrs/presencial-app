@@ -46,6 +46,12 @@ class SettingsViewModel @Inject constructor(
         }
     }
 
+    fun updateOpenAiApiKey(apiKey: String) {
+        viewModelScope.launch {
+            settingsRepository.updateOpenAiApiKey(apiKey)
+        }
+    }
+
     fun exportBackup(outputStream: OutputStream?) {
         if (outputStream == null) return
         viewModelScope.launch {

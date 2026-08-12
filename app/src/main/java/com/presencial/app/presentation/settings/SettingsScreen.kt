@@ -37,6 +37,10 @@ import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.input.PasswordVisualTransformation
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.presencial.app.presentation.components.MonitoringStatusBanner
 import com.presencial.app.presentation.location.rememberWorkLocationPermissions
@@ -74,6 +78,7 @@ fun SettingsScreen(
             backgroundGranted = backgroundPermission.allPermissionsGranted,
             onPercentageSelected = viewModel::updatePercentage,
             onToggleSaturdays = viewModel::updateSaturdays,
+            onOpenAiApiKeyChange = viewModel::updateOpenAiApiKey,
             onExport = { exportLauncher.launch("presencial_backup.json") },
             onRestore = { importLauncher.launch(arrayOf("application/json")) },
             onNavigateToAbsences = onNavigateToAbsences,
@@ -120,6 +125,7 @@ private data class SettingsScaffoldParams(
     val backgroundGranted: Boolean,
     val onPercentageSelected: (Int) -> Unit,
     val onToggleSaturdays: (Boolean) -> Unit,
+    val onOpenAiApiKeyChange: (String) -> Unit,
     val onExport: () -> Unit,
     val onRestore: () -> Unit,
     val onNavigateToAbsences: () -> Unit,
@@ -141,6 +147,7 @@ private fun SettingsScaffold(
                 backgroundGranted = params.backgroundGranted,
                 onPercentageSelected = params.onPercentageSelected,
                 onToggleSaturdays = params.onToggleSaturdays,
+                onOpenAiApiKeyChange = params.onOpenAiApiKeyChange,
                 onExport = params.onExport,
                 onRestore = params.onRestore,
                 onNavigateToAbsences = params.onNavigateToAbsences,
@@ -159,6 +166,7 @@ private data class SettingsContentParams(
     val backgroundGranted: Boolean,
     val onPercentageSelected: (Int) -> Unit,
     val onToggleSaturdays: (Boolean) -> Unit,
+    val onOpenAiApiKeyChange: (String) -> Unit,
     val onExport: () -> Unit,
     val onRestore: () -> Unit,
     val onNavigateToAbsences: () -> Unit,
@@ -191,6 +199,11 @@ private fun SettingsContent(params: SettingsContentParams) {
         SaturdaysConfigCard(
             countSaturdays = params.settings.countSaturdaysAsWorkdays,
             onToggle = params.onToggleSaturdays
+        )
+
+        AiConfigCard(
+            apiKey = params.settings.openAiApiKey,
+            onApiKeyChange = params.onOpenAiApiKeyChange
         )
 
         BackupRestoreCard(
@@ -271,6 +284,41 @@ private fun SaturdaysConfigCard(
             Switch(
                 checked = countSaturdays,
                 onCheckedChange = onToggle
+            )
+        }
+    }
+}
+
+@Composable
+private fun AiConfigCard(
+    apiKey: String,
+    onApiKeyChange: (String) -> Unit
+) {
+    Card(
+        shape = RoundedCornerShape(CORNER_RADIUS_CARD.dp),
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = ALPHA_SURFACE_VARIANT)
+        )
+    ) {
+        Column(
+            modifier = Modifier.padding(PADDING_SCREEN.dp),
+            verticalArrangement = Arrangement.spacedBy(SPACING_CARD_CONTENT.dp)
+        ) {
+            Text("Inteligência (ChatGPT)", style = MaterialTheme.typography.titleLarge)
+            Text(
+                "Opcional. Informe sua chave OpenAI para mensagens contextuais no dashboard. " +
+                    "Sem chave, o app usa recomendações locais.",
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurface.copy(alpha = ALPHA_ON_SURFACE_MEDIUM)
+            )
+            OutlinedTextField(
+                value = apiKey,
+                onValueChange = onApiKeyChange,
+                modifier = Modifier.fillMaxWidth(),
+                label = { Text("Chave da API OpenAI") },
+                visualTransformation = PasswordVisualTransformation(),
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
+                singleLine = true
             )
         }
     }

@@ -6,6 +6,7 @@ import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.intPreferencesKey
+import androidx.datastore.preferences.core.stringPreferencesKey
 import com.presencial.app.domain.model.AppSettings
 import com.presencial.app.domain.repository.SettingsRepository
 import dagger.hilt.android.qualifiers.ApplicationContext
@@ -23,12 +24,14 @@ class SettingsDataStore @Inject constructor(
     private object Keys {
         val REQUIRED_PERCENTAGE = intPreferencesKey("required_percentage")
         val COUNT_SATURDAYS = booleanPreferencesKey("count_saturdays_as_workdays")
+        val OPENAI_API_KEY = stringPreferencesKey("openai_api_key")
     }
 
     override val settings: Flow<AppSettings> = dataStore.data.map { prefs ->
         AppSettings(
             requiredPercentage = prefs[Keys.REQUIRED_PERCENTAGE] ?: DEFAULT_PERCENTAGE,
-            countSaturdaysAsWorkdays = prefs[Keys.COUNT_SATURDAYS] ?: false
+            countSaturdaysAsWorkdays = prefs[Keys.COUNT_SATURDAYS] ?: false,
+            openAiApiKey = prefs[Keys.OPENAI_API_KEY] ?: ""
         )
     }
 
@@ -42,6 +45,10 @@ class SettingsDataStore @Inject constructor(
     override suspend fun updateCountSaturdaysAsWorkdays(count: Boolean) {
         dataStore.edit { it[Keys.COUNT_SATURDAYS] = count }
         syncToSharedPreferences(null, count)
+    }
+
+    override suspend fun updateOpenAiApiKey(apiKey: String) {
+        dataStore.edit { it[Keys.OPENAI_API_KEY] = apiKey.trim() }
     }
 
     private fun syncToSharedPreferences(percentage: Int?, countSaturdays: Boolean?) {

@@ -1,8 +1,12 @@
 package com.presencial.app.domain.usecase
 
 import com.presencial.app.data.remote.AiIntelligenceService
+import com.presencial.app.domain.model.AppSettings
+import com.presencial.app.domain.repository.SettingsRepository
 import io.mockk.coEvery
+import io.mockk.every
 import io.mockk.mockk
+import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.BeforeEach
@@ -13,76 +17,57 @@ import java.time.YearMonth
 class GetAiSmartMessageUseCaseTest {
 
     private val aiService: AiIntelligenceService = mockk()
+    private val settingsRepository: SettingsRepository = mockk()
     private lateinit var useCase: GetAiSmartMessageUseCase
+
+    private val params = SmartMessageParams(
+        completedDays = 8,
+        requiredDays = 12,
+        remainingDays = 4,
+        achievedPercentage = 66f,
+        today = LocalDate.of(2026, 8, 12),
+        yearMonth = YearMonth.of(2026, 8),
+        countSaturdays = false,
+        remainingWorkdays = 10,
+        weeklyCompletedDays = 1,
+        weeklyRequiredDays = 3,
+        projectedMonthPercentage = 67
+    )
 
     @BeforeEach
     fun setup() {
-        useCase = GetAiSmartMessageUseCase(aiService)
+        every { settingsRepository.settings } returns flowOf(AppSettings())
+        useCase = GetAiSmartMessageUseCase(aiService, settingsRepository)
     }
 
     @Test
-    fun `given ai service returns message, when invoke, then return ai message`() = runTest {
-        // Arrange
-        val params = SmartMessageParams(
-            completedDays = 5,
-            requiredDays = 10,
-            remainingDays = 5,
-            achievedPercentage = 50f,
-            today = LocalDate.of(2026, 8, 6),
-            yearMonth = YearMonth.of(2026, 8),
-            countSaturdays = false
-        )
-        coEvery { aiService.fetchSmartMessage(any(), any(), any(), any()) } returns "AI Hello"
+    fun `when ai service returns message, then use ai message`() = runTest {
+        every { settingsRepository.settings } returns flowOf(AppSettings(openAiApiKey = "sk-test"))
+        coEvery { aiService.fetchSmartMessage(params, "sk-test") } returns "AI Hello"
 
-        // Act
-        val result = useCase(params)
-
-        // Assert
-        assertEquals("AI Hello", result)
+        assertEquals("AI Hello", useCase(params))
     }
 
     @Test
-    fun `given ai service fails, when invoke, then fallback to generator`() = runTest {
-        // Arrange
-        val params = SmartMessageParams(
-            completedDays = 10,
-            requiredDays = 10,
-            remainingDays = 0,
-            achievedPercentage = 100f,
-            today = LocalDate.of(2026, 8, 6),
-            yearMonth = YearMonth.of(2026, 8),
-            countSaturdays = false
-        )
-        // Generator for 100% returns "Meta concluída 🎉"
-        coEvery { aiService.fetchSmartMessage(any(), any(), any(), any()) } throws Exception("Network Error")
+    fun `when ai service fails, then use fallback`() = runTest {
+        every { settingsRepository.settings } returns flowOf(AppSettings(openAiApiKey = "sk-test"))
+        coEvery { aiService.fetchSmartMessage(params, "sk-test") } throws Exception("Network Error")
 
-        // Act
-        val result = useCase(params)
-
-        // Assert
-        assertEquals("Meta concluída 🎉", result)
+        assertEquals("Faltam 4 dias.", useCase(params))
     }
 
     @Test
-    fun `given ai service returns null, when invoke, then fallback to generator`() = runTest {
-        // Arrange
-        val params = SmartMessageParams(
-            completedDays = 0,
-            requiredDays = 10,
-            remainingDays = 10,
-            achievedPercentage = 0f,
-            today = LocalDate.of(2026, 8, 6),
-            yearMonth = YearMonth.of(2026, 8),
-            countSaturdays = false
-        )
-        coEvery { aiService.fetchSmartMessage(any(), any(), any(), any()) } returns null
+    fun `when ai service returns null, then use fallback`() = runTest {
+        every { settingsRepository.settings } returns flowOf(AppSettings(openAiApiKey = "sk-test"))
+        coEvery { aiService.fetchSmartMessage(params, "sk-test") } returns null
 
-        // Act
-        val result = useCase(params)
+        assertEquals("Faltam 4 dias.", useCase(params))
+    }
 
-        // Assert
-        // For 0/10 in Aug 6 (Thu), remainingWorkdays = 21 - 4 = 17. 
-        // Generator should return weekly distribution or similar.
-        assertEquals("Você precisará ir 10 vezes nas próximas 3 semanas.", result)
+    @Test
+    fun `when no api key, then delegate to ai service local engine`() = runTest {
+        coEvery { aiService.fetchSmartMessage(params, null) } returns "📅 Mensagem local"
+
+        assertEquals("📅 Mensagem local", useCase(params))
     }
 }

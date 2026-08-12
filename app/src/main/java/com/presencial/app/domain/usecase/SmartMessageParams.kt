@@ -13,5 +13,9 @@ data class SmartMessageParams(
     val achievedPercentage: Float,
     val today: LocalDate,
     val yearMonth: YearMonth,
-    val countSaturdays: Boolean
+    val countSaturdays: Boolean,
+    val remainingWorkdays: Int = 0,
+    val weeklyCompletedDays: Int = 0,
+    val weeklyRequiredDays: Int = 0,
+    val projectedMonthPercentage: Int = 0
 )

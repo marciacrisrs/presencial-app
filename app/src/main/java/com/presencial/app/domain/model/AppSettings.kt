@@ -5,5 +5,6 @@ package com.presencial.app.domain.model
  */
 data class AppSettings(
     val requiredPercentage: Int = 40,
-    val countSaturdaysAsWorkdays: Boolean = false
+    val countSaturdaysAsWorkdays: Boolean = false,
+    val openAiApiKey: String = ""
 )

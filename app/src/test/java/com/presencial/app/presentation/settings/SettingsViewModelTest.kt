@@ -47,6 +47,15 @@ class SettingsViewModelTest {
     }
 
     @Test
+    fun `updateOpenAiApiKey should call repository`() = runTest {
+        coEvery { settingsRepository.updateOpenAiApiKey("sk-test") } returns Unit
+
+        viewModel.updateOpenAiApiKey("sk-test")
+
+        coVerify { settingsRepository.updateOpenAiApiKey("sk-test") }
+    }
+
+    @Test
     fun `settings should reflect repository flow`() = runTest {
         val appSettings = AppSettings(requiredPercentage = 50, countSaturdaysAsWorkdays = true)
         every { settingsRepository.settings } returns flowOf(appSettings)

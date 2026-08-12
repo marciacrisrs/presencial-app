@@ -1,22 +1,23 @@
 package com.presencial.app.domain.usecase
 
 import com.presencial.app.data.remote.AiIntelligenceService
-import com.presencial.app.domain.util.SmartMessageGenerator
+import com.presencial.app.domain.repository.SettingsRepository
+import com.presencial.app.domain.util.SmartMessageFallback
+import kotlinx.coroutines.flow.first
 import javax.inject.Inject
 
 class GetAiSmartMessageUseCase @Inject constructor(
-    private val aiService: AiIntelligenceService
+    private val aiService: AiIntelligenceService,
+    private val settingsRepository: SettingsRepository
 ) {
     suspend operator fun invoke(params: SmartMessageParams): String {
-        val aiResult = runCatching {
-            aiService.fetchSmartMessage(
-                completed = params.completedDays,
-                required = params.requiredDays,
-                remainingWorkdays = params.remainingDays,
-                percentage = params.achievedPercentage.toInt()
-            )
-        }
+        val apiKey = settingsRepository.settings.first().openAiApiKey.trim()
 
-        return aiResult.getOrNull() ?: SmartMessageGenerator.generate(params)
+        val aiMessage = runCatching {
+            aiService.fetchSmartMessage(params, apiKey.takeIf { it.isNotEmpty() })
+        }.getOrNull()
+
+        return aiMessage?.takeIf { it.isNotBlank() }
+            ?: SmartMessageFallback.generate(params)
     }
 }
