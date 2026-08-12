@@ -46,7 +46,17 @@ jobs:
 
       - name: Ler versão gerada
         id: version
-        run: echo "name=$(./gradlew -q printVersion)" >> "$GITHUB_OUTPUT"
+        run: |
+          echo "name=$(./gradlew -q printVersion)" >> "$GITHUB_OUTPUT"
+          echo "code=$(./gradlew -q printVersionCode)" >> "$GITHUB_OUTPUT"
+
+      - name: Persist version bump before build
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add version.properties
+          git commit -m "chore(release): bump version to ${{ steps.version.outputs.name }} (code ${{ steps.version.outputs.code }}) [skip ci]"
+          git push origin HEAD:main
 
       - name: Decode Keystore
         env:
@@ -80,12 +90,9 @@ jobs:
           releaseFiles: app/build/outputs/bundle/release/*.aab
           tracks: internal
 
-      - name: Commit version bump and tag release
+      - name: Tag release
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add version.properties
-          git commit -m "chore(release): bump version to ${{ steps.version.outputs.name }} [skip ci]"
           git tag "v${{ steps.version.outputs.name }}"
-          git push origin HEAD:main
           git push origin "v${{ steps.version.outputs.name }}"
