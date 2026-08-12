@@ -12,10 +12,21 @@ import java.net.URL
 import javax.inject.Inject
 import javax.inject.Singleton
 
+fun interface HttpConnectionFactory {
+    fun open(url: String): HttpURLConnection
+}
+
 @Singleton
-class OpenAiChatClient @Inject constructor(
-    @IoDispatcher private val ioDispatcher: CoroutineDispatcher
+class OpenAiChatClient private constructor(
+    private val ioDispatcher: CoroutineDispatcher,
+    private val connectionFactory: HttpConnectionFactory
 ) {
+
+    @Inject
+    constructor(@IoDispatcher ioDispatcher: CoroutineDispatcher) : this(
+        ioDispatcher,
+        HttpConnectionFactory { url -> URL(url).openConnection() as HttpURLConnection }
+    )
 
     suspend fun chatCompletion(
         apiKey: String,
@@ -23,7 +34,7 @@ class OpenAiChatClient @Inject constructor(
         userPrompt: String
     ): Result<String> = withContext(ioDispatcher) {
         runCatching {
-            val connection = (URL(CHAT_COMPLETIONS_URL).openConnection() as HttpURLConnection).apply {
+            val connection = connectionFactory.open(CHAT_COMPLETIONS_URL).apply {
                 requestMethod = "POST"
                 connectTimeout = CONNECT_TIMEOUT_MS
                 readTimeout = READ_TIMEOUT_MS
@@ -65,7 +76,12 @@ class OpenAiChatClient @Inject constructor(
         }
     }
 
-    companion object {
+    internal companion object {
+        fun create(
+            ioDispatcher: CoroutineDispatcher,
+            connectionFactory: HttpConnectionFactory
+        ): OpenAiChatClient = OpenAiChatClient(ioDispatcher, connectionFactory)
+
         private const val CHAT_COMPLETIONS_URL = "https://api.openai.com/v1/chat/completions"
         private const val MODEL = "gpt-4o-mini"
         private const val TEMPERATURE = 0.7
