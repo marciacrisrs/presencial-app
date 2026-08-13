@@ -20,6 +20,8 @@
     <string name="notification_channel_desc">Lembretes diários para registrar presença presencial</string>
     <string name="notification_title">18h</string>
     <string name="notification_checkin_message">Você trabalhou presencialmente hoje?</string>
+    <string name="notification_auto_checkin_title">Check-in automático</string>
+    <string name="notification_auto_checkin_message">Sua presença foi registrada automaticamente ao chegar no trabalho.</string>
     <string name="statistics_export_pdf_content_description">Exportar estatísticas em PDF</string>
     <string name="statistics_export_csv_content_description">Exportar relatório em CSV</string>
     <string name="statistics_export_excel_content_description">Exportar relatório em Excel</string>
@@ -30,4 +32,9 @@
     <string name="statistics_export_excel_success">Excel exportado com sucesso!</string>
     <string name="statistics_export_pdf_success">PDF exportado com sucesso!</string>
     <string name="statistics_export_error">Erro ao exportar: %1$s</string>
+    <string name="about_app_logo_content_description">Logotipo do Presencial</string>
+    <string name="chart_monthly_attendance_title">Comparecimento por mês</string>
+    <string name="chart_no_data">Sem dados para exibir</string>
+    <string name="chart_month_summary">%1$s: %2$.0f%% (%3$d/%4$d dias)</string>
+    <string name="chart_accessibility_summary">Comparecimento mensal: %s</string>
 </resources>
