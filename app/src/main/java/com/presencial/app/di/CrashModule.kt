@@ -17,15 +17,10 @@ object CrashModule {
 
     @Provides
     @Singleton
-    fun provideFirebaseCrashlytics(): FirebaseCrashlytics = FirebaseCrashlytics.getInstance()
-
-    @Provides
-    @Singleton
     fun provideCrashReporter(
-        firebaseCrashReporter: FirebaseCrashReporter,
         noOpCrashReporter: NoOpCrashReporter
     ): CrashReporter = if (BuildConfig.CRASHLYTICS_ENABLED) {
-        firebaseCrashReporter
+        FirebaseCrashReporter(FirebaseCrashlytics.getInstance())
     } else {
         noOpCrashReporter
     }

@@ -2,11 +2,8 @@ package com.presencial.app.data.crash
 
 import com.google.firebase.crashlytics.FirebaseCrashlytics
 import com.presencial.app.domain.util.CrashReporter
-import javax.inject.Inject
-import javax.inject.Singleton
 
-@Singleton
-class FirebaseCrashReporter @Inject constructor(
+class FirebaseCrashReporter(
     private val crashlytics: FirebaseCrashlytics
 ) : CrashReporter {
     override fun recordNonFatal(throwable: Throwable) {
