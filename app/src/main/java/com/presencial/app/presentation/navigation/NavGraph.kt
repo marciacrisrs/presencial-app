@@ -212,17 +212,17 @@ private fun MainTabPager(
         modifier = Modifier.fillMaxSize(),
         beyondViewportPageCount = 1
     ) { page ->
-        when (Screen.bottomNavItems[page]) {
-            Screen.Dashboard -> DashboardScreen(
+        when (page) {
+            0 -> DashboardScreen(
                 openCheckIn = openCheckIn,
                 onCheckInHandled = onCheckInHandled
             )
-            Screen.Calendar -> CalendarScreen(
+            1 -> CalendarScreen(
                 onNavigateToAbsences = { navController.navigate(Screen.Absences.route) }
             )
-            Screen.History -> HistoryScreen()
-            Screen.Statistics -> StatisticsScreen()
-            Screen.Settings -> SettingsScreen(
+            2 -> HistoryScreen()
+            3 -> StatisticsScreen()
+            4 -> SettingsScreen(
                 onNavigateToAbout = { navController.navigate(Screen.About.route) },
                 onNavigateToAbsences = { navController.navigate(Screen.Absences.route) },
                 onNavigateToWorkAddresses = { navController.navigate(Screen.WorkAddresses.route) }
