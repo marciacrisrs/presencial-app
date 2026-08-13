@@ -175,10 +175,11 @@ kotlin {
 }
 
 dependencies {
-    // --- implementation ---
+    // Jetpack Compose BOM
     implementation(platform(libs.androidx.compose.bom))
     implementation(platform(libs.firebase.bom))
 
+    // AndroidX & Lifecycle
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)
     implementation(libs.androidx.lifecycle.viewmodel.compose)
@@ -186,6 +187,7 @@ dependencies {
     implementation(libs.androidx.activity.compose)
     implementation(libs.androidx.splashscreen)
 
+    // Jetpack Compose
     implementation(libs.androidx.compose.ui)
     implementation(libs.androidx.compose.ui.graphics)
     implementation(libs.androidx.compose.ui.tooling.preview)
@@ -193,40 +195,45 @@ dependencies {
     implementation(libs.androidx.compose.material3)
     implementation(libs.androidx.material.icons.extended)
 
+    // Navigation
     implementation(libs.androidx.navigation.compose)
 
+    // Dependency Injection (Hilt)
     implementation(libs.hilt.android)
     implementation(libs.hilt.navigation.compose)
     implementation(libs.hilt.work)
+    ksp(libs.hilt.compiler)
+    ksp(libs.hilt.work.compiler)
 
+    // Database (Room)
     implementation(libs.androidx.room.runtime)
     implementation(libs.androidx.room.ktx)
+    ksp(libs.androidx.room.compiler)
 
+    // DataStore
     implementation(libs.androidx.datastore.preferences)
     implementation(libs.androidx.security.crypto)
 
+    // WorkManager
     implementation(libs.androidx.work.runtime.ktx)
 
+    // Location & Permissions
     implementation(libs.play.services.location)
     implementation(libs.accompanist.permissions)
 
+    // Glance (App Widgets)
     implementation(libs.androidx.glance.appwidget)
     implementation(libs.androidx.glance.material3)
 
+    // UI Libraries & Utils
     implementation(libs.json.library)
     implementation(libs.lottie.compose)
     implementation(libs.fastexcel)
     implementation(libs.kotlinx.coroutines.android)
     implementation(libs.kotlinx.coroutines.play.services)
-
     implementation(libs.firebase.crashlytics)
 
-    // --- ksp ---
-    ksp(libs.hilt.compiler)
-    ksp(libs.hilt.work.compiler)
-    ksp(libs.androidx.room.compiler)
-
-    // --- test ---
+    // Unit Testing
     testImplementation(libs.json.library)
     testImplementation(libs.junit.jupiter.api)
     testImplementation(libs.junit.jupiter.params)
@@ -241,7 +248,7 @@ dependencies {
     testRuntimeOnly(libs.junit.jupiter.engine)
     testRuntimeOnly(libs.junit.platform.launcher)
 
-    // --- androidTest ---
+    // Android Instrumentation Tests
     androidTestImplementation(platform(libs.androidx.compose.bom))
     androidTestImplementation(libs.mockk)
     androidTestImplementation(libs.androidx.espresso.core)
@@ -249,8 +256,6 @@ dependencies {
     androidTestImplementation(libs.androidx.compose.ui.test.junit4)
     androidTestImplementation(libs.androidx.work.testing)
     androidTestImplementation(libs.androidx.test.core)
-
-    // --- debug ---
     debugImplementation(libs.androidx.compose.ui.tooling)
     debugImplementation(libs.androidx.compose.ui.test.manifest)
 }
