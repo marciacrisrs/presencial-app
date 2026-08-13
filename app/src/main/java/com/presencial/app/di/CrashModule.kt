@@ -1,5 +1,6 @@
 package com.presencial.app.di
 
+import com.google.firebase.crashlytics.FirebaseCrashlytics
 import com.presencial.app.BuildConfig
 import com.presencial.app.data.crash.FirebaseCrashReporter
 import com.presencial.app.data.crash.NoOpCrashReporter
@@ -13,6 +14,10 @@ import javax.inject.Singleton
 @Module
 @InstallIn(SingletonComponent::class)
 object CrashModule {
+
+    @Provides
+    @Singleton
+    fun provideFirebaseCrashlytics(): FirebaseCrashlytics = FirebaseCrashlytics.getInstance()
 
     @Provides
     @Singleton

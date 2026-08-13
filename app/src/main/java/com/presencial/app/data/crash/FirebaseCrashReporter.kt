@@ -6,12 +6,14 @@ import javax.inject.Inject
 import javax.inject.Singleton
 
 @Singleton
-class FirebaseCrashReporter @Inject constructor() : CrashReporter {
+class FirebaseCrashReporter @Inject constructor(
+    private val crashlytics: FirebaseCrashlytics
+) : CrashReporter {
     override fun recordNonFatal(throwable: Throwable) {
-        FirebaseCrashlytics.getInstance().recordException(throwable)
+        crashlytics.recordException(throwable)
     }
 
     override fun log(message: String) {
-        FirebaseCrashlytics.getInstance().log(message)
+        crashlytics.log(message)
     }
 }
