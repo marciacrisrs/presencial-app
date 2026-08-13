@@ -143,13 +143,17 @@ private fun StatisticsContent(
 
         StatisticsGrid(data)
 
+        val yearSummaries = data.monthlySummaries
+            .filter { it.yearMonth.year == data.selectedYear }
+            .sortedBy { it.yearMonth }
+
         AnnualSummaryCard(summary = data.annualSummary)
 
-        MonthlyTrendLineChart(summaries = data.monthlySummaries)
+        MonthlyTrendLineChart(summaries = yearSummaries)
 
         WeeklyBarChart(summaries = data.weeklySummaries)
 
-        MonthlyBarChart(summaries = data.monthlySummaries.sortedBy { it.yearMonth })
+        MonthlyBarChart(summaries = yearSummaries)
 
         YearHeatmapCard(
             year = data.selectedYear,
@@ -182,7 +186,7 @@ private fun StatisticsGrid(data: StatisticsData) {
     ) {
         StatSummaryRow(
             label = stringResource(R.string.statistics_average_annual),
-            value = "${"%.1f".format(data.averageAchieved)}%",
+            value = "${"%.1f".format(data.annualSummary.averageAchieved)}%",
             modifier = Modifier.weight(1f)
         )
         StatSummaryRow(
