@@ -46,9 +46,9 @@ sonar-info.txt
 output.json
 *.hprof
 
-# Crashlytics and Google Services (Optional to ignore)
-# google-services.json
-# GoogleService-Info.plist
+# Crashlytics and Google Services
+google-services.json
+GoogleService-Info.plist
 com_crashlytics_export_strings.xml
 
 # NDK
