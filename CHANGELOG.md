@@ -5,6 +5,7 @@ All notable changes to Presencial are documented in this file.
 ## [Unreleased]
 
 ### Added
+- Exportação de relatório mensal em **CSV** e **Excel (.xlsx)** na tela Estatísticas (issue #11)
 - Sincronização na nuvem (Google Drive / OneDrive / Dropbox) via pasta SAF em Configurações
 - Documento de pesquisa comparativa em `docs/cloud-sync-research.md`
 - Feriados estaduais e municipais com base no local de trabalho (issue #7)
@@ -39,5 +40,8 @@ All notable changes to Presencial are documented in this file.
 - Integração OpenAI e armazenamento de chave de API
 
 ### Fixed
-- Geofence receiver com `goAsync()` e handlers extraídos para testes
+- Permissão de notificações solicitada no Android 13+; lembretes das 18h respeitam permissão concedida
+- Acessibilidade: gráfico mensal, exportação PDF e logotipo na tela Sobre
+- WebView do mapa restringe URLs a assets locais e esquema `presencial://location`
+- Teste instrumentado e README alinhados com política de privacidade atual
 - Cobertura Kover/SonarCloud alinhada (~97%)

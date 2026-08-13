@@ -50,4 +50,12 @@
     <string name="statistics_annual_worst_month">Pior mês: %1$s (%2$.0f%%)</string>
     <string name="statistics_export_pdf">Exportar PDF</string>
     <string name="statistics_export_pdf_content_description">Exportar estatísticas em PDF</string>
+    <string name="statistics_export_csv_content_description">Exportar relatório em CSV</string>
+    <string name="statistics_export_excel_content_description">Exportar relatório em Excel</string>
+    <string name="statistics_export_csv">Exportar CSV</string>
+    <string name="statistics_export_excel">Exportar Excel</string>
+    <string name="statistics_export_csv_success">CSV exportado com sucesso!</string>
+    <string name="statistics_export_excel_success">Excel exportado com sucesso!</string>
+    <string name="statistics_export_pdf_success">PDF exportado com sucesso!</string>
+    <string name="statistics_export_error">Erro ao exportar: %1$s</string>
 </resources>
