@@ -22,6 +22,7 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -98,9 +99,9 @@ private fun YearHeatmapGrid(
     days: List<DayInfo>,
     onDayClick: (DayInfo) -> Unit
 ) {
-    val today = java.time.LocalDate.now()
+    val today = remember { java.time.LocalDate.now() }
     val formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy", Locale.getDefault())
-    val weeks = buildHeatmapWeeks(days)
+    val weeks = remember(days) { buildHeatmapWeeks(days) }
 
     Column(verticalArrangement = Arrangement.spacedBy(CELL_SPACING)) {
         weeks.forEach { week ->

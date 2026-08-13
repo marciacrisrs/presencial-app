@@ -19,7 +19,11 @@ import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
+import com.presencial.app.R
 import com.presencial.app.domain.model.AnnualSummary
 import com.presencial.app.domain.model.MonthlySummary
 import com.presencial.app.domain.model.WeeklyAttendanceSummary
@@ -32,12 +36,36 @@ fun MonthlyBarChart(
     modifier: Modifier = Modifier
 ) {
     if (summaries.isEmpty()) {
-        Text("Sem dados para exibir", modifier = modifier.padding(PADDING_LARGE))
+        Text(
+            text = stringResource(R.string.chart_no_data),
+            modifier = modifier.padding(PADDING_LARGE)
+        )
         return
     }
 
-    ChartCard(title = "Comparecimento por mês", modifier = modifier) {
-        Canvas(modifier = Modifier.fillMaxWidth().height(CHART_HEIGHT_DP)) {
+    val locale = Locale.getDefault()
+    val monthSummaries = summaries.takeLast(MAX_VISIBLE_MONTHS).map { summary ->
+        val month = summary.yearMonth.month.getDisplayName(TextStyle.SHORT, locale)
+        stringResource(
+            R.string.chart_month_summary,
+            month,
+            summary.achievedPercentage,
+            summary.completedDays,
+            summary.requiredDays
+        )
+    }
+    val chartDescription = stringResource(
+        R.string.chart_accessibility_summary,
+        monthSummaries.joinToString(separator = ", ")
+    )
+
+    ChartCard(title = stringResource(R.string.chart_monthly_attendance_title), modifier = modifier) {
+        Canvas(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(CHART_HEIGHT_DP)
+                .semantics { contentDescription = chartDescription }
+        ) {
             val barWidth = size.width / (summaries.size * BAR_WIDTH_DIVISOR)
             val maxValue = summaries.maxOf { it.achievedPercentage }.coerceAtLeast(MAX_VALUE_DEFAULT)
             summaries.forEachIndexed { index, summary ->
@@ -52,11 +80,8 @@ fun MonthlyBarChart(
                 )
             }
         }
-        summaries.takeLast(MAX_VISIBLE_MONTHS).forEach { summary ->
-            Text(
-                text = formatMonthlySummaryLine(summary),
-                style = MaterialTheme.typography.bodySmall
-            )
+        monthSummaries.forEach { text ->
+            Text(text = text, style = MaterialTheme.typography.bodySmall)
         }
     }
 }
@@ -67,12 +92,25 @@ fun WeeklyBarChart(
     modifier: Modifier = Modifier
 ) {
     if (summaries.isEmpty()) {
-        Text("Sem dados para exibir", modifier = modifier.padding(PADDING_LARGE))
+        Text(
+            text = stringResource(R.string.chart_no_data),
+            modifier = modifier.padding(PADDING_LARGE)
+        )
         return
     }
 
-    ChartCard(title = "Presença por semana", modifier = modifier) {
-        Canvas(modifier = Modifier.fillMaxWidth().height(CHART_HEIGHT_DP)) {
+    val chartDescription = stringResource(
+        R.string.chart_weekly_accessibility_summary,
+        summaries.joinToString { "${it.label}: ${it.presencialDays} dias" }
+    )
+
+    ChartCard(title = stringResource(R.string.chart_weekly_attendance_title), modifier = modifier) {
+        Canvas(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(CHART_HEIGHT_DP)
+                .semantics { contentDescription = chartDescription }
+        ) {
             val barWidth = size.width / (summaries.size * BAR_WIDTH_DIVISOR)
             val maxValue = summaries.maxOf { it.presencialDays }.coerceAtLeast(1).toFloat()
             summaries.forEachIndexed { index, summary ->
@@ -103,12 +141,25 @@ fun MonthlyTrendLineChart(
 ) {
     val sorted = summaries.sortedBy { it.yearMonth }
     if (sorted.isEmpty()) {
-        Text("Sem dados para exibir", modifier = modifier.padding(PADDING_LARGE))
+        Text(
+            text = stringResource(R.string.chart_no_data),
+            modifier = modifier.padding(PADDING_LARGE)
+        )
         return
     }
 
-    ChartCard(title = "Evolução mensal", modifier = modifier) {
-        Canvas(modifier = Modifier.fillMaxWidth().height(CHART_HEIGHT_DP)) {
+    val chartDescription = stringResource(
+        R.string.chart_trend_accessibility_summary,
+        sorted.takeLast(MAX_VISIBLE_MONTHS).joinToString { formatMonthlySummaryLine(it) }
+    )
+
+    ChartCard(title = stringResource(R.string.chart_monthly_trend_title), modifier = modifier) {
+        Canvas(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(CHART_HEIGHT_DP)
+                .semantics { contentDescription = chartDescription }
+        ) {
             if (sorted.size == 1) {
                 val pointY = size.height * (1f - sorted.first().achievedPercentage / PERCENTAGE_MAX)
                 drawCircle(
@@ -162,28 +213,47 @@ fun AnnualSummaryCard(
             modifier = Modifier.padding(PADDING_EXTRA_LARGE),
             verticalArrangement = Arrangement.spacedBy(PADDING_MEDIUM)
         ) {
-            Text("Resumo ${summary.year}", style = MaterialTheme.typography.titleLarge)
             Text(
-                "Presença média: ${"%.1f".format(summary.averageAchieved)}%",
+                stringResource(R.string.statistics_annual_summary_title, summary.year),
+                style = MaterialTheme.typography.titleLarge
+            )
+            Text(
+                stringResource(R.string.statistics_annual_average, summary.averageAchieved),
                 style = MaterialTheme.typography.bodyLarge
             )
             Text(
-                "Metas atingidas: ${summary.goalsMetCount} / ${summary.totalMonthsWithData} meses",
+                stringResource(
+                    R.string.statistics_annual_goals_met,
+                    summary.goalsMetCount,
+                    summary.totalMonthsWithData
+                ),
                 style = MaterialTheme.typography.bodyLarge
             )
             Text(
-                "Dias presenciais: ${summary.totalPresencial} (${summary.totalWorkdays} úteis)",
+                stringResource(
+                    R.string.statistics_annual_presencial_days,
+                    summary.totalPresencial,
+                    summary.totalWorkdays
+                ),
                 style = MaterialTheme.typography.bodyMedium
             )
             summary.bestMonth?.let { best ->
                 Text(
-                    "Melhor mês: ${formatMonthLabel(best)} (${"%.0f".format(best.achievedPercentage)}%)",
+                    stringResource(
+                        R.string.statistics_annual_best_month,
+                        formatMonthLabel(best),
+                        best.achievedPercentage
+                    ),
                     style = MaterialTheme.typography.bodySmall
                 )
             }
             summary.worstMonth?.let { worst ->
                 Text(
-                    "Pior mês: ${formatMonthLabel(worst)} (${"%.0f".format(worst.achievedPercentage)}%)",
+                    stringResource(
+                        R.string.statistics_annual_worst_month,
+                        formatMonthLabel(worst),
+                        worst.achievedPercentage
+                    ),
                     style = MaterialTheme.typography.bodySmall
                 )
             }

@@ -92,7 +92,7 @@ fun AboutScreenPreview() {
 private fun AboutHeader() {
     Icon(
         painter = painterResource(id = R.drawable.logo_splash),
-        contentDescription = null,
+        contentDescription = stringResource(R.string.about_app_logo_content_description),
         modifier = Modifier.size(120.dp),
         tint = androidx.compose.ui.graphics.Color.Unspecified
     )

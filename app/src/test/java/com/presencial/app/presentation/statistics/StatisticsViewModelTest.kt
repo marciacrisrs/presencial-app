@@ -1,7 +1,13 @@
 package com.presencial.app.presentation.statistics
 
 import app.cash.turbine.test
+import com.presencial.app.data.export.CsvExporter
+import com.presencial.app.data.export.ExcelExporter
 import com.presencial.app.data.export.PdfExporter
+import com.presencial.app.domain.model.AttendanceReport
+import com.presencial.app.domain.model.AttendanceReportFooter
+import com.presencial.app.domain.model.AttendanceReportRow
+import com.presencial.app.domain.usecase.GetAttendanceReportUseCase
 import com.presencial.app.domain.usecase.GetStatisticsUseCase
 import com.presencial.app.domain.usecase.StatisticsData
 import com.presencial.app.domain.util.TimeProvider
@@ -18,6 +24,7 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.RegisterExtension
 import java.io.OutputStream
+import java.time.LocalDate
 import java.time.YearMonth
 
 class StatisticsViewModelTest {
@@ -27,7 +34,10 @@ class StatisticsViewModelTest {
     val mainDispatcherExtension = MainDispatcherExtension()
 
     private val getStatisticsUseCase = mockk<GetStatisticsUseCase>()
+    private val getAttendanceReportUseCase = mockk<GetAttendanceReportUseCase>()
     private val pdfExporter = mockk<PdfExporter>()
+    private val csvExporter = mockk<CsvExporter>()
+    private val excelExporter = mockk<ExcelExporter>()
     private val timeProvider = mockk<TimeProvider>()
     private lateinit var viewModel: StatisticsViewModel
 
@@ -35,15 +45,24 @@ class StatisticsViewModelTest {
     fun setup() {
         every { timeProvider.currentMonth() } returns YearMonth.of(2026, 8)
         every { getStatisticsUseCase(any()) } returns flowOf(TestDataFactory.createStatisticsData())
-        viewModel = StatisticsViewModel(getStatisticsUseCase, pdfExporter, timeProvider)
+        viewModel = createViewModel()
     }
+
+    private fun createViewModel() = StatisticsViewModel(
+        getStatisticsUseCase,
+        getAttendanceReportUseCase,
+        pdfExporter,
+        csvExporter,
+        excelExporter,
+        timeProvider
+    )
 
     @Test
     fun `statistics should reflect use case flow`() = runTest {
         val statsData = TestDataFactory.createStatisticsData()
         every { getStatisticsUseCase(2026) } returns flowOf(statsData)
 
-        viewModel = StatisticsViewModel(getStatisticsUseCase, pdfExporter, timeProvider)
+        viewModel = createViewModel()
 
         viewModel.statistics.test {
             assertEquals(statsData, awaitItem())
@@ -56,7 +75,7 @@ class StatisticsViewModelTest {
         every { getStatisticsUseCase(2026) } returns flowOf(TestDataFactory.createStatisticsData())
         every { getStatisticsUseCase(2025) } returns flowOf(stats2025)
 
-        viewModel = StatisticsViewModel(getStatisticsUseCase, pdfExporter, timeProvider)
+        viewModel = createViewModel()
 
         viewModel.statistics.test {
             assertEquals(2026, awaitItem()?.selectedYear)
@@ -88,7 +107,7 @@ class StatisticsViewModelTest {
             heatmapDays = emptyList()
         )
         every { getStatisticsUseCase(2026) } returns flowOf(statsData)
-        viewModel = StatisticsViewModel(getStatisticsUseCase, pdfExporter, timeProvider)
+        viewModel = createViewModel()
 
         val outputStream = mockk<OutputStream>()
         every { pdfExporter.exportStatistics(any(), any(), any(), any(), any()) } returns Result.success(Unit)
@@ -115,7 +134,7 @@ class StatisticsViewModelTest {
     fun `exportPdf should return failure if pdfExporter fails`() = runTest {
         val statsData = TestDataFactory.createStatisticsData()
         every { getStatisticsUseCase(2026) } returns flowOf(statsData)
-        viewModel = StatisticsViewModel(getStatisticsUseCase, pdfExporter, timeProvider)
+        viewModel = createViewModel()
 
         val outputStream = mockk<OutputStream>()
         val exception = Exception("PDF error")
@@ -128,4 +147,57 @@ class StatisticsViewModelTest {
             assertEquals(exception, result.exceptionOrNull())
         }
     }
+
+    @Test
+    fun `exportFileBaseName should use current month from time provider`() {
+        assertEquals("presencial_2026-08", viewModel.exportFileBaseName())
+    }
+
+    @Test
+    fun `exportCsv should call csvExporter with attendance report`() = runTest {
+        val report = sampleReport()
+        every { getAttendanceReportUseCase(YearMonth.of(2026, 8)) } returns flowOf(report)
+        val outputStream = mockk<OutputStream>()
+        every { csvExporter.export(report, outputStream) } returns Result.success(Unit)
+
+        val result = viewModel.exportCsv(outputStream)
+
+        assertTrue(result.isSuccess)
+        verify { csvExporter.export(report, outputStream) }
+    }
+
+    @Test
+    fun `exportExcel should call excelExporter with attendance report`() = runTest {
+        val report = sampleReport()
+        every { getAttendanceReportUseCase(YearMonth.of(2026, 8)) } returns flowOf(report)
+        val outputStream = mockk<OutputStream>()
+        every { excelExporter.export(report, outputStream) } returns Result.success(Unit)
+
+        val result = viewModel.exportExcel(outputStream)
+
+        assertTrue(result.isSuccess)
+        verify { excelExporter.export(report, outputStream) }
+    }
+
+    private fun sampleReport() = AttendanceReport(
+        yearMonth = YearMonth.of(2026, 8),
+        rows = listOf(
+            AttendanceReportRow(
+                date = LocalDate.of(2026, 8, 3),
+                dayOfWeekLabel = "domingo",
+                statusLabel = "Presencial",
+                isHoliday = false,
+                isWorkday = true,
+                holidayName = null
+            )
+        ),
+        footer = AttendanceReportFooter(
+            workdays = 21,
+            requiredDays = 7,
+            completedDays = 5,
+            requiredPercentage = 40,
+            achievedPercentage = 71.4f,
+            exportedAt = LocalDate.of(2026, 8, 12)
+        )
+    )
 }

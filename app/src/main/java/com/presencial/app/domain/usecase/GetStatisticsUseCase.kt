@@ -17,8 +17,10 @@ import com.presencial.app.domain.util.TimeProvider
 import com.presencial.app.domain.util.WorkdayCalculator
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
+import java.time.DayOfWeek
 import java.time.LocalDate
 import java.time.YearMonth
+import java.time.temporal.TemporalAdjusters
 import javax.inject.Inject
 
 data class StatisticsData(
@@ -42,20 +44,12 @@ class GetStatisticsUseCase @Inject constructor(
     private val timeProvider: TimeProvider
 ) {
     operator fun invoke(selectedYear: Int = timeProvider.currentMonth().year): Flow<StatisticsData> {
-        val monthFlows = (1..MONTHS_IN_YEAR).map { month ->
-            getMonthCalendarUseCase(YearMonth.of(selectedYear, month))
-        }
-        val yearCalendar: Flow<List<DayInfo>> = combine(monthFlows) { months ->
-            months.flatMap { monthDays -> monthDays.toList() }
-        }
-
         return combine(
             checkInRepository.observeAllCheckIns(),
             absenceRepository.getAllAbsences(),
-            settingsRepository.settings,
-            yearCalendar
-        ) { checkIns, absences, settings, heatmapDays ->
-            buildStatistics(checkIns, absences, settings, heatmapDays, selectedYear)
+            settingsRepository.settings
+        ) { checkIns, absences, settings ->
+            buildStatistics(checkIns, absences, settings, selectedYear)
         }
     }
 
@@ -63,7 +57,6 @@ class GetStatisticsUseCase @Inject constructor(
         checkIns: List<CheckIn>,
         absences: List<Absence>,
         settings: AppSettings,
-        heatmapDays: List<DayInfo>,
         selectedYear: Int
     ): StatisticsData {
         val requiredPercentage = settings.requiredPercentage
@@ -83,11 +76,6 @@ class GetStatisticsUseCase @Inject constructor(
 
         val totalPresencial = checkIns.count { it.status == DayStatus.PRESENCIAL }
         val totalHomeOffice = checkIns.count { it.status == DayStatus.HOME_OFFICE }
-        val avg = if (summaries.isNotEmpty()) {
-            summaries.map { it.achievedPercentage }.average().toFloat()
-        } else {
-            0f
-        }
 
         val presencialDates = checkIns
             .filter { it.status == DayStatus.PRESENCIAL }
@@ -96,19 +84,55 @@ class GetStatisticsUseCase @Inject constructor(
 
         val yearSummaries = summaries.filter { it.yearMonth.year == selectedYear }
         val annualSummary = buildAnnualSummary(selectedYear, yearSummaries)
+        val weeklyMonth = weeklyMonthForYear(selectedYear, checkIns)
 
         return StatisticsData(
             selectedYear = selectedYear,
             monthlySummaries = summaries,
-            averageAchieved = avg,
+            averageAchieved = annualSummary.averageAchieved,
             totalPresencial = totalPresencial,
             totalHomeOffice = totalHomeOffice,
             longestStreak = calculateLongestStreak(presencialDates),
             currentStreak = calculateCurrentStreak(presencialDates),
-            weeklySummaries = buildWeeklySummaries(checkIns, timeProvider.currentMonth()),
+            weeklySummaries = buildWeeklySummaries(checkIns, weeklyMonth),
             annualSummary = annualSummary,
-            heatmapDays = heatmapDays
+            heatmapDays = buildHeatmapDays(selectedYear, checkIns, absences, settings)
         )
+    }
+
+    private fun buildHeatmapDays(
+        selectedYear: Int,
+        checkIns: List<CheckIn>,
+        absences: List<Absence>,
+        settings: AppSettings
+    ): List<DayInfo> {
+        return (1..MONTHS_IN_YEAR).flatMap { month ->
+            val yearMonth = YearMonth.of(selectedYear, month)
+            val rangeStart = yearMonth.atDay(1)
+            val rangeEnd = yearMonth.atEndOfMonth()
+            val monthAbsences = absences.filter { absence ->
+                !absence.endDate.isBefore(rangeStart) && !absence.startDate.isAfter(rangeEnd)
+            }
+            getMonthCalendarUseCase.buildForMonth(
+                yearMonth,
+                checkIns,
+                monthAbsences,
+                settings.countSaturdaysAsWorkdays,
+                settings.presencePolicy
+            )
+        }
+    }
+
+    private fun weeklyMonthForYear(selectedYear: Int, checkIns: List<CheckIn>): YearMonth {
+        val current = timeProvider.currentMonth()
+        if (selectedYear == current.year) {
+            return current
+        }
+        val latestDateInYear = checkIns
+            .map { it.date }
+            .filter { it.year == selectedYear }
+            .maxOrNull()
+        return latestDateInYear?.let { YearMonth.from(it) } ?: YearMonth.of(selectedYear, 1)
     }
 
     private fun buildMonthlySummary(
@@ -176,17 +200,29 @@ class GetStatisticsUseCase @Inject constructor(
         val monthCheckIns = checkIns.filter {
             YearMonth.from(it.date) == yearMonth && it.status == DayStatus.PRESENCIAL
         }
-        val weekCount = ((yearMonth.lengthOfMonth() - 1) / DAYS_IN_WEEK) + 1
-        return (1..weekCount).map { week ->
-            val startDay = (week - 1) * DAYS_IN_WEEK + 1
-            val endDay = minOf(week * DAYS_IN_WEEK, yearMonth.lengthOfMonth())
-            val presencialDays = monthCheckIns.count { it.date.dayOfMonth in startDay..endDay }
-            WeeklyAttendanceSummary(
-                weekIndex = week,
-                label = "Semana $week",
+        val monthStart = yearMonth.atDay(1)
+        val monthEnd = yearMonth.atEndOfMonth()
+        var weekStart = monthStart.with(TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY))
+        val summaries = mutableListOf<WeeklyAttendanceSummary>()
+        var weekIndex = 1
+
+        while (!weekStart.isAfter(monthEnd)) {
+            val weekEnd = weekStart.plusDays(WEEK_LAST_DAY_OFFSET)
+            val presencialDays = monthCheckIns.count { checkIn ->
+                !checkIn.date.isBefore(weekStart) &&
+                    !checkIn.date.isAfter(weekEnd) &&
+                    !checkIn.date.isBefore(monthStart) &&
+                    !checkIn.date.isAfter(monthEnd)
+            }
+            summaries += WeeklyAttendanceSummary(
+                weekIndex = weekIndex,
+                label = "Semana $weekIndex",
                 presencialDays = presencialDays
             )
+            weekIndex++
+            weekStart = weekStart.plusWeeks(1)
         }
+        return summaries
     }
 
     private fun calculateLongestStreak(dates: List<LocalDate>): Int {
@@ -220,6 +256,6 @@ class GetStatisticsUseCase @Inject constructor(
 
     companion object {
         private const val MONTHS_IN_YEAR = 12
-        private const val DAYS_IN_WEEK = 7
+        private const val WEEK_LAST_DAY_OFFSET = 6L
     }
 }

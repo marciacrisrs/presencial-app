@@ -31,7 +31,9 @@ class GetStatisticsUseCaseTest {
 
     @BeforeEach
     fun setup() {
-        every { getMonthCalendarUseCase(any()) } returns flowOf(emptyList())
+        every {
+            getMonthCalendarUseCase.buildForMonth(any(), any(), any(), any(), any())
+        } returns emptyList()
         every { timeProvider.currentMonth() } returns YearMonth.of(2026, 8)
         useCase = GetStatisticsUseCase(
             checkInRepository,
