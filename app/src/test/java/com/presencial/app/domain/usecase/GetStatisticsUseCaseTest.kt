@@ -25,21 +25,16 @@ class GetStatisticsUseCaseTest {
     private val checkInRepository: CheckInRepository = mockk()
     private val absenceRepository: AbsenceRepository = mockk()
     private val settingsRepository: SettingsRepository = mockk()
-    private val getMonthCalendarUseCase: GetMonthCalendarUseCase = mockk()
     private val timeProvider: TimeProvider = mockk()
     private lateinit var useCase: GetStatisticsUseCase
 
     @BeforeEach
     fun setup() {
-        every {
-            getMonthCalendarUseCase.buildForMonth(any(), any(), any(), any(), any())
-        } returns emptyList()
         every { timeProvider.currentMonth() } returns YearMonth.of(2026, 8)
         useCase = GetStatisticsUseCase(
             checkInRepository,
             absenceRepository,
             settingsRepository,
-            getMonthCalendarUseCase,
             timeProvider
         )
     }

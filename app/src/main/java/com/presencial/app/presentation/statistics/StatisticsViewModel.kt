@@ -11,13 +11,10 @@ import com.presencial.app.domain.usecase.StatisticsData
 import com.presencial.app.domain.util.TimeProvider
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.first
-import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.stateIn
-import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.withContext
 import java.io.OutputStream
 import java.time.YearMonth
@@ -33,19 +30,8 @@ class StatisticsViewModel @Inject constructor(
     private val timeProvider: TimeProvider
 ) : ViewModel() {
 
-    private val selectedYear = MutableStateFlow(timeProvider.currentMonth().year)
-
-    val statistics: StateFlow<StatisticsData?> = selectedYear
-        .flatMapLatest { year -> getStatisticsUseCase(year) }
+    val statistics: StateFlow<StatisticsData?> = getStatisticsUseCase()
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(STOP_TIMEOUT_MS), null)
-
-    fun previousYear() {
-        selectedYear.update { it - 1 }
-    }
-
-    fun nextYear() {
-        selectedYear.update { it + 1 }
-    }
 
     fun exportPdf(outputStream: OutputStream): Result<Unit> {
         val data = statistics.value ?: return Result.failure(IllegalStateException("Sem dados"))

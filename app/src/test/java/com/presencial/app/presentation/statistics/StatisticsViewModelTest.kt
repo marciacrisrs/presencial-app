@@ -44,7 +44,7 @@ class StatisticsViewModelTest {
     @BeforeEach
     fun setup() {
         every { timeProvider.currentMonth() } returns YearMonth.of(2026, 8)
-        every { getStatisticsUseCase(any()) } returns flowOf(TestDataFactory.createStatisticsData())
+        every { getStatisticsUseCase() } returns flowOf(TestDataFactory.createStatisticsData())
         viewModel = createViewModel()
     }
 
@@ -60,27 +60,12 @@ class StatisticsViewModelTest {
     @Test
     fun `statistics should reflect use case flow`() = runTest {
         val statsData = TestDataFactory.createStatisticsData()
-        every { getStatisticsUseCase(2026) } returns flowOf(statsData)
+        every { getStatisticsUseCase() } returns flowOf(statsData)
 
         viewModel = createViewModel()
 
         viewModel.statistics.test {
             assertEquals(statsData, awaitItem())
-        }
-    }
-
-    @Test
-    fun `previousYear should request statistics for prior year`() = runTest {
-        val stats2025 = TestDataFactory.createStatisticsData(selectedYear = 2025)
-        every { getStatisticsUseCase(2026) } returns flowOf(TestDataFactory.createStatisticsData())
-        every { getStatisticsUseCase(2025) } returns flowOf(stats2025)
-
-        viewModel = createViewModel()
-
-        viewModel.statistics.test {
-            assertEquals(2026, awaitItem()?.selectedYear)
-            viewModel.previousYear()
-            assertEquals(2025, awaitItem()?.selectedYear)
         }
     }
 
@@ -103,10 +88,9 @@ class StatisticsViewModelTest {
             longestStreak = 5,
             currentStreak = 2,
             weeklySummaries = emptyList(),
-            annualSummary = TestDataFactory.createAnnualSummary(),
-            heatmapDays = emptyList()
+            annualSummary = TestDataFactory.createAnnualSummary()
         )
-        every { getStatisticsUseCase(2026) } returns flowOf(statsData)
+        every { getStatisticsUseCase() } returns flowOf(statsData)
         viewModel = createViewModel()
 
         val outputStream = mockk<OutputStream>()
@@ -133,7 +117,7 @@ class StatisticsViewModelTest {
     @Test
     fun `exportPdf should return failure if pdfExporter fails`() = runTest {
         val statsData = TestDataFactory.createStatisticsData()
-        every { getStatisticsUseCase(2026) } returns flowOf(statsData)
+        every { getStatisticsUseCase() } returns flowOf(statsData)
         viewModel = createViewModel()
 
         val outputStream = mockk<OutputStream>()

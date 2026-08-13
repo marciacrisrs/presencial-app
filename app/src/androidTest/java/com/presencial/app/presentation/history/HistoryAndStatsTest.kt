@@ -73,8 +73,7 @@ class HistoryAndStatsTest {
                 totalMonthsWithData = 12,
                 bestMonth = null,
                 worstMonth = null
-            ),
-            heatmapDays = emptyList()
+            )
         )
         val statsFlow = MutableStateFlow<StatisticsData?>(statsData)
         every { statisticsViewModel.statistics } returns statsFlow

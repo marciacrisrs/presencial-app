@@ -4,7 +4,6 @@ import com.presencial.app.domain.model.Absence
 import com.presencial.app.domain.model.AnnualSummary
 import com.presencial.app.domain.model.AppSettings
 import com.presencial.app.domain.model.CheckIn
-import com.presencial.app.domain.model.DayInfo
 import com.presencial.app.domain.model.DayStatus
 import com.presencial.app.domain.model.MonthlySummary
 import com.presencial.app.domain.model.WeeklyAttendanceSummary
@@ -32,15 +31,13 @@ data class StatisticsData(
     val longestStreak: Int,
     val currentStreak: Int,
     val weeklySummaries: List<WeeklyAttendanceSummary>,
-    val annualSummary: AnnualSummary,
-    val heatmapDays: List<DayInfo>
+    val annualSummary: AnnualSummary
 )
 
 class GetStatisticsUseCase @Inject constructor(
     private val checkInRepository: CheckInRepository,
     private val absenceRepository: AbsenceRepository,
     private val settingsRepository: SettingsRepository,
-    private val getMonthCalendarUseCase: GetMonthCalendarUseCase,
     private val timeProvider: TimeProvider
 ) {
     operator fun invoke(selectedYear: Int = timeProvider.currentMonth().year): Flow<StatisticsData> {
@@ -95,32 +92,8 @@ class GetStatisticsUseCase @Inject constructor(
             longestStreak = calculateLongestStreak(presencialDates),
             currentStreak = calculateCurrentStreak(presencialDates),
             weeklySummaries = buildWeeklySummaries(checkIns, weeklyMonth),
-            annualSummary = annualSummary,
-            heatmapDays = buildHeatmapDays(selectedYear, checkIns, absences, settings)
+            annualSummary = annualSummary
         )
-    }
-
-    private fun buildHeatmapDays(
-        selectedYear: Int,
-        checkIns: List<CheckIn>,
-        absences: List<Absence>,
-        settings: AppSettings
-    ): List<DayInfo> {
-        return (1..MONTHS_IN_YEAR).flatMap { month ->
-            val yearMonth = YearMonth.of(selectedYear, month)
-            val rangeStart = yearMonth.atDay(1)
-            val rangeEnd = yearMonth.atEndOfMonth()
-            val monthAbsences = absences.filter { absence ->
-                !absence.endDate.isBefore(rangeStart) && !absence.startDate.isAfter(rangeEnd)
-            }
-            getMonthCalendarUseCase.buildForMonth(
-                yearMonth,
-                checkIns,
-                monthAbsences,
-                settings.countSaturdaysAsWorkdays,
-                settings.presencePolicy
-            )
-        }
     }
 
     private fun weeklyMonthForYear(selectedYear: Int, checkIns: List<CheckIn>): YearMonth {
@@ -255,7 +228,6 @@ class GetStatisticsUseCase @Inject constructor(
     }
 
     companion object {
-        private const val MONTHS_IN_YEAR = 12
         private const val WEEK_LAST_DAY_OFFSET = 6L
     }
 }

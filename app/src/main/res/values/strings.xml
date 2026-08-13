@@ -40,8 +40,6 @@
     <string name="statistics_best_month">Melhor mês</string>
     <string name="statistics_total_presencial">Total presencial: %1$d dias</string>
     <string name="statistics_days_count">%1$d dias</string>
-    <string name="statistics_heatmap_title">Calendário %1$d</string>
-    <string name="statistics_no_data">Sem dados para exibir</string>
     <string name="statistics_annual_summary_title">Resumo %1$d</string>
     <string name="statistics_annual_average">Presença média: %1$.1f%%</string>
     <string name="statistics_annual_goals_met">Metas atingidas: %1$d / %2$d meses</string>
