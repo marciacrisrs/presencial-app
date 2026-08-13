@@ -44,7 +44,7 @@ class StatisticsViewModelTest {
     @BeforeEach
     fun setup() {
         every { timeProvider.currentMonth() } returns YearMonth.of(2026, 8)
-        every { getStatisticsUseCase() } returns flowOf(TestDataFactory.createStatisticsData())
+        every { getStatisticsUseCase(any()) } returns flowOf(TestDataFactory.createStatisticsData())
         viewModel = createViewModel()
     }
 
@@ -60,7 +60,7 @@ class StatisticsViewModelTest {
     @Test
     fun `statistics should reflect use case flow`() = runTest {
         val statsData = TestDataFactory.createStatisticsData()
-        every { getStatisticsUseCase() } returns flowOf(statsData)
+        every { getStatisticsUseCase(any()) } returns flowOf(statsData)
 
         viewModel = createViewModel()
 
@@ -90,7 +90,7 @@ class StatisticsViewModelTest {
             weeklySummaries = emptyList(),
             annualSummary = TestDataFactory.createAnnualSummary()
         )
-        every { getStatisticsUseCase() } returns flowOf(statsData)
+        every { getStatisticsUseCase(any()) } returns flowOf(statsData)
         viewModel = createViewModel()
 
         val outputStream = mockk<OutputStream>()
@@ -117,7 +117,7 @@ class StatisticsViewModelTest {
     @Test
     fun `exportPdf should return failure if pdfExporter fails`() = runTest {
         val statsData = TestDataFactory.createStatisticsData()
-        every { getStatisticsUseCase() } returns flowOf(statsData)
+        every { getStatisticsUseCase(any()) } returns flowOf(statsData)
         viewModel = createViewModel()
 
         val outputStream = mockk<OutputStream>()
