@@ -36,13 +36,22 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.presencial.app.R
+import com.presencial.app.domain.model.DayInfo
 import com.presencial.app.domain.usecase.StatisticsData
+import com.presencial.app.ui.components.AnnualSummaryCard
 import com.presencial.app.ui.components.MonthlyBarChart
+import com.presencial.app.ui.components.MonthlyTrendLineChart
 import com.presencial.app.ui.components.StatSummaryRow
+import com.presencial.app.ui.components.WeeklyBarChart
+import com.presencial.app.ui.components.YearHeatmapCard
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.launch
 import java.io.OutputStream
+import java.time.format.DateTimeFormatter
+import java.time.format.TextStyle
+import java.util.Locale
+
 @Composable
 fun StatisticsScreen(viewModel: StatisticsViewModel = hiltViewModel()) {
     val stats by viewModel.statistics.collectAsStateWithLifecycle()
@@ -95,6 +104,11 @@ fun StatisticsScreen(viewModel: StatisticsViewModel = hiltViewModel()) {
         onExportPdf = { pdfLauncher.launch("$exportFileBaseName.pdf") },
         onExportCsv = { csvLauncher.launch("$exportFileBaseName.csv") },
         onExportExcel = { excelLauncher.launch("$exportFileBaseName.xlsx") },
+        onPreviousYear = viewModel::previousYear,
+        onNextYear = viewModel::nextYear,
+        onDayClick = { dayInfo ->
+            message.value = formatDayDetail(dayInfo)
+        },
         snackbarHostState = snackbarHostState
     )
 }
@@ -133,6 +147,9 @@ private fun StatisticsScaffold(
     onExportPdf: () -> Unit,
     onExportCsv: () -> Unit,
     onExportExcel: () -> Unit,
+    onPreviousYear: () -> Unit,
+    onNextYear: () -> Unit,
+    onDayClick: (DayInfo) -> Unit,
     snackbarHostState: SnackbarHostState
 ) {
     Box(modifier = Modifier.fillMaxSize()) {
@@ -143,7 +160,10 @@ private fun StatisticsScaffold(
                 data = stats,
                 onExportPdf = onExportPdf,
                 onExportCsv = onExportCsv,
-                onExportExcel = onExportExcel
+                onExportExcel = onExportExcel,
+                onPreviousYear = onPreviousYear,
+                onNextYear = onNextYear,
+                onDayClick = onDayClick
             )
         }
 
@@ -159,7 +179,10 @@ private fun StatisticsContent(
     data: StatisticsData,
     onExportPdf: () -> Unit,
     onExportCsv: () -> Unit,
-    onExportExcel: () -> Unit
+    onExportExcel: () -> Unit,
+    onPreviousYear: () -> Unit,
+    onNextYear: () -> Unit,
+    onDayClick: (DayInfo) -> Unit
 ) {
     Column(
         modifier = Modifier
@@ -168,14 +191,32 @@ private fun StatisticsContent(
             .padding(20.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
-        Text("Estatísticas", style = MaterialTheme.typography.headlineLarge)
+        Text(stringResource(R.string.statistics_title), style = MaterialTheme.typography.headlineLarge)
 
         StatisticsGrid(data)
 
-        MonthlyBarChart(summaries = data.monthlySummaries.sortedBy { it.yearMonth })
+        val yearSummaries = data.monthlySummaries
+            .filter { it.yearMonth.year == data.selectedYear }
+            .sortedBy { it.yearMonth }
+
+        AnnualSummaryCard(summary = data.annualSummary)
+
+        MonthlyTrendLineChart(summaries = yearSummaries)
+
+        WeeklyBarChart(summaries = data.weeklySummaries)
+
+        MonthlyBarChart(summaries = yearSummaries)
+
+        YearHeatmapCard(
+            year = data.selectedYear,
+            days = data.heatmapDays,
+            onPreviousYear = onPreviousYear,
+            onNextYear = onNextYear,
+            onDayClick = onDayClick
+        )
 
         Text(
-            "Total presencial: ${data.totalPresencial} dias",
+            stringResource(R.string.statistics_total_presencial, data.totalPresencial),
             style = MaterialTheme.typography.bodyLarge
         )
 
@@ -236,13 +277,13 @@ private fun StatisticsGrid(data: StatisticsData) {
         horizontalArrangement = Arrangement.spacedBy(12.dp)
     ) {
         StatSummaryRow(
-            label = "Média anual",
-            value = "${"%.1f".format(data.averageAchieved)}%",
+            label = stringResource(R.string.statistics_average_annual),
+            value = "${"%.1f".format(data.annualSummary.averageAchieved)}%",
             modifier = Modifier.weight(1f)
         )
         StatSummaryRow(
-            label = "Sequência atual",
-            value = "${data.currentStreak} dias",
+            label = stringResource(R.string.statistics_current_streak),
+            value = stringResource(R.string.statistics_days_count, data.currentStreak),
             modifier = Modifier.weight(1f)
         )
     }
@@ -252,14 +293,47 @@ private fun StatisticsGrid(data: StatisticsData) {
         horizontalArrangement = Arrangement.spacedBy(12.dp)
     ) {
         StatSummaryRow(
-            label = "Maior sequência",
-            value = "${data.longestStreak} dias",
+            label = stringResource(R.string.statistics_longest_streak),
+            value = stringResource(R.string.statistics_days_count, data.longestStreak),
             modifier = Modifier.weight(1f)
         )
         StatSummaryRow(
-            label = "Home office",
+            label = stringResource(R.string.statistics_total_home_office),
             value = "${data.totalHomeOffice}",
             modifier = Modifier.weight(1f)
         )
     }
+
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.spacedBy(12.dp)
+    ) {
+        StatSummaryRow(
+            label = stringResource(R.string.statistics_total_presencial_label),
+            value = "${data.totalPresencial}",
+            modifier = Modifier.weight(1f)
+        )
+        data.annualSummary.bestMonth?.let { best ->
+            StatSummaryRow(
+                label = stringResource(R.string.statistics_best_month),
+                value = "${"%.0f".format(best.achievedPercentage)}%",
+                modifier = Modifier.weight(1f)
+            )
+        }
+    }
+}
+
+private fun formatDayDetail(dayInfo: DayInfo): String {
+    val formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy")
+    val weekday = dayInfo.date.dayOfWeek.getDisplayName(TextStyle.FULL, Locale.getDefault())
+    val status = when (dayInfo.status) {
+        com.presencial.app.domain.model.DayStatus.PRESENCIAL -> "Presencial"
+        com.presencial.app.domain.model.DayStatus.HOME_OFFICE -> "Home Office"
+        com.presencial.app.domain.model.DayStatus.FERIADO -> dayInfo.holidayName ?: "Feriado"
+        com.presencial.app.domain.model.DayStatus.FIM_DE_SEMANA -> "Fim de semana"
+        com.presencial.app.domain.model.DayStatus.FUTURO -> "Futuro"
+        com.presencial.app.domain.model.DayStatus.FALTOU -> "Faltou"
+        com.presencial.app.domain.model.DayStatus.ABSENCE -> "Ausência"
+    }
+    return "${formatter.format(dayInfo.date)} ($weekday): $status"
 }

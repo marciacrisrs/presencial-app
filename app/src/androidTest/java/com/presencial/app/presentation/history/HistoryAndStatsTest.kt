@@ -56,12 +56,25 @@ class HistoryAndStatsTest {
     @Test
     fun statisticsScreen_displaysStatsAndChart() {
         val statsData = StatisticsData(
+            selectedYear = 2026,
             monthlySummaries = emptyList(),
             averageAchieved = 85.5f,
             totalPresencial = 150,
             totalHomeOffice = 20,
             longestStreak = 15,
-            currentStreak = 5
+            currentStreak = 5,
+            weeklySummaries = emptyList(),
+            annualSummary = com.presencial.app.domain.model.AnnualSummary(
+                year = 2026,
+                averageAchieved = 85.5f,
+                totalWorkdays = 220,
+                totalPresencial = 150,
+                goalsMetCount = 10,
+                totalMonthsWithData = 12,
+                bestMonth = null,
+                worstMonth = null
+            ),
+            heatmapDays = emptyList()
         )
         val statsFlow = MutableStateFlow<StatisticsData?>(statsData)
         every { statisticsViewModel.statistics } returns statsFlow

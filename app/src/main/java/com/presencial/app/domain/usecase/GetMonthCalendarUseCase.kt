@@ -29,7 +29,7 @@ class GetMonthCalendarUseCase @Inject constructor(
             absenceRepository.getAbsencesInRange(yearMonth.atDay(1), yearMonth.atEndOfMonth()),
             settingsRepository.settings
         ) { checkIns, absences, settings ->
-            buildCalendar(
+            buildForMonth(
                 yearMonth,
                 checkIns,
                 absences,
@@ -38,6 +38,20 @@ class GetMonthCalendarUseCase @Inject constructor(
             )
         }
     }
+
+    fun buildForMonth(
+        yearMonth: YearMonth,
+        checkIns: List<CheckIn>,
+        absences: List<Absence>,
+        countSaturdays: Boolean,
+        policy: com.presencial.app.domain.model.PresencePolicy
+    ): List<DayInfo> = buildCalendar(
+        yearMonth,
+        checkIns.filter { YearMonth.from(it.date) == yearMonth },
+        absences,
+        countSaturdays,
+        policy
+    )
 
     private fun buildCalendar(
         yearMonth: YearMonth,
