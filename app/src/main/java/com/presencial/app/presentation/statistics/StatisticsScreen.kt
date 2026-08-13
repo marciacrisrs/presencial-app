@@ -1,5 +1,6 @@
 package com.presencial.app.presentation.statistics
 
+import android.content.Context
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Arrangement
@@ -13,10 +14,12 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.PictureAsPdf
+import androidx.compose.material.icons.filled.TableChart
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
@@ -24,6 +27,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -35,17 +39,47 @@ import com.presencial.app.R
 import com.presencial.app.domain.usecase.StatisticsData
 import com.presencial.app.ui.components.MonthlyBarChart
 import com.presencial.app.ui.components.StatSummaryRow
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.MutableStateFlow
-import java.time.YearMonth
-
+import kotlinx.coroutines.launch
+import java.io.OutputStream
 @Composable
 fun StatisticsScreen(viewModel: StatisticsViewModel = hiltViewModel()) {
     val stats by viewModel.statistics.collectAsStateWithLifecycle()
     val context = LocalContext.current
+    val scope = rememberCoroutineScope()
     val snackbarHostState = remember { SnackbarHostState() }
     val message = remember { MutableStateFlow<String?>(null) }
+    val exportFileBaseName = viewModel.exportFileBaseName()
+    val exportErrorTemplate = stringResource(R.string.statistics_export_error)
 
-    val pdfLauncher = rememberStatisticsPdfLauncher(context, viewModel, message)
+    val pdfLauncher = rememberExportLauncher(
+        mimeType = "application/pdf",
+        context = context,
+        scope = scope,
+        onExport = { stream -> viewModel.exportPdf(stream) },
+        successMessage = stringResource(R.string.statistics_export_pdf_success),
+        errorTemplate = exportErrorTemplate,
+        message = message
+    )
+    val csvLauncher = rememberExportLauncher(
+        mimeType = "text/csv",
+        context = context,
+        scope = scope,
+        onExport = { stream -> viewModel.exportCsv(stream) },
+        successMessage = stringResource(R.string.statistics_export_csv_success),
+        errorTemplate = exportErrorTemplate,
+        message = message
+    )
+    val excelLauncher = rememberExportLauncher(
+        mimeType = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        context = context,
+        scope = scope,
+        onExport = { stream -> viewModel.exportExcel(stream) },
+        successMessage = stringResource(R.string.statistics_export_excel_success),
+        errorTemplate = exportErrorTemplate,
+        message = message
+    )
 
     LaunchedEffect(message) {
         message.collect { msg ->
@@ -58,27 +92,37 @@ fun StatisticsScreen(viewModel: StatisticsViewModel = hiltViewModel()) {
 
     StatisticsScaffold(
         stats = stats,
-        onExportClick = {
-            val fileName = "presencial_stats_${YearMonth.now()}.pdf"
-            pdfLauncher.launch(fileName)
-        },
+        onExportPdf = { pdfLauncher.launch("$exportFileBaseName.pdf") },
+        onExportCsv = { csvLauncher.launch("$exportFileBaseName.csv") },
+        onExportExcel = { excelLauncher.launch("$exportFileBaseName.xlsx") },
         snackbarHostState = snackbarHostState
     )
 }
 
 @Composable
-private fun rememberStatisticsPdfLauncher(
-    context: android.content.Context,
-    viewModel: StatisticsViewModel,
+private fun rememberExportLauncher(
+    mimeType: String,
+    context: Context,
+    scope: CoroutineScope,
+    onExport: suspend (OutputStream) -> Result<Unit>,
+    successMessage: String,
+    errorTemplate: String,
     message: MutableStateFlow<String?>
 ) = rememberLauncherForActivityResult(
-    ActivityResultContracts.CreateDocument("application/pdf")
+    ActivityResultContracts.CreateDocument(mimeType)
 ) { uri ->
     uri?.let {
-        context.contentResolver.openOutputStream(it)?.use { stream ->
-            viewModel.exportPdf(stream)
-                .onSuccess { message.value = "PDF exportado com sucesso!" }
-                .onFailure { message.value = "Erro ao exportar PDF: ${it.message}" }
+        scope.launch {
+            context.contentResolver.openOutputStream(it)?.use { stream ->
+                onExport(stream)
+                    .onSuccess { message.value = successMessage }
+                    .onFailure { error ->
+                        message.value = String.format(
+                            errorTemplate,
+                            error.message ?: "Erro desconhecido"
+                        )
+                    }
+            }
         }
     }
 }
@@ -86,7 +130,9 @@ private fun rememberStatisticsPdfLauncher(
 @Composable
 private fun StatisticsScaffold(
     stats: StatisticsData?,
-    onExportClick: () -> Unit,
+    onExportPdf: () -> Unit,
+    onExportCsv: () -> Unit,
+    onExportExcel: () -> Unit,
     snackbarHostState: SnackbarHostState
 ) {
     Box(modifier = Modifier.fillMaxSize()) {
@@ -95,10 +141,12 @@ private fun StatisticsScaffold(
         } else {
             StatisticsContent(
                 data = stats,
-                onExportClick = onExportClick
+                onExportPdf = onExportPdf,
+                onExportCsv = onExportCsv,
+                onExportExcel = onExportExcel
             )
         }
-        
+
         SnackbarHost(
             hostState = snackbarHostState,
             modifier = Modifier.align(Alignment.BottomCenter)
@@ -109,7 +157,9 @@ private fun StatisticsScaffold(
 @Composable
 private fun StatisticsContent(
     data: StatisticsData,
-    onExportClick: () -> Unit
+    onExportPdf: () -> Unit,
+    onExportCsv: () -> Unit,
+    onExportExcel: () -> Unit
 ) {
     Column(
         modifier = Modifier
@@ -129,15 +179,52 @@ private fun StatisticsContent(
             style = MaterialTheme.typography.bodyLarge
         )
 
-        Button(
-            onClick = onExportClick,
-            modifier = Modifier.fillMaxWidth()
-        ) {
+        ExportButtons(
+            onExportPdf = onExportPdf,
+            onExportCsv = onExportCsv,
+            onExportExcel = onExportExcel
+        )
+    }
+}
+
+@Composable
+private fun ExportButtons(
+    onExportPdf: () -> Unit,
+    onExportCsv: () -> Unit,
+    onExportExcel: () -> Unit
+) {
+    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        Button(onClick = onExportPdf, modifier = Modifier.fillMaxWidth()) {
             Icon(
                 Icons.Default.PictureAsPdf,
                 contentDescription = stringResource(R.string.statistics_export_pdf_content_description)
             )
-            Text("  Exportar PDF")
+            Text("  ${stringResource(R.string.statistics_export_pdf)}")
+        }
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            OutlinedButton(
+                onClick = onExportCsv,
+                modifier = Modifier.weight(1f)
+            ) {
+                Icon(
+                    Icons.Default.TableChart,
+                    contentDescription = stringResource(R.string.statistics_export_csv_content_description)
+                )
+                Text("  ${stringResource(R.string.statistics_export_csv)}")
+            }
+            OutlinedButton(
+                onClick = onExportExcel,
+                modifier = Modifier.weight(1f)
+            ) {
+                Icon(
+                    Icons.Default.TableChart,
+                    contentDescription = stringResource(R.string.statistics_export_excel_content_description)
+                )
+                Text("  ${stringResource(R.string.statistics_export_excel)}")
+            }
         }
     }
 }

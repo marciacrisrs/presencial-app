@@ -23,6 +23,15 @@
     <string name="notification_auto_checkin_title">Check-in automático</string>
     <string name="notification_auto_checkin_message">Sua presença foi registrada automaticamente ao chegar no trabalho.</string>
     <string name="statistics_export_pdf_content_description">Exportar estatísticas em PDF</string>
+    <string name="statistics_export_csv_content_description">Exportar relatório em CSV</string>
+    <string name="statistics_export_excel_content_description">Exportar relatório em Excel</string>
+    <string name="statistics_export_csv">Exportar CSV</string>
+    <string name="statistics_export_excel">Exportar Excel</string>
+    <string name="statistics_export_pdf">Exportar PDF</string>
+    <string name="statistics_export_csv_success">CSV exportado com sucesso!</string>
+    <string name="statistics_export_excel_success">Excel exportado com sucesso!</string>
+    <string name="statistics_export_pdf_success">PDF exportado com sucesso!</string>
+    <string name="statistics_export_error">Erro ao exportar: %1$s</string>
     <string name="about_app_logo_content_description">Logotipo do Presencial</string>
     <string name="chart_monthly_attendance_title">Comparecimento por mês</string>
     <string name="chart_no_data">Sem dados para exibir</string>

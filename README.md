@@ -22,7 +22,7 @@ Aplicativo Android para controle de comparecimento presencial no trabalho. Calcu
 
 - **Histórico** — resumo de todos os meses registrados, resumo semanal da política e compartilhamento
 
-- **Estatísticas** — gráficos de evolução, média anual, sequências e exportação PDF
+- **Estatísticas** — gráficos de evolução, média anual, sequências e exportação PDF, CSV e Excel
 
 - **Configurações** — política de presença (percentual livre, dias fixos, semanas alternadas), sábados como dias úteis, backup/restauração JSON e sincronização opcional com Google Drive
 
