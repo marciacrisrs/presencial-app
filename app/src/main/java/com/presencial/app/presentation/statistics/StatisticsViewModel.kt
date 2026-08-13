@@ -30,7 +30,7 @@ class StatisticsViewModel @Inject constructor(
     private val timeProvider: TimeProvider
 ) : ViewModel() {
 
-    val statistics: StateFlow<StatisticsData?> = getStatisticsUseCase()
+    val statistics: StateFlow<StatisticsData?> = getStatisticsUseCase(timeProvider.currentMonth().year)
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(STOP_TIMEOUT_MS), null)
 
     fun exportPdf(outputStream: OutputStream): Result<Unit> {
