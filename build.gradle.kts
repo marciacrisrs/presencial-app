@@ -31,6 +31,17 @@ subprojects {
         buildUponDefaultConfig = true
     }
 }
+tasks.register("verifyCi") {
+    group = "verification"
+    description = "Checks de CI antes do release (lint, detekt, testes, cobertura)"
+    dependsOn(
+        ":app:lintDebug",
+        ":app:detekt",
+        ":app:testDebugUnitTest",
+        ":app:koverVerify"
+    )
+}
+
 tasks.named("sonar") {
     dependsOn(":app:testDebugUnitTest", ":app:koverXmlReport")
 }
