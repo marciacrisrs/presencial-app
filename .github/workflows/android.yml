@@ -131,11 +131,10 @@ jobs:
         run: chmod +x gradlew
 
       - name: Run instrumented tests
-        uses: reactivecircus/android-emulator-runner@a421e43855164a8197daf9d8d40fe71c6996bb0d # v2.38.0
+        uses: ./.github/actions/android-emulator
         with:
-          api-level: 34
+          api-level: "34"
           arch: x86_64
-          disable-animations: true
           script: ./gradlew connectedDebugAndroidTest
 
       - name: Upload Instrumented Test Reports
