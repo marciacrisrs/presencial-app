@@ -26,6 +26,11 @@
 # Geofencing / Play Services Location
 -keep class com.google.android.gms.location.** { *; }
 
-# Keep line numbers for crash reports
+# Firebase Crashlytics (when google-services.json is present)
 -keepattributes SourceFile,LineNumberTable
+-keep public class * extends java.lang.Exception
+-keep class com.google.firebase.** { *; }
+-dontwarn com.google.firebase.**
+
+# Keep line numbers for crash reports
 -renamesourcefileattribute SourceFile
