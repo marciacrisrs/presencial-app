@@ -48,6 +48,17 @@ jobs:
       - name: Build Release
         run: ./gradlew assembleRelease
 
+      - name: Build Release App Bundle
+        run: ./gradlew bundleRelease
+
+      - name: Upload Release AAB
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: app-release-aab
+          path: app/build/outputs/bundle/release/app-release.aab
+          if-no-files-found: ignore
+
       - name: Upload Debug APK
         if: always()
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
@@ -100,3 +111,36 @@ jobs:
         with:
           name: gradle-problems
           path: build/reports/problems/**
+
+  instrumented:
+    runs-on: ubuntu-latest
+    if: ${{ !contains(github.event.head_commit.message, '[skip ci]') }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+
+      - name: Setup JDK 17
+        uses: actions/setup-java@03ad4de0992f5dab5e18fcb136590ce7c4a0ac95 # v5.6.0
+        with:
+          distribution: temurin
+          java-version: 17
+          cache: gradle
+
+      - name: Grant execute permission
+        run: chmod +x gradlew
+
+      - name: Run instrumented tests
+        uses: ./.github/actions/android-emulator
+        with:
+          api-level: "34"
+          arch: x86_64
+          script: ./gradlew connectedDebugAndroidTest
+
+      - name: Upload Instrumented Test Reports
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: connected-test-report
+          path: app/build/reports/androidTests/connected/**
+          if-no-files-found: ignore

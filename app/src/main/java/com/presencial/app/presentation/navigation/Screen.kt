@@ -19,6 +19,22 @@ sealed class Screen(val route: String, val title: String, val icon: ImageVector?
     data object WorkAddresses : Screen("work_addresses", "Locais de Trabalho")
 
     companion object {
+        const val MAIN_ROUTE = "main"
+        const val TAB_ARG = "tab"
+
         val bottomNavItems = listOf(Dashboard, Calendar, History, Statistics, Settings)
+
+        fun mainRoute(tab: Int = 0): String = "$MAIN_ROUTE?$TAB_ARG=$tab"
+
+        fun isMainDestination(route: String?): Boolean =
+            route?.startsWith("$MAIN_ROUTE?") == true
+
+        fun tabFromRoute(route: String?): Int? {
+            if (!isMainDestination(route)) return null
+            return route
+                ?.substringAfter("$TAB_ARG=")
+                ?.substringBefore("&")
+                ?.toIntOrNull()
+        }
     }
 }

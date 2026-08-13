@@ -162,8 +162,7 @@ object TestDataFactory {
         longestStreak: Int = 5,
         currentStreak: Int = 2,
         weeklySummaries: List<com.presencial.app.domain.model.WeeklyAttendanceSummary> = emptyList(),
-        annualSummary: com.presencial.app.domain.model.AnnualSummary = createAnnualSummary(selectedYear),
-        heatmapDays: List<com.presencial.app.domain.model.DayInfo> = emptyList()
+        annualSummary: com.presencial.app.domain.model.AnnualSummary = createAnnualSummary(selectedYear)
     ) = StatisticsData(
         selectedYear,
         monthlySummaries,
@@ -173,8 +172,7 @@ object TestDataFactory {
         longestStreak,
         currentStreak,
         weeklySummaries,
-        annualSummary,
-        heatmapDays
+        annualSummary
     )
 
     fun createAnnualSummary(year: Int = 2026) = com.presencial.app.domain.model.AnnualSummary(

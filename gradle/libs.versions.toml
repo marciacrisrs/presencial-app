@@ -40,6 +40,9 @@ mapsCompose = "6.2.1"
 playServicesMaps = "19.2.0"
 sonar = "7.4.0.8496"
 securityCrypto = "1.1.0-alpha06"
+firebaseBom = "33.7.0"
+googleServices = "4.4.2"
+firebaseCrashlyticsGradle = "3.0.3"
 fastexcel = "0.19.0"
 
 [libraries]
@@ -113,6 +116,8 @@ turbine = { group = "app.cash.turbine", name = "turbine", version.ref = "turbine
 junit-platform-launcher = { group = "org.junit.platform", name = "junit-platform-launcher", version.ref = "junit-platform" }
 json-library = { group = "org.json", name = "json", version.ref = "json" }
 androidx-security-crypto = { group = "androidx.security", name = "security-crypto", version.ref = "securityCrypto" }
+firebase-bom = { group = "com.google.firebase", name = "firebase-bom", version.ref = "firebaseBom" }
+firebase-crashlytics = { group = "com.google.firebase", name = "firebase-crashlytics-ktx" }
 fastexcel = { group = "org.dhatim", name = "fastexcel", version.ref = "fastexcel" }
 
 [plugins]
@@ -123,3 +128,5 @@ hilt = { id = "com.google.dagger.hilt.android", version.ref = "hilt" }
 kover = { id = "org.jetbrains.kotlinx.kover", version.ref = "kover" }
 detekt = { id = "io.gitlab.arturbosch.detekt", version.ref = "detekt" }
 sonarqube = { id = "org.sonarqube", version.ref = "sonar" }
+google-services = { id = "com.google.gms.google-services", version.ref = "googleServices" }
+firebase-crashlytics = { id = "com.google.firebase.crashlytics", version.ref = "firebaseCrashlyticsGradle" }

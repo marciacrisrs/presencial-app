@@ -36,21 +36,16 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.presencial.app.R
-import com.presencial.app.domain.model.DayInfo
 import com.presencial.app.domain.usecase.StatisticsData
 import com.presencial.app.ui.components.AnnualSummaryCard
 import com.presencial.app.ui.components.MonthlyBarChart
 import com.presencial.app.ui.components.MonthlyTrendLineChart
 import com.presencial.app.ui.components.StatSummaryRow
 import com.presencial.app.ui.components.WeeklyBarChart
-import com.presencial.app.ui.components.YearHeatmapCard
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.launch
 import java.io.OutputStream
-import java.time.format.DateTimeFormatter
-import java.time.format.TextStyle
-import java.util.Locale
 
 @Composable
 fun StatisticsScreen(viewModel: StatisticsViewModel = hiltViewModel()) {
@@ -104,11 +99,6 @@ fun StatisticsScreen(viewModel: StatisticsViewModel = hiltViewModel()) {
         onExportPdf = { pdfLauncher.launch("$exportFileBaseName.pdf") },
         onExportCsv = { csvLauncher.launch("$exportFileBaseName.csv") },
         onExportExcel = { excelLauncher.launch("$exportFileBaseName.xlsx") },
-        onPreviousYear = viewModel::previousYear,
-        onNextYear = viewModel::nextYear,
-        onDayClick = { dayInfo ->
-            message.value = formatDayDetail(dayInfo)
-        },
         snackbarHostState = snackbarHostState
     )
 }
@@ -147,9 +137,6 @@ private fun StatisticsScaffold(
     onExportPdf: () -> Unit,
     onExportCsv: () -> Unit,
     onExportExcel: () -> Unit,
-    onPreviousYear: () -> Unit,
-    onNextYear: () -> Unit,
-    onDayClick: (DayInfo) -> Unit,
     snackbarHostState: SnackbarHostState
 ) {
     Box(modifier = Modifier.fillMaxSize()) {
@@ -160,10 +147,7 @@ private fun StatisticsScaffold(
                 data = stats,
                 onExportPdf = onExportPdf,
                 onExportCsv = onExportCsv,
-                onExportExcel = onExportExcel,
-                onPreviousYear = onPreviousYear,
-                onNextYear = onNextYear,
-                onDayClick = onDayClick
+                onExportExcel = onExportExcel
             )
         }
 
@@ -179,10 +163,7 @@ private fun StatisticsContent(
     data: StatisticsData,
     onExportPdf: () -> Unit,
     onExportCsv: () -> Unit,
-    onExportExcel: () -> Unit,
-    onPreviousYear: () -> Unit,
-    onNextYear: () -> Unit,
-    onDayClick: (DayInfo) -> Unit
+    onExportExcel: () -> Unit
 ) {
     Column(
         modifier = Modifier
@@ -206,14 +187,6 @@ private fun StatisticsContent(
         WeeklyBarChart(summaries = data.weeklySummaries)
 
         MonthlyBarChart(summaries = yearSummaries)
-
-        YearHeatmapCard(
-            year = data.selectedYear,
-            days = data.heatmapDays,
-            onPreviousYear = onPreviousYear,
-            onNextYear = onNextYear,
-            onDayClick = onDayClick
-        )
 
         Text(
             stringResource(R.string.statistics_total_presencial, data.totalPresencial),
@@ -321,19 +294,4 @@ private fun StatisticsGrid(data: StatisticsData) {
             )
         }
     }
-}
-
-private fun formatDayDetail(dayInfo: DayInfo): String {
-    val formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy")
-    val weekday = dayInfo.date.dayOfWeek.getDisplayName(TextStyle.FULL, Locale.getDefault())
-    val status = when (dayInfo.status) {
-        com.presencial.app.domain.model.DayStatus.PRESENCIAL -> "Presencial"
-        com.presencial.app.domain.model.DayStatus.HOME_OFFICE -> "Home Office"
-        com.presencial.app.domain.model.DayStatus.FERIADO -> dayInfo.holidayName ?: "Feriado"
-        com.presencial.app.domain.model.DayStatus.FIM_DE_SEMANA -> "Fim de semana"
-        com.presencial.app.domain.model.DayStatus.FUTURO -> "Futuro"
-        com.presencial.app.domain.model.DayStatus.FALTOU -> "Faltou"
-        com.presencial.app.domain.model.DayStatus.ABSENCE -> "Ausência"
-    }
-    return "${formatter.format(dayInfo.date)} ($weekday): $status"
 }

@@ -3,7 +3,9 @@ package com.presencial.app
 import android.app.Application
 import androidx.hilt.work.HiltWorkerFactory
 import androidx.work.Configuration
+import com.google.firebase.crashlytics.FirebaseCrashlytics
 import com.presencial.app.domain.holidays.HolidayScopeManager
+import com.presencial.app.domain.util.CrashReporter
 import com.presencial.app.domain.usecase.ResolveWorkAddressLocationUseCase
 import com.presencial.app.domain.usecase.SyncGeofencesUseCase
 import com.presencial.app.domain.widget.WidgetRefresher
@@ -24,6 +26,7 @@ class PresencialApp : Application(), Configuration.Provider {
     @Inject lateinit var widgetRefresher: WidgetRefresher
     @Inject lateinit var holidayScopeManager: HolidayScopeManager
     @Inject lateinit var resolveWorkAddressLocationUseCase: ResolveWorkAddressLocationUseCase
+    @Inject lateinit var crashReporter: CrashReporter
 
     private val appScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
 
@@ -34,6 +37,10 @@ class PresencialApp : Application(), Configuration.Provider {
 
     override fun onCreate() {
         super.onCreate()
+        if (BuildConfig.CRASHLYTICS_ENABLED) {
+            FirebaseCrashlytics.getInstance().isCrashlyticsCollectionEnabled = !BuildConfig.DEBUG
+        }
+        crashReporter.log("PresencialApp started")
         holidayScopeManager
         notificationScheduler.scheduleDailyReminder()
         appScope.launch {

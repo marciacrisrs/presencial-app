@@ -1,0 +1,24 @@
+name: Android Emulator Runner
+description: Pinned wrapper for reactivecircus/android-emulator-runner
+
+inputs:
+  api-level:
+    description: Android API level for the emulator
+    required: true
+  arch:
+    description: Emulator CPU architecture
+    required: false
+    default: x86_64
+  script:
+    description: Command to run after the emulator boots
+    required: true
+
+runs:
+  using: composite
+  steps:
+    - uses: reactivecircus/android-emulator-runner@a421e43855164a8197daf9d8d40fe71c6996bb0d # v2.38.0
+      with:
+        api-level: ${{ inputs.api-level }}
+        arch: ${{ inputs.arch }}
+        disable-animations: true
+        script: ${{ inputs.script }}

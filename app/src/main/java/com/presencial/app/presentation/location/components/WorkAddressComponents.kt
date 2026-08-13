@@ -10,16 +10,19 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -30,7 +33,12 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import com.presencial.app.R
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.MultiplePermissionsState
 import com.presencial.app.domain.model.WorkAddress
@@ -98,6 +106,8 @@ fun WorkAddressContent(params: WorkAddressContentParams) {
             .padding(params.padding)
             .fillMaxSize()
     ) {
+        LocationOnboardingHero()
+
         PermissionSection(
             foregroundGranted = params.foregroundPermissions.allPermissionsGranted,
             backgroundGranted = params.backgroundPermission.allPermissionsGranted,
@@ -140,6 +150,50 @@ fun WorkAddressTopBar(onBack: () -> Unit) {
 }
 
 @Composable
+private fun LocationOnboardingHero() {
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(SPACING_MEDIUM),
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.primaryContainer
+        )
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(SPACING_MEDIUM),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.spacedBy(SPACING_SMALL)
+        ) {
+            Icon(
+                imageVector = Icons.Default.LocationOn,
+                contentDescription = stringResource(R.string.location_onboarding_icon_description),
+                modifier = Modifier.size(ICON_HERO_SIZE),
+                tint = MaterialTheme.colorScheme.primary
+            )
+            Text(
+                text = stringResource(R.string.location_onboarding_title),
+                style = MaterialTheme.typography.titleLarge,
+                textAlign = TextAlign.Center
+            )
+            Text(
+                text = stringResource(R.string.location_onboarding_body),
+                style = MaterialTheme.typography.bodyMedium,
+                textAlign = TextAlign.Center,
+                color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = TEXT_ALPHA)
+            )
+            Text(
+                text = stringResource(R.string.location_onboarding_privacy),
+                style = MaterialTheme.typography.bodySmall,
+                textAlign = TextAlign.Center,
+                color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = TEXT_ALPHA)
+            )
+        }
+    }
+}
+
+@Composable
 private fun PermissionSection(
     foregroundGranted: Boolean,
     backgroundGranted: Boolean,
@@ -151,9 +205,9 @@ private fun PermissionSection(
         enter = expandVertically() + fadeIn()
     ) {
         PermissionCard(
-            title = "Localização Necessária",
-            description = "Para o check-in automático funcionar, precisamos de acesso à sua localização.",
-            buttonText = "Conceder Permissão",
+            title = stringResource(R.string.location_permission_foreground_title),
+            description = stringResource(R.string.location_permission_foreground_body),
+            buttonText = stringResource(R.string.location_permission_grant),
             onClick = onForegroundPermission
         )
     }
@@ -163,10 +217,11 @@ private fun PermissionSection(
         enter = expandVertically() + fadeIn()
     ) {
         PermissionCard(
-            title = "Localização em Background",
-            description = "O check-in automático só funciona se o app puder acessar a localização \"O tempo todo\".",
-            buttonText = "Configurar",
-            onClick = onBackgroundPermission
+            title = stringResource(R.string.location_permission_background_title),
+            description = stringResource(R.string.location_permission_background_body),
+            buttonText = stringResource(R.string.location_permission_configure),
+            onClick = onBackgroundPermission,
+            useTonalButton = true
         )
     }
 }
@@ -213,7 +268,8 @@ private fun PermissionCard(
     title: String,
     description: String,
     buttonText: String,
-    onClick: () -> Unit
+    onClick: () -> Unit,
+    useTonalButton: Boolean = false
 ) {
     Card(
         modifier = Modifier
@@ -229,8 +285,14 @@ private fun PermissionCard(
         ) {
             Text(text = title, style = MaterialTheme.typography.titleMedium)
             Text(text = description, style = MaterialTheme.typography.bodyMedium)
-            Button(onClick = onClick) {
-                Text(buttonText)
+            if (useTonalButton) {
+                FilledTonalButton(onClick = onClick, modifier = Modifier.fillMaxWidth()) {
+                    Text(buttonText)
+                }
+            } else {
+                Button(onClick = onClick, modifier = Modifier.fillMaxWidth()) {
+                    Text(buttonText)
+                }
             }
         }
     }
@@ -310,3 +372,5 @@ private fun WorkAddressItem(
 
 private val SPACING_MEDIUM = 16.dp
 private val SPACING_SMALL = 8.dp
+private val ICON_HERO_SIZE = 56.dp
+private const val TEXT_ALPHA = 0.85f

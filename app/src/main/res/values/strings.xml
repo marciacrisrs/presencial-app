@@ -40,8 +40,6 @@
     <string name="statistics_best_month">Melhor mês</string>
     <string name="statistics_total_presencial">Total presencial: %1$d dias</string>
     <string name="statistics_days_count">%1$d dias</string>
-    <string name="statistics_heatmap_title">Calendário %1$d</string>
-    <string name="statistics_no_data">Sem dados para exibir</string>
     <string name="statistics_annual_summary_title">Resumo %1$d</string>
     <string name="statistics_annual_average">Presença média: %1$.1f%%</string>
     <string name="statistics_annual_goals_met">Metas atingidas: %1$d / %2$d meses</string>
@@ -58,4 +56,14 @@
     <string name="statistics_export_excel_success">Excel exportado com sucesso!</string>
     <string name="statistics_export_pdf_success">PDF exportado com sucesso!</string>
     <string name="statistics_export_error">Erro ao exportar: %1$s</string>
+    <string name="location_onboarding_icon_description">Ícone de localização</string>
+    <string name="location_onboarding_title">Check-in automático no escritório</string>
+    <string name="location_onboarding_body">Usamos sua localização apenas para confirmar quando você está no endereço cadastrado. Não rastreamos sua posição fora do horário de trabalho.</string>
+    <string name="location_onboarding_privacy">Sem rastreamento contínuo. Você controla quando o monitoramento está ativo.</string>
+    <string name="location_permission_foreground_title">Permissão de localização</string>
+    <string name="location_permission_foreground_body">Precisamos da localização para validar o check-in automático quando você chega ao escritório.</string>
+    <string name="location_permission_background_title">Localização em segundo plano</string>
+    <string name="location_permission_background_body">Para registrar a presença automaticamente, escolha \"Permitir o tempo todo\" nas configurações do Android.</string>
+    <string name="location_permission_grant">Entendi, conceder permissão</string>
+    <string name="location_permission_configure">Abrir configurações</string>
 </resources>

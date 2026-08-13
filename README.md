@@ -207,7 +207,21 @@ Testes unitários abrangentes na camada de domínio e dados:
 
 ./gradlew test
 
+./gradlew connectedDebugAndroidTest
+
 ```
+
+### Monitoramento (Crashlytics)
+
+Para habilitar o Firebase Crashlytics em builds de produção:
+
+1. Crie um projeto no [Firebase Console](https://console.firebase.google.com/).
+2. Baixe `google-services.json` e coloque em `app/google-services.json` (use `app/google-services.json.sample` como referência).
+3. Gere um build release — o Crashlytics será ativado automaticamente quando o arquivo estiver presente.
+
+### Revisão de código (CodeRabbit)
+
+Veja [docs/CODERABBIT.md](docs/CODERABBIT.md) para instalar o GitHub App e validar revisões automáticas nos Pull Requests.
 
 
 

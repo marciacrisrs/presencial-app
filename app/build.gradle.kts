@@ -121,6 +121,13 @@ android {
         versionName = appVersionName
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+
+        val googleServicesFile = rootProject.file("app/google-services.json")
+        buildConfigField(
+            "Boolean",
+            "CRASHLYTICS_ENABLED",
+            googleServicesFile.exists().toString()
+        )
     }
 
     buildTypes {
@@ -170,6 +177,7 @@ kotlin {
 dependencies {
     // Jetpack Compose BOM
     implementation(platform(libs.androidx.compose.bom))
+    implementation(platform(libs.firebase.bom))
 
     // AndroidX & Lifecycle
     implementation(libs.androidx.core.ktx)
@@ -223,6 +231,7 @@ dependencies {
     implementation(libs.fastexcel)
     implementation(libs.kotlinx.coroutines.android)
     implementation(libs.kotlinx.coroutines.play.services)
+    implementation(libs.firebase.crashlytics)
 
     // Unit Testing
     testImplementation(libs.json.library)
@@ -294,4 +303,10 @@ kover {
             }
         }
     }
+}
+
+val googleServicesFile = layout.projectDirectory.file("google-services.json").asFile
+if (googleServicesFile.exists()) {
+    apply(plugin = "com.google.gms.google-services")
+    apply(plugin = "com.google.firebase.crashlytics")
 }
