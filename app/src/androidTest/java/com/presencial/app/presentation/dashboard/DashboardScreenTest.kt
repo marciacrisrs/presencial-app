@@ -2,6 +2,7 @@ package com.presencial.app.presentation.dashboard
 
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.junit4.createComposeRule
+import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import com.presencial.app.domain.model.DashboardData
@@ -10,6 +11,7 @@ import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
 import kotlinx.coroutines.flow.MutableStateFlow
+import org.junit.Assert.assertTrue
 import org.junit.Rule
 import org.junit.Test
 import java.time.YearMonth
@@ -40,7 +42,9 @@ class DashboardScreenTest {
 
         // Verify that the month/year text is NOT displayed (indicating skeleton or empty state)
         // Using "Agosto 2026" as an example of content that should only be in the success state
-        composeTestRule.onNodeWithText("Agosto 2026").assertDoesNotExist()
+        assertTrue(
+            composeTestRule.onAllNodesWithText("Agosto 2026").fetchSemanticsNodes().isEmpty()
+        )
     }
 
     @Test
