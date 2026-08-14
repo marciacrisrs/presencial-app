@@ -31,16 +31,14 @@ internal object WidgetGlanceState {
     }
 
     fun read(prefs: Preferences): WidgetInfo? {
-        val completedDays = prefs[completed]
-        val requiredDays = prefs[required]
-        val remainingDays = prefs[remaining]
+        val completedDays = prefs[completed] ?: return null
+        val requiredDays = prefs[required] ?: return null
+        val remainingDays = prefs[remaining] ?: return null
         val month = prefs[monthName]
         val widgetStatus = prefs[status]?.let {
             runCatching { WidgetStatus.valueOf(it) }.getOrNull()
         }
-        if (completedDays == null || requiredDays == null || remainingDays == null ||
-            month == null || widgetStatus == null
-        ) {
+        if (month == null || widgetStatus == null) {
             return null
         }
         return WidgetInfo(
