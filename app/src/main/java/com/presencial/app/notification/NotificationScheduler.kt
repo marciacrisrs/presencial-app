@@ -2,6 +2,8 @@ package com.presencial.app.notification
 
 import android.content.Context
 import androidx.work.ExistingPeriodicWorkPolicy
+import androidx.work.ExistingWorkPolicy
+import androidx.work.OneTimeWorkRequestBuilder
 import androidx.work.PeriodicWorkRequestBuilder
 import androidx.work.WorkManager
 import com.presencial.app.worker.CheckInReminderWorker
@@ -22,27 +24,24 @@ class NotificationScheduler @Inject constructor(
         scheduleCheckInReminder()
     }
 
-    fun scheduleWidgetRefresh() {
+    fun scheduleWidgetRefresh(policy: ExistingWorkPolicy = ExistingWorkPolicy.KEEP) {
         val now = Calendar.getInstance()
         val target = Calendar.getInstance().apply {
             set(Calendar.HOUR_OF_DAY, WIDGET_REFRESH_HOUR)
             set(Calendar.MINUTE, WIDGET_REFRESH_MINUTE)
             set(Calendar.SECOND, 0)
             set(Calendar.MILLISECOND, 0)
-            if (before(now)) add(Calendar.DAY_OF_MONTH, 1)
+            if (!after(now)) add(Calendar.DAY_OF_MONTH, 1)
         }
-        val initialDelay = target.timeInMillis - now.timeInMillis
+        val initialDelay = (target.timeInMillis - now.timeInMillis).coerceAtLeast(1L)
 
-        val workRequest = PeriodicWorkRequestBuilder<WidgetRefreshWorker>(
-            INTERVAL_HOURS,
-            TimeUnit.HOURS
-        )
+        val workRequest = OneTimeWorkRequestBuilder<WidgetRefreshWorker>()
             .setInitialDelay(initialDelay, TimeUnit.MILLISECONDS)
             .build()
 
-        WorkManager.getInstance(context).enqueueUniquePeriodicWork(
+        WorkManager.getInstance(context).enqueueUniqueWork(
             WidgetRefreshWorker.WORK_NAME,
-            ExistingPeriodicWorkPolicy.KEEP,
+            policy,
             workRequest
         )
     }

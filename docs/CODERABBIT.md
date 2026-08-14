@@ -72,7 +72,7 @@ flowchart LR
 | Documentação e referência no README | Concluído |
 | GitHub App instalado em `marciacrisrs/presencial-app` | **Pendente (manual)** |
 | PR de teste com comentários do bot | Pendente após instalar o app |
-| Comentários limitados ao diff do PR | Comportamento padrão do CodeRabbit |
+| Comentários inline limitados ao diff do PR; o walkthrough pode aparecer fora das linhas alteradas | Comportamento padrão do CodeRabbit |
 
 ### Ativar revisões automáticas
 

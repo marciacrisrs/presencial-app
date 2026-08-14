@@ -9,12 +9,18 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
+import androidx.lifecycle.lifecycleScope
+import com.presencial.app.domain.widget.WidgetRefresher
 import com.presencial.app.presentation.navigation.PresencialNavHost
 import com.presencial.app.ui.theme.PresencialTheme
 import dagger.hilt.android.AndroidEntryPoint
+import javax.inject.Inject
+import kotlinx.coroutines.launch
 
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
+
+    @Inject lateinit var widgetRefresher: WidgetRefresher
 
     private var openCheckIn by mutableStateOf(false)
 
@@ -38,6 +44,13 @@ class MainActivity : ComponentActivity() {
     override fun onNewIntent(intent: Intent) {
         super.onNewIntent(intent)
         openCheckIn = intent.getBooleanExtra(EXTRA_OPEN_CHECKIN, false)
+    }
+
+    override fun onResume() {
+        super.onResume()
+        lifecycleScope.launch {
+            widgetRefresher.refresh()
+        }
     }
 
     companion object {

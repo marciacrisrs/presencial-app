@@ -44,16 +44,17 @@ class CloudSyncRepositoryImpl @Inject constructor(
             return Result.failure(IllegalStateException("Selecione uma pasta na nuvem primeiro"))
         }
         _syncState.update { it.copy(isSyncing = true) }
-        return try {
-            val bytes = backupManager.exportToBytes().getOrElse { return Result.failure(it) }
-            folderSyncProvider.uploadBackup(BACKUP_FILE_NAME, bytes)
-                .onSuccess {
-                    cloudSyncPreferences.setLastSyncEpochMillis(System.currentTimeMillis())
-                    refreshState()
-                }
-        } finally {
-            _syncState.update { it.copy(isSyncing = false) }
-        }
+        val result = runCatching {
+            val bytes = backupManager.exportToBytes().getOrThrow()
+            folderSyncProvider.uploadBackup(BACKUP_FILE_NAME, bytes).getOrThrow()
+            cloudSyncPreferences.setLastSyncEpochMillis(System.currentTimeMillis())
+        }.fold(
+            onSuccess = { Result.success(Unit) },
+            onFailure = { Result.failure(it) }
+        )
+        refreshState()
+        _syncState.update { it.copy(isSyncing = false) }
+        return result
     }
 
     override suspend fun restoreBackup(): Result<Unit> {
@@ -61,12 +62,16 @@ class CloudSyncRepositoryImpl @Inject constructor(
             return Result.failure(IllegalStateException("Selecione uma pasta na nuvem primeiro"))
         }
         _syncState.update { it.copy(isSyncing = true) }
-        return try {
-            val bytes = folderSyncProvider.downloadBackup(BACKUP_FILE_NAME).getOrElse { return Result.failure(it) }
-            backupManager.importFromBytes(bytes)
-        } finally {
-            _syncState.update { it.copy(isSyncing = false) }
-        }
+        val result = runCatching {
+            val bytes = folderSyncProvider.downloadBackup(BACKUP_FILE_NAME).getOrThrow()
+            backupManager.importFromBytes(bytes).getOrThrow()
+        }.fold(
+            onSuccess = { Result.success(Unit) },
+            onFailure = { Result.failure(it) }
+        )
+        refreshState()
+        _syncState.update { it.copy(isSyncing = false) }
+        return result
     }
 
     override suspend fun refreshState() {

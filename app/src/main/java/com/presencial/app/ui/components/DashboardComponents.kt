@@ -119,7 +119,7 @@ fun CircularProgressCard(
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.spacedBy(SPACING_MEDIUM)
         ) {
-            Box(contentAlignment = Alignment.Center, modifier = Modifier.size(CIRCLE_SIZE_DP)) {
+            Box(modifier = Modifier.size(CIRCLE_SIZE_DP)) {
                 CircularProgressIndicator(
                     progress = { animatedProgress },
                     modifier = Modifier.fillMaxWidth().aspectRatio(ASPECT_RATIO_SQUARE),
@@ -127,11 +127,6 @@ fun CircularProgressCard(
                     strokeCap = StrokeCap.Round,
                     color = MaterialTheme.colorScheme.primary,
                     trackColor = MaterialTheme.colorScheme.surfaceVariant
-                )
-                Text(
-                    text = "${(animatedProgress * PERCENT_MULTIPLIER).toInt()}%",
-                    style = MaterialTheme.typography.displayLarge,
-                    color = MaterialTheme.colorScheme.primary
                 )
             }
             Text(
@@ -174,7 +169,6 @@ private const val CARD_ALPHA_SURFACE = 0.5f
 private const val CARD_ALPHA_PRIMARY = 0.3f
 private const val ON_SURFACE_ALPHA_MEDIUM = 0.7f
 private const val ON_SURFACE_ALPHA_LOW = 0.6f
-private const val PERCENT_MULTIPLIER = 100
 private val PADDING_MEDIUM = 12.dp
 private val PADDING_EXTRA_LARGE = 24.dp
 private val SPACING_TINY = 2.dp

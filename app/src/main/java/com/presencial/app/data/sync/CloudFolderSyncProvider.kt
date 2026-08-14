@@ -47,9 +47,7 @@ class CloudFolderSyncProvider @Inject constructor(
                 val resolver = context.contentResolver
                 val backupUri = findBackupUri(resolver, treeUri, fileName)
                     ?: createBackupUri(resolver, treeUri, fileName)
-                resolver.openOutputStream(backupUri, "wt")?.use { stream ->
-                    stream.write(content)
-                } ?: error("Não foi possível gravar o backup na pasta")
+                writeBackupContent(resolver, backupUri, content)
             }
         }
 
@@ -128,10 +126,30 @@ class CloudFolderSyncProvider @Inject constructor(
 
     private fun hasPersistedPermission(treeUri: Uri): Boolean =
         context.contentResolver.persistedUriPermissions.any { permission ->
-            permission.uri == treeUri &&
-                permission.isReadPermission &&
-                permission.isWritePermission
+            permission.isReadPermission &&
+                permission.isWritePermission &&
+                uriRefsSameTree(permission.uri, treeUri)
         }
+
+    private fun uriRefsSameTree(stored: Uri, requested: Uri): Boolean {
+        if (stored == requested) return true
+        return runCatching {
+            DocumentsContract.getTreeDocumentId(stored) ==
+                DocumentsContract.getTreeDocumentId(requested)
+        }.getOrDefault(false)
+    }
+
+    private fun treeDocumentUri(treeUri: Uri): Uri =
+        DocumentsContract.buildDocumentUriUsingTree(
+            treeUri,
+            DocumentsContract.getTreeDocumentId(treeUri)
+        )
+
+    private fun writeBackupContent(resolver: ContentResolver, backupUri: Uri, content: ByteArray) {
+        val stream = resolver.openOutputStream(backupUri)
+            ?: resolver.openOutputStream(backupUri, "wt")
+        stream?.use { it.write(content) } ?: error("Não foi possível gravar o backup na pasta")
+    }
 
     private fun findBackupUri(resolver: ContentResolver, treeUri: Uri, fileName: String): Uri? {
         require(fileName == BACKUP_FILE_NAME) { "Nome de arquivo inválido" }
@@ -160,7 +178,7 @@ class CloudFolderSyncProvider @Inject constructor(
     }
 
     private fun createBackupUri(resolver: ContentResolver, treeUri: Uri, fileName: String): Uri =
-        DocumentsContract.createDocument(resolver, treeUri, MIME_JSON, fileName)
+        DocumentsContract.createDocument(resolver, treeDocumentUri(treeUri), MIME_JSON, fileName)
             ?: error("Não foi possível criar o arquivo de backup")
 
     private object Keys {

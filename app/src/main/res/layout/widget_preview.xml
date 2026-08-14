@@ -5,7 +5,7 @@
     android:background="@drawable/widget_preview_background"
     android:minWidth="@dimen/widget_min_width"
     android:minHeight="@dimen/widget_min_height"
-    android:padding="12dp">
+    android:padding="8dp">
 
     <LinearLayout
         android:layout_width="match_parent"
@@ -20,48 +20,29 @@
             android:maxLines="1"
             android:text="@string/widget_preview_month"
             android:textColor="@color/widget_text_secondary"
-            android:textSize="10sp"
+            android:textSize="9sp"
             android:textStyle="bold" />
 
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginTop="4dp"
-            android:text="@string/widget_preview_progress"
-            android:textColor="@color/widget_success"
-            android:textSize="28sp"
-            android:textStyle="bold" />
-
-        <ProgressBar
-            style="@android:style/Widget.ProgressBar.Horizontal"
-            android:layout_width="match_parent"
-            android:layout_height="5dp"
-            android:layout_marginTop="8dp"
-            android:max="100"
-            android:progress="62"
-            android:progressBackgroundTint="@color/widget_text_secondary"
-            android:progressTint="@color/widget_success" />
-
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="6dp"
             android:ellipsize="end"
-            android:maxLines="1"
-            android:text="@string/widget_preview_percentage"
-            android:textColor="@color/widget_text_secondary"
-            android:textSize="12sp" />
-
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="4dp"
-            android:ellipsize="end"
-            android:maxLines="1"
+            android:maxLines="2"
             android:text="@string/widget_preview_remaining"
             android:textColor="@color/widget_primary_text"
-            android:textSize="12sp"
+            android:textSize="13sp"
             android:textStyle="bold" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="4dp"
+            android:ellipsize="end"
+            android:maxLines="1"
+            android:text="@string/widget_preview_progress"
+            android:textColor="@color/widget_text_secondary"
+            android:textSize="11sp" />
 
         <TextView
             android:layout_width="wrap_content"
@@ -71,7 +52,7 @@
             android:maxLines="1"
             android:text="@string/widget_preview_today"
             android:textColor="@color/widget_success"
-            android:textSize="11sp" />
+            android:textSize="10sp" />
 
     </LinearLayout>
 

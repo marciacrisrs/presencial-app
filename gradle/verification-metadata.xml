@@ -6,7 +6,6 @@
       <trusted-artifacts>
          <trust file=".*-sources[.]jar" regex="true"/>
          <trust file=".*-javadoc[.]jar" regex="true"/>
-         <trust file="gradle-.*-src[.]zip" regex="true"/>
       </trusted-artifacts>
    </configuration>
    <components>

@@ -6,13 +6,14 @@
     <string name="widget_desc">Progresso mensal de presença, status do dia e toque para abrir o app.</string>
     <string name="widget_title_month">PRESENÇA EM %s</string>
     <string name="widget_progress_format">%1$d / %2$d</string>
+    <string name="widget_compact_progress">%1$d / %2$d presenciais</string>
     <string name="widget_percentage_format">%d%% da meta</string>
     <string name="widget_goal_met">Meta atingida! 🎉</string>
     <string name="widget_configure_goal">Configure sua meta</string>
     <string name="widget_today_presencial">Hoje: presencial ✓</string>
     <string name="widget_today_pending">Hoje: pendente</string>
     <string name="widget_preview_month">PRESENÇA EM AGOSTO</string>
-    <string name="widget_preview_progress">8 / 13</string>
+    <string name="widget_preview_progress">8 / 13 presenciais</string>
     <string name="widget_preview_percentage">62% da meta</string>
     <string name="widget_preview_remaining">Faltam 5 dias</string>
     <string name="widget_preview_today">Hoje: presencial ✓</string>

@@ -81,8 +81,9 @@ class CloudSyncRepositoryImplTest {
         }
         coEvery { folderSyncProvider.isFolderAccessible() } returns true
 
-        repository.uploadBackup()
+        val result = repository.uploadBackup()
 
+        assertTrue(result.isSuccess)
         assertEquals(syncTime, repository.syncState.value.lastSyncEpochMillis)
         assertTrue(repository.syncState.value.isSignedIn)
         coVerify(exactly = 0) { folderSyncProvider.signOut() }

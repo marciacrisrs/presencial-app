@@ -1,6 +1,7 @@
 package com.presencial.app.presentation.dashboard.components
 
 import androidx.compose.ui.test.assertIsDisplayed
+import androidx.compose.ui.test.assertDoesNotExist
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithText
 import com.presencial.app.domain.model.DashboardData
@@ -64,16 +65,15 @@ class DashboardComponentsTest {
     }
 
     @Test
-    fun CircularProgressCard_displaysLabelAndPercentage() {
+    fun CircularProgressCard_displaysLabelWithoutPercentage() {
         val label = "Meta: 60%"
-        val progress = 0.5f
         composeTestRule.setContent {
             PresencialTheme {
-                CircularProgressCard(progress = progress, label = label)
+                CircularProgressCard(progress = 0.5f, label = label)
             }
         }
         composeTestRule.onNodeWithText(label).assertIsDisplayed()
-        composeTestRule.onNodeWithText("50%").assertIsDisplayed()
+        composeTestRule.onNodeWithText("50%").assertDoesNotExist()
     }
 
     @Test
