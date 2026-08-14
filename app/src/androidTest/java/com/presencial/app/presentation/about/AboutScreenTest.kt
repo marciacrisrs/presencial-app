@@ -5,6 +5,7 @@ import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
+import androidx.compose.ui.test.performScrollTo
 import com.presencial.app.ui.theme.PresencialTheme
 import org.junit.Rule
 import org.junit.Test
@@ -33,10 +34,9 @@ class AboutScreenTest {
         composeTestRule.onNodeWithText("Política de Privacidade").assertIsDisplayed()
         composeTestRule.onNodeWithText("Por padrão, todos os dados permanecem no dispositivo", substring = true).assertIsDisplayed()
 
-        // Check Developer Card
-        composeTestRule.onNodeWithText("Desenvolvido por").assertIsDisplayed()
-        composeTestRule.onNodeWithText("Márcia Cristina").assertIsDisplayed()
-        composeTestRule.onNodeWithText("GitHub").assertIsDisplayed()
+        composeTestRule.onNodeWithText("Desenvolvido por").performScrollTo().assertIsDisplayed()
+        composeTestRule.onNodeWithText("Márcia Cristina").performScrollTo().assertIsDisplayed()
+        composeTestRule.onNodeWithText("GitHub").performScrollTo().assertIsDisplayed()
     }
 
     @Test

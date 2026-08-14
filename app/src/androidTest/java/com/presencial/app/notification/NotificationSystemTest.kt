@@ -1,19 +1,16 @@
 package com.presencial.app.notification
 
-import android.app.Notification
+import android.Manifest
 import android.app.NotificationManager
 import android.content.Context
+import android.os.Build
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
-import androidx.work.ExistingPeriodicWorkPolicy
-import androidx.work.PeriodicWorkRequest
+import androidx.test.platform.app.InstrumentationRegistry
 import androidx.work.WorkManager
-import io.mockk.every
-import io.mockk.mockk
-import io.mockk.mockkStatic
-import io.mockk.unmockkStatic
-import io.mockk.verify
-import org.junit.After
+import androidx.work.testing.WorkManagerTestInitHelper
+import com.presencial.app.worker.CheckInReminderWorker
+import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -22,48 +19,35 @@ import org.junit.runner.RunWith
 class NotificationSystemTest {
 
     private val context: Context = ApplicationProvider.getApplicationContext()
-    private val notificationManager: NotificationManager = mockk(relaxed = true)
-    private val workManager: WorkManager = mockk(relaxed = true)
-    private lateinit var notificationHelper: NotificationHelper
-    private lateinit var notificationScheduler: NotificationScheduler
 
     @Before
     fun setup() {
-        mockkStatic(WorkManager::class)
-        every { WorkManager.getInstance(any()) } returns workManager
-        
-        notificationHelper = NotificationHelper(context)
-        notificationScheduler = NotificationScheduler(context)
-    }
-
-    @After
-    fun tearDown() {
-        unmockkStatic(WorkManager::class)
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            InstrumentationRegistry.getInstrumentation().uiAutomation.grantRuntimePermission(
+                context.packageName,
+                Manifest.permission.POST_NOTIFICATIONS
+            )
+        }
+        runCatching { WorkManagerTestInitHelper.initializeTestWorkManager(context) }
     }
 
     @Test
     fun notificationHelper_showCheckInReminder_callsNotify() {
-        val mockContext: Context = mockk(relaxed = true)
-        every { mockContext.getSystemService(NotificationManager::class.java) } returns notificationManager
-        every { mockContext.applicationContext } returns mockContext
-        every { mockContext.getString(any()) } returns "test"
-        
-        val helper = NotificationHelper(mockContext)
-        helper.showCheckInReminder()
+        NotificationHelper(context).showCheckInReminder()
 
-        verify { notificationManager.notify(NotificationHelper.NOTIFICATION_ID, any<Notification>()) }
+        val manager = context.getSystemService(NotificationManager::class.java)
+        assertTrue(
+            manager.activeNotifications.any { it.id == NotificationHelper.NOTIFICATION_ID }
+        )
     }
 
     @Test
     fun notificationScheduler_scheduleDailyReminder_enqueuesWork() {
-        notificationScheduler.scheduleDailyReminder()
+        NotificationScheduler(context).scheduleDailyReminder()
 
-        verify { 
-            workManager.enqueueUniquePeriodicWork(
-                "check_in_reminder",
-                ExistingPeriodicWorkPolicy.KEEP,
-                any<PeriodicWorkRequest>()
-            )
-        }
+        val infos = WorkManager.getInstance(context)
+            .getWorkInfosForUniqueWork(CheckInReminderWorker.WORK_NAME)
+            .get()
+        assertTrue(infos.isNotEmpty())
     }
 }

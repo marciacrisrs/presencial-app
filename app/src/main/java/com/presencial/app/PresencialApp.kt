@@ -3,7 +3,7 @@ package com.presencial.app
 import android.app.Application
 import androidx.hilt.work.HiltWorkerFactory
 import androidx.work.Configuration
-import com.google.firebase.crashlytics.FirebaseCrashlytics
+import com.presencial.app.data.crash.CrashlyticsAccess
 import com.presencial.app.domain.holidays.HolidayScopeManager
 import com.presencial.app.domain.util.CrashReporter
 import com.presencial.app.domain.usecase.ResolveWorkAddressLocationUseCase
@@ -37,9 +37,7 @@ class PresencialApp : Application(), Configuration.Provider {
 
     override fun onCreate() {
         super.onCreate()
-        if (BuildConfig.CRASHLYTICS_ENABLED) {
-            FirebaseCrashlytics.getInstance().isCrashlyticsCollectionEnabled = !BuildConfig.DEBUG
-        }
+        CrashlyticsAccess.getOrNull()?.isCrashlyticsCollectionEnabled = !BuildConfig.DEBUG
         crashReporter.log("PresencialApp started")
         holidayScopeManager
         notificationScheduler.scheduleDailyReminder()

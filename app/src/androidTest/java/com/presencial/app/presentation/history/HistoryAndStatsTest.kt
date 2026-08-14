@@ -2,9 +2,12 @@ package com.presencial.app.presentation.history
 
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.junit4.createComposeRule
+import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onNodeWithText
+import androidx.compose.ui.test.performScrollTo
 import com.presencial.app.domain.model.HistoryMonthData
 import com.presencial.app.domain.model.MonthlySummary
+import com.presencial.app.domain.model.WeeklyPolicySummary
 import com.presencial.app.domain.usecase.StatisticsData
 import com.presencial.app.presentation.statistics.StatisticsScreen
 import com.presencial.app.presentation.statistics.StatisticsViewModel
@@ -12,6 +15,7 @@ import com.presencial.app.ui.theme.PresencialTheme
 import io.mockk.every
 import io.mockk.mockk
 import kotlinx.coroutines.flow.MutableStateFlow
+import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import java.time.YearMonth
@@ -23,6 +27,13 @@ class HistoryAndStatsTest {
 
     private val historyViewModel = mockk<HistoryViewModel>(relaxed = true)
     private val statisticsViewModel = mockk<StatisticsViewModel>(relaxed = true)
+    private val weeklySummariesFlow = MutableStateFlow<List<WeeklyPolicySummary>>(emptyList())
+
+    @Before
+    fun setup() {
+        every { historyViewModel.weeklySummaries } returns weeklySummariesFlow
+        every { statisticsViewModel.exportFileBaseName() } returns "presencial_2026-08"
+    }
 
     @Test
     fun historyScreen_displaysSummaries() {
@@ -86,12 +97,15 @@ class HistoryAndStatsTest {
 
         composeTestRule.onNodeWithText("Estatísticas").assertIsDisplayed()
         composeTestRule.onNodeWithText("Média anual").assertIsDisplayed()
-        
-        // Verificando valores (pode variar o formato decimal conforme o locale do teste)
-        // Tentamos encontrar o valor da média e a sequência atual
-        composeTestRule.onNodeWithText("85,5%", substring = true).assertIsDisplayed()
+
+        val averageLabel = "${"%.1f".format(85.5f)}%"
+        composeTestRule.onAllNodesWithText(averageLabel, substring = true)[0]
+            .performScrollTo()
+            .assertIsDisplayed()
         composeTestRule.onNodeWithText("5 dias").assertIsDisplayed()
-        
-        composeTestRule.onNodeWithText("Exportar PDF").assertIsDisplayed()
+
+        composeTestRule.onNodeWithText("Exportar PDF", substring = true)
+            .performScrollTo()
+            .assertIsDisplayed()
     }
 }

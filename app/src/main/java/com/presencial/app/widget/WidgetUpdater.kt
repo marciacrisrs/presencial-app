@@ -10,10 +10,12 @@ object WidgetUpdater {
 
     suspend fun updateAll(context: Context) {
         val appContext = context.applicationContext
-        val info = WidgetInfoLoader.load(appContext)
         val manager = GlanceAppWidgetManager(appContext)
+        val ids = runCatching { glanceIds(manager) }.getOrDefault(emptyList())
+        if (ids.isEmpty()) return
+        val info = WidgetInfoLoader.load(appContext)
         val widget = PresencialWidget()
-        glanceIds(manager).forEach { glanceId ->
+        ids.forEach { glanceId ->
             updateAppWidgetState(appContext, PreferencesGlanceStateDefinition, glanceId) { prefs ->
                 prefs.toMutablePreferences().apply {
                     WidgetGlanceState.write(this, info)
