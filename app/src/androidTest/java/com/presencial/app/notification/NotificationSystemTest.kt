@@ -3,29 +3,31 @@ package com.presencial.app.notification
 import android.Manifest
 import android.app.NotificationManager
 import android.content.Context
+import android.os.Build
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
-import androidx.test.rule.GrantPermissionRule
+import androidx.test.platform.app.InstrumentationRegistry
 import androidx.work.WorkManager
 import androidx.work.testing.WorkManagerTestInitHelper
 import com.presencial.app.worker.CheckInReminderWorker
 import org.junit.Assert.assertTrue
 import org.junit.Before
-import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 
 @RunWith(AndroidJUnit4::class)
 class NotificationSystemTest {
 
-    @get:Rule
-    val notificationPermission: GrantPermissionRule =
-        GrantPermissionRule.grant(Manifest.permission.POST_NOTIFICATIONS)
-
     private val context: Context = ApplicationProvider.getApplicationContext()
 
     @Before
     fun setup() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            InstrumentationRegistry.getInstrumentation().uiAutomation.grantRuntimePermission(
+                context.packageName,
+                Manifest.permission.POST_NOTIFICATIONS
+            )
+        }
         runCatching { WorkManagerTestInitHelper.initializeTestWorkManager(context) }
     }
 
