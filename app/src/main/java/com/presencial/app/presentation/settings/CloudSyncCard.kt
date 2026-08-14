@@ -118,8 +118,9 @@ fun CloudSyncCard(
 
 @Composable
 private fun StatusText(state: CloudSyncState) {
-    val accountLine = if (state.isSignedIn && !state.accountEmail.isNullOrBlank()) {
-        stringResource(R.string.cloud_sync_folder_connected, state.accountEmail)
+    val accountLine = if (state.isSignedIn) {
+        val folderName = state.accountEmail?.takeIf { it.isNotBlank() } ?: state.provider.displayName
+        stringResource(R.string.cloud_sync_folder_connected, folderName)
     } else {
         stringResource(R.string.cloud_sync_not_connected)
     }

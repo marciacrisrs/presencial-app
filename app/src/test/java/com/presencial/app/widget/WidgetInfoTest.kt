@@ -1,7 +1,6 @@
 package com.presencial.app.widget
 
 import org.junit.jupiter.api.Assertions.assertEquals
-import org.junit.jupiter.api.Assertions.assertNotNull
 import org.junit.jupiter.api.Test
 import java.time.Month
 import java.time.YearMonth
@@ -17,7 +16,7 @@ class WidgetInfoTest {
         remaining: Int = 5,
         remainingWorkdays: Int = 8,
         achievedPercentage: Int = 50,
-        todayIsPresencial: Boolean = false,
+        todayStatus: WidgetTodayStatus = WidgetTodayStatus.PENDING,
         todayIsWorkday: Boolean = true,
         yearMonth: YearMonth = YearMonth.of(2026, Month.AUGUST)
     ) = WidgetInfo.create(
@@ -26,7 +25,7 @@ class WidgetInfoTest {
         remaining = remaining,
         remainingWorkdays = remainingWorkdays,
         achievedPercentage = achievedPercentage,
-        todayIsPresencial = todayIsPresencial,
+        todayStatus = todayStatus,
         todayIsWorkday = todayIsWorkday,
         yearMonth = yearMonth,
         locale = locale
@@ -87,20 +86,12 @@ class WidgetInfoTest {
             remaining = 0,
             remainingWorkdays = 1,
             achievedPercentage = 100,
-            todayIsPresencial = true,
+            todayStatus = WidgetTodayStatus.PRESENCIAL,
             todayIsWorkday = true,
             yearMonth = YearMonth.of(2026, Month.AUGUST),
             locale = Locale.US
         )
         assertEquals("AUGUST", info.monthName)
-    }
-
-    @Test
-    fun `should cover WidgetSize enum`() {
-        assertEquals(3, WidgetSize.entries.size)
-        WidgetSize.entries.forEach {
-            assertNotNull(it.displayName)
-        }
     }
 
     @Test

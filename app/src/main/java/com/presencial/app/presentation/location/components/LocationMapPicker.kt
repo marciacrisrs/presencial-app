@@ -28,11 +28,15 @@ import androidx.compose.runtime.remember
 
 import androidx.compose.runtime.setValue
 
+import androidx.compose.foundation.layout.Box
+import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.Modifier
 
 import androidx.compose.ui.unit.dp
 
 import androidx.compose.ui.viewinterop.AndroidView
+
+val LocalSkipLocationMap = staticCompositionLocalOf { false }
 
 
 
@@ -51,6 +55,15 @@ fun LocationMapPicker(
     modifier: Modifier = Modifier
 
 ) {
+
+    if (LocalSkipLocationMap.current) {
+        Box(
+            modifier = modifier
+                .fillMaxWidth()
+                .height(200.dp)
+        )
+        return
+    }
 
     val hasValidCoords = latitude != 0.0 || longitude != 0.0
 

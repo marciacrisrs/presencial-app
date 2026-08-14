@@ -20,6 +20,7 @@ import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Switch
@@ -154,8 +155,11 @@ private data class SettingsScaffoldParams(
 private fun SettingsScaffold(
     params: SettingsScaffoldParams
 ) {
-    Column(modifier = Modifier.fillMaxSize()) {
+    Scaffold(
+        snackbarHost = { SnackbarHost(hostState = params.snackbarHostState) }
+    ) { padding ->
         SettingsContent(
+            modifier = Modifier.padding(padding),
             params = SettingsContentParams(
                 settings = params.settings,
                 activeWorkAddressCount = params.activeWorkAddressCount,
@@ -177,7 +181,6 @@ private fun SettingsScaffold(
                 onNavigateToAbout = params.onNavigateToAbout
             )
         )
-        SnackbarHost(hostState = params.snackbarHostState)
     }
 }
 
@@ -203,9 +206,12 @@ private data class SettingsContentParams(
 )
 
 @Composable
-private fun SettingsContent(params: SettingsContentParams) {
+private fun SettingsContent(
+    params: SettingsContentParams,
+    modifier: Modifier = Modifier
+) {
     Column(
-        modifier = Modifier
+        modifier = modifier
             .fillMaxWidth()
             .verticalScroll(rememberScrollState())
             .padding(PADDING_SCREEN.dp),

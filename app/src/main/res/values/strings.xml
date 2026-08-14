@@ -2,12 +2,8 @@
 <resources>
     <string name="app_name">Presencial</string>
     <string name="close">Fechar</string>
-    <string name="widget_small_name">Presencial (Pequeno)</string>
-    <string name="widget_medium_name">Presencial (Médio)</string>
-    <string name="widget_large_name">Presencial (Grande)</string>
-    <string name="widget_small_desc">Contador compacto de dias presenciais.</string>
-    <string name="widget_medium_desc">Contador padrão de dias presenciais.</string>
-    <string name="widget_large_desc">Contador detalhado com progresso mensal.</string>
+    <string name="widget_name">Presencial</string>
+    <string name="widget_desc">Progresso mensal de presença, status do dia e toque para abrir o app.</string>
     <string name="widget_title_month">PRESENÇA EM %s</string>
     <string name="widget_progress_format">%1$d / %2$d</string>
     <string name="widget_compact_progress">%1$d / %2$d presenciais</string>
@@ -15,7 +11,13 @@
     <string name="widget_goal_met">Meta atingida! 🎉</string>
     <string name="widget_configure_goal">Configure sua meta</string>
     <string name="widget_today_presencial">Hoje: presencial ✓</string>
+    <string name="widget_today_home_office">Hoje: home office</string>
     <string name="widget_today_pending">Hoje: pendente</string>
+    <string name="widget_preview_month">PRESENÇA EM AGOSTO</string>
+    <string name="widget_preview_progress">8 / 13 presenciais</string>
+    <string name="widget_preview_percentage">62% da meta</string>
+    <string name="widget_preview_remaining">Faltam 5 dias</string>
+    <string name="widget_preview_today">Hoje: presencial ✓</string>
     <string name="notification_channel_name">Lembretes de presença</string>
     <string name="notification_channel_desc">Lembretes diários para registrar presença presencial</string>
     <string name="notification_title">18h</string>

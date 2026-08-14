@@ -266,7 +266,7 @@ dependencies {
 
     // Android Instrumentation Tests
     androidTestImplementation(platform(libs.androidx.compose.bom))
-    androidTestImplementation(libs.mockk)
+    androidTestImplementation(libs.mockk.android)
     androidTestImplementation(libs.androidx.espresso.core)
     androidTestImplementation(libs.androidx.test.ext.junit)
     androidTestImplementation(libs.androidx.compose.ui.test.junit4)
@@ -304,9 +304,7 @@ kover {
                     "**.*Preview*", "**.*Screen*", "**.*Activity*", "**.*DialogState*"
                 )
                 classes(
-                    "**.notification.**", "**.*WidgetReceiver*",
-                    "**.*BasePresencialWidget*", "**.*WidgetSmall*",
-                    "**.*WidgetMedium*", "**.*WidgetLarge*", "**.widget.**",
+                    "**.notification.**",                     "**.*WidgetReceiver*", "**.*PresencialWidget*", "**.widget.**",
                     "**.worker.**", "**.data.export.**", "**.data.sync.**", "**.domain.location.**",
                     "**.data.location.**", "**.data.local.migration.**",
                     "**.*_Impl*", "**.*WidgetColors*"

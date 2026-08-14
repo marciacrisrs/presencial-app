@@ -6,3 +6,9 @@ enum class WidgetStatus {
     BEHIND,
     NO_GOAL
 }
+
+enum class WidgetTodayStatus {
+    PENDING,
+    PRESENCIAL,
+    HOME_OFFICE
+}

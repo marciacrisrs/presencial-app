@@ -34,7 +34,7 @@ class BootCompletedReceiver : BroadcastReceiver() {
             try {
                 handler.handleBootCompleted()
             } finally {
-                pendingResult.finish()
+                pendingResult?.finish()
             }
         }
     }

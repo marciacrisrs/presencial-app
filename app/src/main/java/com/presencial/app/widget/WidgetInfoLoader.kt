@@ -41,7 +41,7 @@ object WidgetInfoLoader {
             policy
         )
 
-        val checkIns = db.checkInDao().observeBetween(start, end).first()
+        val checkIns = db.checkInDao().getBetween(start, end)
         val completed = checkIns.count { it.status == DayStatus.PRESENCIAL.name }
         val remaining = GoalCalculator.calculateRemainingDays(completed, required)
         val remainingWorkdays = WorkdayCalculator.countRemainingWorkdays(
@@ -54,7 +54,11 @@ object WidgetInfoLoader {
             .toInt()
 
         val todayCheckIn = checkIns.find { it.dateEpochDay == today.toEpochDay() }
-        val todayIsPresencial = todayCheckIn?.status == DayStatus.PRESENCIAL.name
+        val todayStatus = when (todayCheckIn?.status) {
+            DayStatus.PRESENCIAL.name -> WidgetTodayStatus.PRESENCIAL
+            DayStatus.HOME_OFFICE.name -> WidgetTodayStatus.HOME_OFFICE
+            else -> WidgetTodayStatus.PENDING
+        }
         val todayIsWorkday = WorkdayCalculator.isWorkday(today, countSaturdays)
 
         return WidgetInfo.create(
@@ -63,7 +67,7 @@ object WidgetInfoLoader {
             remaining = remaining,
             remainingWorkdays = remainingWorkdays,
             achievedPercentage = achievedPercentage,
-            todayIsPresencial = todayIsPresencial,
+            todayStatus = todayStatus,
             todayIsWorkday = todayIsWorkday,
             yearMonth = yearMonth
         )

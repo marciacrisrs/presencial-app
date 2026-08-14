@@ -4,6 +4,7 @@ import app.cash.turbine.test
 import com.presencial.app.domain.model.Absence
 import com.presencial.app.domain.model.AbsenceType
 import com.presencial.app.domain.repository.AbsenceRepository
+import com.presencial.app.domain.widget.WidgetRefresher
 import com.presencial.app.util.MainDispatcherExtension
 import com.presencial.app.util.TestDataFactory
 import io.mockk.coEvery
@@ -26,12 +27,14 @@ class AbsenceViewModelTest {
     val mainDispatcherExtension = MainDispatcherExtension()
 
     private val repository = mockk<AbsenceRepository>()
+    private val widgetRefresher = mockk<WidgetRefresher>(relaxed = true)
     private lateinit var viewModel: AbsenceViewModel
 
     @BeforeEach
     fun setup() {
         every { repository.getAllAbsences() } returns flowOf(emptyList())
-        viewModel = AbsenceViewModel(repository)
+        coEvery { widgetRefresher.refresh() } returns Unit
+        viewModel = AbsenceViewModel(repository, widgetRefresher)
     }
 
     @Test
@@ -39,7 +42,7 @@ class AbsenceViewModelTest {
         val absenceList = listOf(TestDataFactory.createAbsence())
         every { repository.getAllAbsences() } returns flowOf(absenceList)
         
-        viewModel = AbsenceViewModel(repository)
+        viewModel = AbsenceViewModel(repository, widgetRefresher)
 
         viewModel.absences.test {
             assertEquals(absenceList, awaitItem())
@@ -75,6 +78,7 @@ class AbsenceViewModelTest {
             !it.isCounted
         }) }
         assertEquals("Registro adicionado com sucesso", viewModel.message.value)
+        coVerify { widgetRefresher.refresh() }
     }
 
     @Test
@@ -129,6 +133,7 @@ class AbsenceViewModelTest {
         viewModel.deleteAbsence(1L)
 
         coVerify { repository.deleteById(1L) }
+        coVerify { widgetRefresher.refresh() }
         assertEquals("Registro removido", viewModel.message.value)
     }
 

@@ -1,10 +1,8 @@
 package com.presencial.app.data.sync
 
-import android.content.ContentResolver
 import android.content.Context
 import android.content.Intent
 import android.net.Uri
-import android.provider.DocumentsContract
 import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.edit
@@ -45,11 +43,9 @@ class CloudFolderSyncProvider @Inject constructor(
             runCatching {
                 val treeUri = getTreeUri() ?: error("Selecione uma pasta na nuvem")
                 val resolver = context.contentResolver
-                val backupUri = findBackupUri(resolver, treeUri, fileName)
-                    ?: createBackupUri(resolver, treeUri, fileName)
-                resolver.openOutputStream(backupUri, "wt")?.use { stream ->
-                    stream.write(content)
-                } ?: error("Não foi possível gravar o backup na pasta")
+                val backupUri = CloudFolderDocuments.findBackupUri(resolver, treeUri, fileName)
+                    ?: CloudFolderDocuments.createBackupUri(resolver, treeUri, fileName)
+                CloudFolderDocuments.writeBackupContent(resolver, backupUri, content)
             }
         }
 
@@ -57,20 +53,25 @@ class CloudFolderSyncProvider @Inject constructor(
         withContext(ioDispatcher) {
             runCatching {
                 val treeUri = getTreeUri() ?: error("Selecione uma pasta na nuvem")
-                val backupUri = findBackupUri(context.contentResolver, treeUri, fileName)
+                val resolver = context.contentResolver
+                val backupUri = CloudFolderDocuments.findBackupUri(resolver, treeUri, fileName)
                     ?: error("Nenhum backup encontrado na pasta")
-                context.contentResolver.openInputStream(backupUri)?.use { it.readBytes() }
+                resolver.openInputStream(backupUri)?.use { it.readBytes() }
                     ?: error("Não foi possível ler o backup")
             }
         }
 
     suspend fun connectFolder(treeUri: Uri, selectedProvider: CloudStorageProvider) {
         val flags = Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_GRANT_WRITE_URI_PERMISSION
+        val resolver = context.contentResolver
         runCatching {
-            context.contentResolver.takePersistableUriPermission(treeUri, flags)
+            resolver.takePersistableUriPermission(treeUri, flags)
         }.getOrElse { error("Não foi possível acessar a pasta selecionada") }
-        require(hasPersistedPermission(treeUri)) { "Permissão da pasta não concedida" }
-        val label = readTreeDisplayName(treeUri) ?: selectedProvider.displayName
+        require(CloudFolderDocuments.hasPersistedPermission(resolver, treeUri)) {
+            "Permissão da pasta não concedida"
+        }
+        val label = CloudFolderDocuments.readTreeDisplayName(resolver, treeUri)
+            ?: selectedProvider.displayName
         dataStore.edit { prefs ->
             prefs[Keys.TREE_URI] = treeUri.toString()
             prefs[Keys.PROVIDER] = selectedProvider.name
@@ -80,7 +81,7 @@ class CloudFolderSyncProvider @Inject constructor(
 
     suspend fun isFolderAccessible(): Boolean {
         val treeUri = getTreeUri() ?: return false
-        return hasPersistedPermission(treeUri) && readTreeDisplayName(treeUri) != null
+        return CloudFolderDocuments.hasPersistedPermission(context.contentResolver, treeUri)
     }
 
     suspend fun selectedProvider(): CloudStorageProvider {
@@ -100,55 +101,6 @@ class CloudFolderSyncProvider @Inject constructor(
         return Uri.parse(value)
     }
 
-    private fun readTreeDisplayName(treeUri: Uri): String? = runCatching {
-        context.contentResolver.query(
-            treeUri,
-            arrayOf(DocumentsContract.Document.COLUMN_DISPLAY_NAME),
-            null,
-            null,
-            null
-        )?.use { cursor ->
-            if (cursor.moveToFirst()) cursor.getString(0) else null
-        }
-    }.getOrNull()
-
-    private fun hasPersistedPermission(treeUri: Uri): Boolean =
-        context.contentResolver.persistedUriPermissions.any { permission ->
-            permission.uri == treeUri &&
-                permission.isReadPermission &&
-                permission.isWritePermission
-        }
-
-    private fun findBackupUri(resolver: ContentResolver, treeUri: Uri, fileName: String): Uri? {
-        require(fileName == BACKUP_FILE_NAME) { "Nome de arquivo inválido" }
-        val docId = DocumentsContract.getTreeDocumentId(treeUri)
-        val childrenUri = DocumentsContract.buildChildDocumentsUriUsingTree(treeUri, docId)
-        resolver.query(
-            childrenUri,
-            arrayOf(
-                DocumentsContract.Document.COLUMN_DOCUMENT_ID,
-                DocumentsContract.Document.COLUMN_DISPLAY_NAME
-            ),
-            null,
-            null,
-            null
-        )?.use { cursor ->
-            val idColumn = cursor.getColumnIndexOrThrow(DocumentsContract.Document.COLUMN_DOCUMENT_ID)
-            val nameColumn = cursor.getColumnIndexOrThrow(DocumentsContract.Document.COLUMN_DISPLAY_NAME)
-            while (cursor.moveToNext()) {
-                if (cursor.getString(nameColumn) == fileName) {
-                    val documentId = cursor.getString(idColumn)
-                    return DocumentsContract.buildDocumentUriUsingTree(treeUri, documentId)
-                }
-            }
-        }
-        return null
-    }
-
-    private fun createBackupUri(resolver: ContentResolver, treeUri: Uri, fileName: String): Uri =
-        DocumentsContract.createDocument(resolver, treeUri, MIME_JSON, fileName)
-            ?: error("Não foi possível criar o arquivo de backup")
-
     private object Keys {
         val TREE_URI = stringPreferencesKey("cloud_sync_tree_uri")
         val PROVIDER = stringPreferencesKey("cloud_sync_provider")
@@ -156,7 +108,6 @@ class CloudFolderSyncProvider @Inject constructor(
     }
 
     companion object {
-        private const val MIME_JSON = "application/json"
         const val BACKUP_FILE_NAME = "presencial_backup.json"
     }
 }

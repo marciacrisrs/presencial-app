@@ -11,8 +11,10 @@ import com.presencial.app.domain.model.DayStatus
 import com.presencial.app.domain.repository.CheckInRepository
 import com.presencial.app.domain.repository.SettingsRepository
 import com.presencial.app.domain.util.WorkdayCalculator
+import com.presencial.app.domain.widget.WidgetRefresher
 import com.presencial.app.notification.NotificationHelper
 import io.mockk.coEvery
+import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.mockkObject
@@ -32,6 +34,7 @@ class CheckInReminderWorkerTest {
     private val checkInRepository: CheckInRepository = mockk()
     private val settingsRepository: SettingsRepository = mockk()
     private val notificationHelper: NotificationHelper = mockk(relaxed = true)
+    private val widgetRefresher: WidgetRefresher = mockk(relaxed = true)
 
     @Before
     fun setup() {
@@ -57,7 +60,8 @@ class CheckInReminderWorkerTest {
                         workerParameters,
                         checkInRepository,
                         settingsRepository,
-                        notificationHelper
+                        notificationHelper,
+                        widgetRefresher
                     )
                 }
             })
@@ -66,6 +70,7 @@ class CheckInReminderWorkerTest {
         val result = worker.doWork()
 
         assertEquals(ListenableWorker.Result.success(), result)
+        coVerify { widgetRefresher.refresh() }
         verify { notificationHelper.showCheckInReminder() }
     }
 }

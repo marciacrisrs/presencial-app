@@ -5,6 +5,7 @@ import androidx.lifecycle.viewModelScope
 import com.presencial.app.domain.model.Absence
 import com.presencial.app.domain.model.AbsenceType
 import com.presencial.app.domain.repository.AbsenceRepository
+import com.presencial.app.domain.widget.WidgetRefresher
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -16,7 +17,8 @@ import javax.inject.Inject
 
 @HiltViewModel
 class AbsenceViewModel @Inject constructor(
-    private val absenceRepository: AbsenceRepository
+    private val absenceRepository: AbsenceRepository,
+    private val widgetRefresher: WidgetRefresher
 ) : ViewModel() {
 
     val absences: StateFlow<List<Absence>> = absenceRepository.getAllAbsences()
@@ -50,6 +52,7 @@ class AbsenceViewModel @Inject constructor(
                     isCounted = false // Default to not counted for these types
                 )
             )
+            widgetRefresher.refresh()
             _message.value = "Registro adicionado com sucesso"
         }
     }
@@ -57,6 +60,7 @@ class AbsenceViewModel @Inject constructor(
     fun deleteAbsence(id: Long) {
         viewModelScope.launch {
             absenceRepository.deleteById(id)
+            widgetRefresher.refresh()
             _message.value = "Registro removido"
         }
     }

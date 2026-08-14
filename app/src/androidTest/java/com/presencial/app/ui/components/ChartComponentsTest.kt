@@ -45,10 +45,7 @@ class ChartComponentsTest {
         }
 
         composeTestRule.onNodeWithText("Comparecimento por mês").assertIsDisplayed()
-        
-        // O formato do mês abreviado em pt-BR geralmente é "jan." (com ponto)
-        // O texto completo deve ser "jan.: 50% (5/10)"
-        composeTestRule.onNodeWithText("jan.: 50% (5/10)").assertIsDisplayed()
+        composeTestRule.onNodeWithText("jan.: 50% (5/10 dias)").assertIsDisplayed()
     }
 
     @Test

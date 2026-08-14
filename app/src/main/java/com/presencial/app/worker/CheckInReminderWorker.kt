@@ -9,6 +9,7 @@ import com.presencial.app.domain.repository.CheckInRepository
 import com.presencial.app.domain.util.WorkdayCalculator
 import com.presencial.app.notification.NotificationHelper
 import com.presencial.app.domain.repository.SettingsRepository
+import com.presencial.app.domain.widget.WidgetRefresher
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedInject
 import kotlinx.coroutines.flow.first
@@ -20,10 +21,13 @@ class CheckInReminderWorker @AssistedInject constructor(
     @Assisted params: WorkerParameters,
     private val checkInRepository: CheckInRepository,
     private val settingsRepository: SettingsRepository,
-    private val notificationHelper: NotificationHelper
+    private val notificationHelper: NotificationHelper,
+    private val widgetRefresher: WidgetRefresher
 ) : CoroutineWorker(context, params) {
 
     override suspend fun doWork(): Result {
+        widgetRefresher.refresh()
+
         val today = LocalDate.now()
         val settings = settingsRepository.settings.first()
 

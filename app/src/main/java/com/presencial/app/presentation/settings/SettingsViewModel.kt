@@ -126,21 +126,25 @@ class SettingsViewModel @Inject constructor(
 
     fun uploadCloudBackup() {
         viewModelScope.launch {
-            cloudSyncRepository.uploadBackup()
+            runCatching { cloudSyncRepository.uploadBackup().getOrThrow() }
                 .onSuccess { _message.value = "Backup enviado para a nuvem!" }
-                .onFailure { _message.value = "Erro na sincronização: ${it.message}" }
+                .onFailure {
+                    _message.value = "Erro na sincronização: ${it.message ?: "Erro desconhecido"}"
+                }
         }
     }
 
     fun restoreCloudBackup() {
         viewModelScope.launch {
-            cloudSyncRepository.restoreBackup()
+            runCatching { cloudSyncRepository.restoreBackup().getOrThrow() }
                 .onSuccess {
                     syncGeofencesUseCase()
                     widgetRefresher.refresh()
                     _message.value = "Backup restaurado da nuvem!"
                 }
-                .onFailure { _message.value = "Erro na sincronização: ${it.message}" }
+                .onFailure {
+                    _message.value = "Erro na sincronização: ${it.message ?: "Erro desconhecido"}"
+                }
         }
     }
 
