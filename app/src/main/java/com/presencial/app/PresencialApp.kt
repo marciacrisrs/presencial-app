@@ -36,6 +36,7 @@ class PresencialApp : Application(), Configuration.Provider {
             .build()
 
     override fun onCreate() {
+        CrashlyticsAccess.ensureInitialized(this)
         super.onCreate()
         CrashlyticsAccess.getOrNull()?.isCrashlyticsCollectionEnabled = !BuildConfig.DEBUG
         crashReporter.log("PresencialApp started")
