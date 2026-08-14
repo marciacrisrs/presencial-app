@@ -80,7 +80,7 @@ class CloudFolderSyncProvider @Inject constructor(
 
     suspend fun isFolderAccessible(): Boolean {
         val treeUri = getTreeUri() ?: return false
-        return hasPersistedPermission(treeUri) && readTreeDisplayName(treeUri) != null
+        return hasPersistedPermission(treeUri)
     }
 
     suspend fun selectedProvider(): CloudStorageProvider {
@@ -101,6 +101,20 @@ class CloudFolderSyncProvider @Inject constructor(
     }
 
     private fun readTreeDisplayName(treeUri: Uri): String? = runCatching {
+        val documentUri = DocumentsContract.buildDocumentUriUsingTree(
+            treeUri,
+            DocumentsContract.getTreeDocumentId(treeUri)
+        )
+        context.contentResolver.query(
+            documentUri,
+            arrayOf(DocumentsContract.Document.COLUMN_DISPLAY_NAME),
+            null,
+            null,
+            null
+        )?.use { cursor ->
+            if (cursor.moveToFirst()) cursor.getString(0) else null
+        }
+    }.getOrNull() ?: runCatching {
         context.contentResolver.query(
             treeUri,
             arrayOf(DocumentsContract.Document.COLUMN_DISPLAY_NAME),

@@ -12,9 +12,9 @@ Complementar o SonarCloud com revisão de código baseada em IA em cada Pull Req
 2. Conceda acesso ao repositório `marciacrisrs/presencial-app`.
 3. Escolha **All repositories** ou apenas este repositório.
 
-## Configuração recomendada
+## Configuração no repositório
 
-Crie `.coderabbit.yaml` na raiz (opcional):
+O arquivo `.coderabbit.yaml` na raiz já está configurado:
 
 ```yaml
 language: pt-BR
@@ -30,6 +30,8 @@ reviews:
 chat:
   auto_reply: true
 ```
+
+Para alterar o comportamento, edite `.coderabbit.yaml` e abra um PR.
 
 ### Opções úteis
 
@@ -64,10 +66,20 @@ flowchart LR
 
 ## Critérios de aceite (#21)
 
-- [ ] GitHub App instalado no repositório
-- [ ] PR de teste recebe comentários automáticos
-- [ ] Comentários limitados ao diff do PR
-- [ ] Este documento referenciado no README
+| Critério | Status |
+|----------|--------|
+| `.coderabbit.yaml` com revisão automática habilitada | Concluído |
+| Documentação e referência no README | Concluído |
+| GitHub App instalado em `marciacrisrs/presencial-app` | **Pendente (manual)** |
+| PR de teste com comentários do bot | Pendente após instalar o app |
+| Comentários limitados ao diff do PR | Comportamento padrão do CodeRabbit |
+
+### Ativar revisões automáticas
+
+1. Instale o app em [github.com/apps/coderabbitai](https://github.com/apps/coderabbitai).
+2. Conceda acesso ao repositório `marciacrisrs/presencial-app`.
+3. Abra ou reabra um Pull Request — o bot deve comentar nas linhas alteradas em alguns minutos.
+4. Feche a issue #21 após validar o primeiro review.
 
 ## Referências
 

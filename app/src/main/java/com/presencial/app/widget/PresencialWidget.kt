@@ -1,7 +1,7 @@
 package com.presencial.app.widget
 
-import android.content.Intent
 import android.content.Context
+import android.content.Intent
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -31,24 +31,20 @@ import androidx.glance.unit.ColorProvider
 import com.presencial.app.MainActivity
 import com.presencial.app.R
 
-abstract class BasePresencialWidget(private val widgetSize: WidgetSize) : GlanceAppWidget() {
+class PresencialWidget : GlanceAppWidget() {
     override suspend fun provideGlance(context: Context, id: GlanceId) {
         val info = WidgetInfoLoader.load(context)
 
         provideContent {
             GlanceTheme {
-                WidgetContent(context, widgetSize, info)
+                WidgetContent(context, info)
             }
         }
     }
 }
 
-class PresencialWidgetSmall : BasePresencialWidget(WidgetSize.SMALL)
-class PresencialWidgetMedium : BasePresencialWidget(WidgetSize.MEDIUM)
-class PresencialWidgetLarge : BasePresencialWidget(WidgetSize.LARGE)
-
 @Composable
-private fun WidgetContent(context: Context, widgetSize: WidgetSize, info: WidgetInfo) {
+private fun WidgetContent(context: Context, info: WidgetInfo) {
     val colors = WidgetColors.from(context)
 
     val modifier = GlanceModifier
@@ -63,120 +59,6 @@ private fun WidgetContent(context: Context, widgetSize: WidgetSize, info: Widget
             )
         )
         .padding(WIDGET_PADDING.dp)
-
-    when (widgetSize) {
-        WidgetSize.SMALL -> SmallLayout(info, colors, modifier)
-        WidgetSize.MEDIUM -> MediumLayout(info, colors, modifier)
-        WidgetSize.LARGE -> LargeLayout(info, colors, modifier)
-    }
-}
-
-@Composable
-private fun SmallLayout(
-    info: WidgetInfo,
-    colors: WidgetColors,
-    modifier: GlanceModifier
-) {
-    val context = androidx.glance.LocalContext.current
-
-    Column(
-        modifier = modifier,
-        verticalAlignment = Alignment.Vertical.CenterVertically,
-        horizontalAlignment = Alignment.Horizontal.CenterHorizontally
-    ) {
-        Text(
-            text = headlineFor(info, context),
-            style = TextStyle(
-                color = colors.headline(info.status),
-                fontSize = 15.sp,
-                fontWeight = FontWeight.Bold,
-                textAlign = TextAlign.Center
-            )
-        )
-        if (info.status != WidgetStatus.GOAL_MET && info.required > 0) {
-            Spacer(modifier = GlanceModifier.height(4.dp))
-            Text(
-                text = context.getString(
-                    R.string.widget_compact_progress,
-                    info.completed,
-                    info.required
-                ),
-                style = TextStyle(
-                    color = colors.secondaryText,
-                    fontSize = 12.sp,
-                    textAlign = TextAlign.Center
-                )
-            )
-        }
-    }
-}
-
-@Composable
-private fun MediumLayout(
-    info: WidgetInfo,
-    colors: WidgetColors,
-    modifier: GlanceModifier
-) {
-    val context = androidx.glance.LocalContext.current
-
-    Column(
-        modifier = modifier,
-        verticalAlignment = Alignment.Vertical.CenterVertically,
-        horizontalAlignment = Alignment.Horizontal.CenterHorizontally
-    ) {
-        Text(
-            text = context.getString(
-                R.string.widget_progress_format,
-                info.completed,
-                info.required
-            ),
-            style = TextStyle(
-                color = colors.success,
-                fontSize = 24.sp,
-                fontWeight = FontWeight.Bold,
-                textAlign = TextAlign.Center
-            )
-        )
-
-        if (info.required > 0) {
-            Spacer(modifier = GlanceModifier.height(8.dp))
-            LinearProgressIndicator(
-                progress = info.progressFraction,
-                modifier = GlanceModifier.fillMaxWidth().height(5.dp),
-                color = colors.accent(info.status),
-                backgroundColor = colors.secondaryText
-            )
-            Spacer(modifier = GlanceModifier.height(8.dp))
-            Text(
-                text = context.getString(R.string.widget_percentage_format, info.achievedPercentage),
-                style = TextStyle(
-                    color = colors.secondaryText,
-                    fontSize = 12.sp,
-                    textAlign = TextAlign.Center
-                )
-            )
-        }
-
-        Spacer(modifier = GlanceModifier.height(4.dp))
-        Text(
-            text = headlineFor(info, context),
-            style = TextStyle(
-                color = colors.headline(info.status),
-                fontSize = 13.sp,
-                fontWeight = FontWeight.Medium,
-                textAlign = TextAlign.Center
-            )
-        )
-    }
-}
-
-@Composable
-private fun LargeLayout(
-    info: WidgetInfo,
-    colors: WidgetColors,
-    modifier: GlanceModifier
-) {
-    val context = androidx.glance.LocalContext.current
 
     Column(
         modifier = modifier,
@@ -301,14 +183,6 @@ private data class WidgetColors(
 private const val WIDGET_CORNER_RADIUS = 24
 private const val WIDGET_PADDING = 12
 
-class PresencialWidgetReceiverSmall : GlanceAppWidgetReceiver() {
-    override val glanceAppWidget: GlanceAppWidget = PresencialWidgetSmall()
-}
-
-class PresencialWidgetReceiverMedium : GlanceAppWidgetReceiver() {
-    override val glanceAppWidget: GlanceAppWidget = PresencialWidgetMedium()
-}
-
-class PresencialWidgetReceiverLarge : GlanceAppWidgetReceiver() {
-    override val glanceAppWidget: GlanceAppWidget = PresencialWidgetLarge()
+class PresencialWidgetReceiver : GlanceAppWidgetReceiver() {
+    override val glanceAppWidget: GlanceAppWidget = PresencialWidget()
 }

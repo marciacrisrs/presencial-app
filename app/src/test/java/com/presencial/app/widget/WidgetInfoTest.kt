@@ -1,7 +1,6 @@
 package com.presencial.app.widget
 
 import org.junit.jupiter.api.Assertions.assertEquals
-import org.junit.jupiter.api.Assertions.assertNotNull
 import org.junit.jupiter.api.Test
 import java.time.Month
 import java.time.YearMonth
@@ -93,14 +92,6 @@ class WidgetInfoTest {
             locale = Locale.US
         )
         assertEquals("AUGUST", info.monthName)
-    }
-
-    @Test
-    fun `should cover WidgetSize enum`() {
-        assertEquals(3, WidgetSize.entries.size)
-        WidgetSize.entries.forEach {
-            assertNotNull(it.displayName)
-        }
     }
 
     @Test

@@ -304,9 +304,7 @@ kover {
                     "**.*Preview*", "**.*Screen*", "**.*Activity*", "**.*DialogState*"
                 )
                 classes(
-                    "**.notification.**", "**.*WidgetReceiver*",
-                    "**.*BasePresencialWidget*", "**.*WidgetSmall*",
-                    "**.*WidgetMedium*", "**.*WidgetLarge*", "**.widget.**",
+                    "**.notification.**",                     "**.*WidgetReceiver*", "**.*PresencialWidget*", "**.widget.**",
                     "**.worker.**", "**.data.export.**", "**.data.sync.**", "**.domain.location.**",
                     "**.data.location.**", "**.data.local.migration.**",
                     "**.*_Impl*", "**.*WidgetColors*"

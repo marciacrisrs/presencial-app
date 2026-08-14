@@ -69,6 +69,27 @@ class CloudSyncRepositoryImplTest {
     }
 
     @Test
+    fun `uploadBackup keeps last sync after refresh when folder remains accessible`() = runTest {
+        val payload = """{"version":3}""".toByteArray()
+        val syncTime = 1_700_000_000_000L
+        coEvery { backupManager.exportToBytes() } returns Result.success(payload)
+        coEvery {
+            folderSyncProvider.uploadBackup(CloudSyncRepositoryImpl.BACKUP_FILE_NAME, payload)
+        } returns Result.success(Unit)
+        coEvery { preferences.setLastSyncEpochMillis(any()) } coAnswers {
+            coEvery { preferences.getLastSyncEpochMillis() } returns syncTime
+        }
+        coEvery { folderSyncProvider.isFolderAccessible() } returns true
+
+        repository.uploadBackup()
+
+        assertEquals(syncTime, repository.syncState.value.lastSyncEpochMillis)
+        assertTrue(repository.syncState.value.isSignedIn)
+        coVerify(exactly = 0) { folderSyncProvider.signOut() }
+        coVerify(exactly = 0) { preferences.clearLastSyncEpochMillis() }
+    }
+
+    @Test
     fun `refreshState clears connection when folder is no longer accessible`() = runTest {
         coEvery { folderSyncProvider.isSignedIn() } returnsMany listOf(true, false)
         coEvery { folderSyncProvider.isFolderAccessible() } returns false
