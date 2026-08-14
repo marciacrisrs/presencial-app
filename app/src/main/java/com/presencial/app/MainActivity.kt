@@ -15,6 +15,7 @@ import com.presencial.app.presentation.navigation.PresencialNavHost
 import com.presencial.app.ui.theme.PresencialTheme
 import dagger.hilt.android.AndroidEntryPoint
 import javax.inject.Inject
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -60,7 +61,7 @@ class MainActivity : ComponentActivity() {
 
     private fun refreshWidget() {
         lifecycleScope.launch {
-            withContext(NonCancellable) {
+            withContext(NonCancellable + Dispatchers.IO) {
                 widgetRefresher.refresh()
             }
         }

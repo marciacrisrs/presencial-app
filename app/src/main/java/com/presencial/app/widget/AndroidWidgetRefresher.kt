@@ -11,6 +11,6 @@ class AndroidWidgetRefresher @Inject constructor(
     @ApplicationContext private val context: Context
 ) : WidgetRefresher {
     override suspend fun refresh() {
-        WidgetUpdater.updateAll(context)
+        runCatching { WidgetUpdater.updateAll(context) }
     }
 }

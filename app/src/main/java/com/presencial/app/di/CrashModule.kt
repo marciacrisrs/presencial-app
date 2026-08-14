@@ -1,7 +1,6 @@
 package com.presencial.app.di
 
-import com.google.firebase.crashlytics.FirebaseCrashlytics
-import com.presencial.app.BuildConfig
+import com.presencial.app.data.crash.CrashlyticsAccess
 import com.presencial.app.data.crash.FirebaseCrashReporter
 import com.presencial.app.data.crash.NoOpCrashReporter
 import com.presencial.app.domain.util.CrashReporter
@@ -19,9 +18,8 @@ object CrashModule {
     @Singleton
     fun provideCrashReporter(
         noOpCrashReporter: NoOpCrashReporter
-    ): CrashReporter = if (BuildConfig.CRASHLYTICS_ENABLED) {
-        FirebaseCrashReporter(FirebaseCrashlytics.getInstance())
-    } else {
-        noOpCrashReporter
+    ): CrashReporter {
+        val crashlytics = CrashlyticsAccess.getOrNull() ?: return noOpCrashReporter
+        return FirebaseCrashReporter(crashlytics)
     }
 }

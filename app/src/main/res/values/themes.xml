@@ -11,7 +11,7 @@
     </style>
     <style name="Theme.Presencial.Splash" parent="Theme.SplashScreen">
         <item name="windowSplashScreenBackground">#0C0F0D</item>
-        <item name="windowSplashScreenAnimatedIcon">@drawable/splash_icon</item>
+        <item name="windowSplashScreenAnimatedIcon">@mipmap/splash_icon</item>
         <item name="postSplashScreenTheme">@style/Theme.Presencial</item>
     </style>
 </resources>
