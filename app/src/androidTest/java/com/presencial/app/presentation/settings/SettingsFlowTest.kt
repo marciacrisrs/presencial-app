@@ -1,13 +1,19 @@
 package com.presencial.app.presentation.settings
 
 import androidx.compose.ui.test.assertIsDisplayed
+import androidx.compose.ui.test.hasAnyDescendant
+import androidx.compose.ui.test.hasParent
+import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.isToggleable
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
+import androidx.compose.ui.test.performScrollTo
 import com.presencial.app.domain.model.AppSettings
+import com.presencial.app.domain.model.CloudSyncState
 import com.presencial.app.domain.model.PolicyValidationResult
 import com.presencial.app.domain.model.PresencePolicy
+import com.presencial.app.domain.model.WorkAddress
 import com.presencial.app.ui.theme.PresencialTheme
 import io.mockk.every
 import io.mockk.mockk
@@ -25,14 +31,17 @@ class SettingsFlowTest {
     private val viewModel = mockk<SettingsViewModel>(relaxed = true)
     private val settingsFlow = MutableStateFlow(AppSettings())
     private val messageFlow = MutableStateFlow<String?>(null)
-
+    private val workAddressesFlow = MutableStateFlow<List<WorkAddress>>(emptyList())
     private val policyValidationFlow = MutableStateFlow(PolicyValidationResult(isValid = true))
+    private val cloudSyncStateFlow = MutableStateFlow(CloudSyncState())
 
     @Before
     fun setup() {
         every { viewModel.settings } returns settingsFlow
         every { viewModel.message } returns messageFlow
+        every { viewModel.workAddresses } returns workAddressesFlow
         every { viewModel.policyValidation } returns policyValidationFlow
+        every { viewModel.cloudSyncState } returns cloudSyncStateFlow
     }
 
     @Test
@@ -46,7 +55,7 @@ class SettingsFlowTest {
     fun changingPolicyPercentage_triggersViewModelUpdate() {
         startSettingsScreen()
 
-        composeTestRule.onNodeWithText("60%").performClick()
+        composeTestRule.onNodeWithText("60%").performScrollTo().performClick()
         verify { viewModel.updatePresencePolicy(match { it.freePercentage == 60 }) }
     }
 
@@ -54,8 +63,9 @@ class SettingsFlowTest {
     fun togglingSaturdays_triggersViewModelUpdate() {
         startSettingsScreen()
 
-        // O Switch pode ser encontrado pelo seu estado de toggle
-        composeTestRule.onNode(isToggleable()).performClick()
+        composeTestRule.onNode(
+            isToggleable() and hasParent(hasAnyDescendant(hasText("Sábados como dias úteis")))
+        ).performScrollTo().performClick()
         verify { viewModel.updateSaturdays(any()) }
     }
 
@@ -65,7 +75,7 @@ class SettingsFlowTest {
         startSettingsScreen(onNavigateToAbout = { navigatedToAbout = true })
 
         // "Sobre o Aplicativo" está dentro de um Card de configurações extras
-        composeTestRule.onNodeWithText("Sobre o Aplicativo").performClick()
+        composeTestRule.onNodeWithText("Sobre o Aplicativo").performScrollTo().performClick()
         
         assert(navigatedToAbout)
     }

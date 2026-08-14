@@ -5,12 +5,14 @@ import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
+import androidx.compose.ui.test.performScrollTo
 import com.presencial.app.domain.model.DashboardData
 import com.presencial.app.ui.theme.PresencialTheme
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.emptyFlow
 import org.junit.Assert.assertTrue
 import org.junit.Rule
 import org.junit.Test
@@ -28,6 +30,7 @@ class DashboardScreenTest {
     init {
         every { viewModel.dashboardData } returns dashboardData
         every { viewModel.workAddresses } returns workAddresses
+        every { viewModel.uiEvents } returns emptyFlow()
     }
 
     @Test
@@ -61,7 +64,9 @@ class DashboardScreenTest {
         composeTestRule.onNodeWithText("Agosto 2026").assertIsDisplayed()
         
         // Verify main action is shown
-        composeTestRule.onNodeWithText("Registrar Presença Hoje").assertIsDisplayed()
+        composeTestRule.onNodeWithText("Registrar presença hoje")
+            .performScrollTo()
+            .assertIsDisplayed()
     }
 
     @Test
@@ -74,7 +79,9 @@ class DashboardScreenTest {
             }
         }
 
-        composeTestRule.onNodeWithText("Registrar Presença Hoje").performClick()
+        composeTestRule.onNodeWithText("Registrar presença hoje")
+            .performScrollTo()
+            .performClick()
 
         verify { viewModel.toggleTodayCheckIn(true) }
     }

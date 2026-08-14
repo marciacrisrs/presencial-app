@@ -96,7 +96,7 @@ class DashboardComponentsTest {
                 CheckInButton(isPresencial = false, onConfirm = {})
             }
         }
-        composeTestRule.onNodeWithText("Registrar Presença Hoje").assertIsDisplayed()
+        composeTestRule.onNodeWithText("Registrar presença hoje").assertIsDisplayed()
     }
 
     @Test
@@ -106,7 +106,7 @@ class DashboardComponentsTest {
                 CheckInButton(isPresencial = true, onConfirm = {})
             }
         }
-        composeTestRule.onNodeWithText("Presença Registrada").assertIsDisplayed()
+        composeTestRule.onNodeWithText("Presença registrada").assertIsDisplayed()
     }
 
     @Test

@@ -126,7 +126,7 @@ class CalendarComponentsTest {
         val colorRedFaltou = Color(0xFFD93025).copy(alpha = 0.7f)
         val colorOrange = Color(0xFFFF8C00)
         val colorYellow = Color(0xFFF9AB00)
-        val colorBlueToday = Color(0xFF1A73E8).copy(alpha = 0.3f)
+        val colorBlueToday = Color(0xFF1A73E8).copy(alpha = 0.12f)
 
         // Case: isToday = true, not marked as PRESENCIAL or ABSENCE
         assertEquals(colorBlueToday, dayColor(DayStatus.FUTURO, true))
