@@ -1,13 +1,16 @@
 package com.presencial.app.presentation.location
 
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.test.assertIsEnabled
 import androidx.compose.ui.test.assertIsNotEnabled
+import androidx.compose.ui.test.junit4.ComposeContentTestRule
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performTextInput
 import com.presencial.app.domain.model.WorkAddress
+import com.presencial.app.presentation.location.components.LocalSkipLocationMap
 import com.presencial.app.presentation.location.model.WorkAddressViewModel
 import io.mockk.every
 import io.mockk.mockk
@@ -45,9 +48,7 @@ class WorkAddressFlowTest {
     fun workAddressScreen_initialState_showsEmptyMessage() {
         addressesFlow.value = emptyList()
 
-        composeTestRule.setContent {
-            WorkAddressScreen(viewModel = viewModel, onBack = {})
-        }
+        composeTestRule.setScreen()
 
         composeTestRule.onNodeWithText("Nenhum local cadastrado").assertExists()
     }
@@ -63,9 +64,7 @@ class WorkAddressFlowTest {
         )
         addressesFlow.value = listOf(address)
 
-        composeTestRule.setContent {
-            WorkAddressScreen(viewModel = viewModel, onBack = {})
-        }
+        composeTestRule.setScreen()
 
         composeTestRule.onNodeWithText("Escritório").assertExists()
         composeTestRule.onNodeWithText("Rua A, 123").assertExists()
@@ -73,9 +72,7 @@ class WorkAddressFlowTest {
 
     @Test
     fun clickingFAB_opensNewLocationDialog() {
-        composeTestRule.setContent {
-            WorkAddressScreen(viewModel = viewModel, onBack = {})
-        }
+        composeTestRule.setScreen()
 
         composeTestRule.onNodeWithContentDescription("Adicionar").performClick()
 
@@ -90,13 +87,11 @@ class WorkAddressFlowTest {
     fun dialogValidation_saveButtonDisabledWithoutCoordinates() {
         editingAddressFlow.value = WorkAddress(name = "", addressText = "", latitude = 0.0, longitude = 0.0)
 
-        composeTestRule.setContent {
-            WorkAddressScreen(viewModel = viewModel, onBack = {})
-        }
+        composeTestRule.setScreen()
 
         composeTestRule.onNodeWithText("Salvar Local").assertIsNotEnabled()
 
-        composeTestRule.onNodeWithText("Nome do Local").performTextInput("Meu Trabalho")
+        composeTestRule.onNodeWithText(NAME_FIELD_LABEL).performTextInput("Meu Trabalho")
 
         composeTestRule.onNodeWithText("Salvar Local").assertIsNotEnabled()
     }
@@ -111,11 +106,9 @@ class WorkAddressFlowTest {
         )
         geocodedLocationFlow.value = -23.0 to -46.0
 
-        composeTestRule.setContent {
-            WorkAddressScreen(viewModel = viewModel, onBack = {})
-        }
+        composeTestRule.setScreen()
 
-        composeTestRule.onNodeWithText("Nome do Local").performTextInput("Meu Trabalho")
+        composeTestRule.onNodeWithText(NAME_FIELD_LABEL).performTextInput("Meu Trabalho")
 
         composeTestRule.onNodeWithText("Salvar Local").assertIsEnabled()
     }
@@ -130,11 +123,9 @@ class WorkAddressFlowTest {
         )
         geocodedLocationFlow.value = -23.0 to -46.0
 
-        composeTestRule.setContent {
-            WorkAddressScreen(viewModel = viewModel, onBack = {})
-        }
+        composeTestRule.setScreen()
 
-        composeTestRule.onNodeWithText("Nome do Local").performTextInput("Escritório Central")
+        composeTestRule.onNodeWithText(NAME_FIELD_LABEL).performTextInput("Escritório Central")
         composeTestRule.onNodeWithText("Salvar Local").performClick()
 
         verify {
@@ -149,4 +140,14 @@ class WorkAddressFlowTest {
             )
         }
     }
+
+    private fun ComposeContentTestRule.setScreen() {
+        setContent {
+            CompositionLocalProvider(LocalSkipLocationMap provides true) {
+                WorkAddressScreen(viewModel = viewModel, onBack = {})
+            }
+        }
+    }
 }
+
+private const val NAME_FIELD_LABEL = "Nome (ex: Escritório)"
