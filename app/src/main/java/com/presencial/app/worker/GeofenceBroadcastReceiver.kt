@@ -58,7 +58,7 @@ class GeofenceBroadcastReceiver : BroadcastReceiver() {
                     AutoCheckInResult.Success -> Unit
                 }
             } finally {
-                pendingResult.finish()
+                pendingResult?.finish()
             }
         }
     }

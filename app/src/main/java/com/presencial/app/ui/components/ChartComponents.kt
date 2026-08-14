@@ -43,7 +43,7 @@ fun MonthlyBarChart(
         return
     }
 
-    val locale = Locale.getDefault()
+    val locale = Locale.forLanguageTag("pt-BR")
     val monthSummaries = summaries.takeLast(MAX_VISIBLE_MONTHS).map { summary ->
         val month = summary.yearMonth.month.getDisplayName(TextStyle.SHORT, locale)
         stringResource(

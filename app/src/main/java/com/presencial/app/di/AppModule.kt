@@ -1,7 +1,6 @@
 package com.presencial.app.di
 
 import android.content.Context
-import androidx.room.Room
 import com.presencial.app.data.local.PresencialDatabase
 import com.google.android.gms.location.FusedLocationProviderClient
 import com.google.android.gms.location.LocationServices
@@ -19,8 +18,6 @@ import com.presencial.app.domain.repository.CheckInRepository
 import com.presencial.app.domain.repository.MonthlySummaryRepository
 import com.presencial.app.domain.repository.SettingsRepository
 import com.presencial.app.data.location.AndroidGeocodingHelper
-import com.presencial.app.data.local.migration.MIGRATION_3_4
-import com.presencial.app.data.local.migration.MIGRATION_4_5
 import com.presencial.app.domain.location.GeocodingHelper
 import com.presencial.app.domain.repository.WorkAddressRepository
 import com.presencial.app.domain.util.DefaultTimeProvider
@@ -84,10 +81,7 @@ object DatabaseModule {
     @Provides
     @Singleton
     fun provideDatabase(@ApplicationContext context: Context): PresencialDatabase =
-        Room.databaseBuilder(context, PresencialDatabase::class.java, "presencial.db")
-            .addMigrations(MIGRATION_3_4, MIGRATION_4_5)
-            .fallbackToDestructiveMigration(dropAllTables = false)
-            .build()
+        PresencialDatabase.getInstance(context)
 
     @Provides
     fun provideCheckInDao(db: PresencialDatabase): CheckInDao = db.checkInDao()

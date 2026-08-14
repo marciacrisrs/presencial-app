@@ -13,6 +13,7 @@ import com.presencial.app.data.local.entity.CheckInEntity
 import com.presencial.app.data.local.entity.MonthlySummaryEntity
 import com.presencial.app.data.local.entity.WorkAddressEntity
 import com.presencial.app.data.local.migration.MIGRATION_3_4
+import com.presencial.app.data.local.migration.MIGRATION_4_5
 
 @Database(
     entities = [CheckInEntity::class, MonthlySummaryEntity::class, AbsenceEntity::class, WorkAddressEntity::class],
@@ -39,7 +40,10 @@ abstract class PresencialDatabase : RoomDatabase() {
                         context.applicationContext,
                         PresencialDatabase::class.java,
                         "presencial.db"
-                    ).fallbackToDestructiveMigration(dropAllTables = true).build()
+                    )
+                        .addMigrations(MIGRATION_3_4, MIGRATION_4_5)
+                        .fallbackToDestructiveMigration(dropAllTables = false)
+                        .build()
                     INSTANCE = newInstance
                     newInstance
                 }

@@ -266,7 +266,7 @@ dependencies {
 
     // Android Instrumentation Tests
     androidTestImplementation(platform(libs.androidx.compose.bom))
-    androidTestImplementation(libs.mockk)
+    androidTestImplementation(libs.mockk.android)
     androidTestImplementation(libs.androidx.espresso.core)
     androidTestImplementation(libs.androidx.test.ext.junit)
     androidTestImplementation(libs.androidx.compose.ui.test.junit4)

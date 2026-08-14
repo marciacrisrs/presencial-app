@@ -11,6 +11,7 @@
     <string name="widget_goal_met">Meta atingida! 🎉</string>
     <string name="widget_configure_goal">Configure sua meta</string>
     <string name="widget_today_presencial">Hoje: presencial ✓</string>
+    <string name="widget_today_home_office">Hoje: home office</string>
     <string name="widget_today_pending">Hoje: pendente</string>
     <string name="widget_preview_month">PRESENÇA EM AGOSTO</string>
     <string name="widget_preview_progress">8 / 13 presenciais</string>

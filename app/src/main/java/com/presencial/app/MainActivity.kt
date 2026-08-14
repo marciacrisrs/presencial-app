@@ -15,7 +15,9 @@ import com.presencial.app.presentation.navigation.PresencialNavHost
 import com.presencial.app.ui.theme.PresencialTheme
 import dagger.hilt.android.AndroidEntryPoint
 import javax.inject.Inject
+import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
@@ -48,8 +50,19 @@ class MainActivity : ComponentActivity() {
 
     override fun onResume() {
         super.onResume()
+        refreshWidget()
+    }
+
+    override fun onStop() {
+        super.onStop()
+        refreshWidget()
+    }
+
+    private fun refreshWidget() {
         lifecycleScope.launch {
-            widgetRefresher.refresh()
+            withContext(NonCancellable) {
+                widgetRefresher.refresh()
+            }
         }
     }
 

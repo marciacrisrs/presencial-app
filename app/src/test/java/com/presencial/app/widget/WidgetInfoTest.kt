@@ -16,7 +16,7 @@ class WidgetInfoTest {
         remaining: Int = 5,
         remainingWorkdays: Int = 8,
         achievedPercentage: Int = 50,
-        todayIsPresencial: Boolean = false,
+        todayStatus: WidgetTodayStatus = WidgetTodayStatus.PENDING,
         todayIsWorkday: Boolean = true,
         yearMonth: YearMonth = YearMonth.of(2026, Month.AUGUST)
     ) = WidgetInfo.create(
@@ -25,7 +25,7 @@ class WidgetInfoTest {
         remaining = remaining,
         remainingWorkdays = remainingWorkdays,
         achievedPercentage = achievedPercentage,
-        todayIsPresencial = todayIsPresencial,
+        todayStatus = todayStatus,
         todayIsWorkday = todayIsWorkday,
         yearMonth = yearMonth,
         locale = locale
@@ -86,7 +86,7 @@ class WidgetInfoTest {
             remaining = 0,
             remainingWorkdays = 1,
             achievedPercentage = 100,
-            todayIsPresencial = true,
+            todayStatus = WidgetTodayStatus.PRESENCIAL,
             todayIsWorkday = true,
             yearMonth = YearMonth.of(2026, Month.AUGUST),
             locale = Locale.US

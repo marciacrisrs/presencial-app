@@ -3,13 +3,15 @@ package com.presencial.app.domain.usecase
 import com.presencial.app.domain.model.DayStatus
 import com.presencial.app.domain.repository.CheckInRepository
 import com.presencial.app.domain.repository.MonthlySummaryRepository
+import com.presencial.app.domain.widget.WidgetRefresher
 import java.time.LocalDate
 import java.time.YearMonth
 import javax.inject.Inject
 
 class UpdateDayStatusUseCase @Inject constructor(
     private val checkInRepository: CheckInRepository,
-    private val monthlySummaryRepository: MonthlySummaryRepository
+    private val monthlySummaryRepository: MonthlySummaryRepository,
+    private val widgetRefresher: WidgetRefresher
 ) {
     suspend operator fun invoke(date: LocalDate, status: DayStatus, source: String = "MANUAL") {
         when (status) {
@@ -19,5 +21,6 @@ class UpdateDayStatusUseCase @Inject constructor(
             else -> checkInRepository.deleteCheckIn(date)
         }
         monthlySummaryRepository.refreshSummary(YearMonth.from(date))
+        widgetRefresher.refresh()
     }
 }

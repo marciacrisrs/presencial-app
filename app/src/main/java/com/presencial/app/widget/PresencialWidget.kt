@@ -15,18 +15,23 @@ import androidx.glance.appwidget.GlanceAppWidgetReceiver
 import androidx.glance.appwidget.action.actionStartActivity
 import androidx.glance.appwidget.cornerRadius
 import androidx.glance.appwidget.provideContent
+import androidx.glance.appwidget.state.updateAppWidgetState
 import androidx.glance.background
+import androidx.glance.currentState
 import androidx.glance.layout.Alignment
 import androidx.glance.layout.Column
 import androidx.glance.layout.Spacer
 import androidx.glance.layout.fillMaxSize
 import androidx.glance.layout.height
 import androidx.glance.layout.padding
+import androidx.glance.state.GlanceStateDefinition
+import androidx.glance.state.PreferencesGlanceStateDefinition
 import androidx.glance.text.FontWeight
 import androidx.glance.text.Text
 import androidx.glance.text.TextAlign
 import androidx.glance.text.TextStyle
 import androidx.glance.unit.ColorProvider
+import androidx.datastore.preferences.core.Preferences
 import com.presencial.app.MainActivity
 import com.presencial.app.R
 import kotlinx.coroutines.CoroutineScope
@@ -35,10 +40,17 @@ import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.launch
 
 class PresencialWidget : GlanceAppWidget() {
-    override suspend fun provideGlance(context: Context, id: GlanceId) {
-        val info = WidgetInfoLoader.load(context)
+    override val stateDefinition: GlanceStateDefinition<*> = PreferencesGlanceStateDefinition
 
+    override suspend fun provideGlance(context: Context, id: GlanceId) {
+        val loaded = WidgetInfoLoader.load(context)
+        updateAppWidgetState(context, PreferencesGlanceStateDefinition, id) { prefs ->
+            prefs.toMutablePreferences().apply {
+                WidgetGlanceState.write(this, loaded)
+            }
+        }
         provideContent {
+            val info = WidgetGlanceState.read(currentState<Preferences>()) ?: loaded
             GlanceTheme {
                 WidgetContent(info)
             }
@@ -110,19 +122,25 @@ private fun WidgetContent(info: WidgetInfo) {
         if (info.todayIsWorkday) {
             Spacer(modifier = GlanceModifier.height(4.dp))
             Text(
-                text = if (info.todayIsPresencial) {
-                    context.getString(R.string.widget_today_presencial)
-                } else {
-                    context.getString(R.string.widget_today_pending)
-                },
+                text = todayLabel(info.todayStatus, context),
                 style = TextStyle(
-                    color = if (info.todayIsPresencial) colors.success else colors.secondaryText,
+                    color = when (info.todayStatus) {
+                        WidgetTodayStatus.PRESENCIAL -> colors.success
+                        WidgetTodayStatus.HOME_OFFICE -> colors.primaryText
+                        WidgetTodayStatus.PENDING -> colors.secondaryText
+                    },
                     fontSize = 10.sp,
                     textAlign = TextAlign.Center
                 )
             )
         }
     }
+}
+
+private fun todayLabel(status: WidgetTodayStatus, context: Context): String = when (status) {
+    WidgetTodayStatus.PRESENCIAL -> context.getString(R.string.widget_today_presencial)
+    WidgetTodayStatus.HOME_OFFICE -> context.getString(R.string.widget_today_home_office)
+    WidgetTodayStatus.PENDING -> context.getString(R.string.widget_today_pending)
 }
 
 private fun headlineFor(info: WidgetInfo, context: Context): String = when (info.status) {
@@ -168,14 +186,11 @@ class PresencialWidgetReceiver : GlanceAppWidgetReceiver() {
         appWidgetManager: AppWidgetManager,
         appWidgetIds: IntArray
     ) {
+        // GlanceAppWidgetReceiver already calls goAsync(); a second call returns null
+        // and pendingResult.finish() crashes the process on Samsung.
         super.onUpdate(context, appWidgetManager, appWidgetIds)
-        val pendingResult = goAsync()
         CoroutineScope(SupervisorJob() + Dispatchers.IO).launch {
-            try {
-                WidgetUpdater.updateAll(context)
-            } finally {
-                pendingResult.finish()
-            }
+            WidgetUpdater.updateAll(context)
         }
     }
 }

@@ -3,6 +3,7 @@ package com.presencial.app.domain.usecase
 import com.presencial.app.domain.model.DayStatus
 import com.presencial.app.domain.repository.CheckInRepository
 import com.presencial.app.domain.repository.MonthlySummaryRepository
+import com.presencial.app.domain.widget.WidgetRefresher
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.mockk
@@ -16,11 +17,17 @@ class UpdateDayStatusUseCaseTest {
 
     private val checkInRepository: CheckInRepository = mockk()
     private val monthlySummaryRepository: MonthlySummaryRepository = mockk()
+    private val widgetRefresher: WidgetRefresher = mockk()
     private lateinit var useCase: UpdateDayStatusUseCase
 
     @BeforeEach
     fun setup() {
-        useCase = UpdateDayStatusUseCase(checkInRepository, monthlySummaryRepository)
+        coEvery { widgetRefresher.refresh() } returns Unit
+        useCase = UpdateDayStatusUseCase(
+            checkInRepository,
+            monthlySummaryRepository,
+            widgetRefresher
+        )
     }
 
     @Test
@@ -36,6 +43,7 @@ class UpdateDayStatusUseCaseTest {
         // Assert
         coVerify { checkInRepository.saveCheckIn(date, DayStatus.PRESENCIAL, "MANUAL") }
         coVerify { monthlySummaryRepository.refreshSummary(YearMonth.of(2026, 8)) }
+        coVerify { widgetRefresher.refresh() }
     }
 
     @Test
@@ -51,6 +59,7 @@ class UpdateDayStatusUseCaseTest {
         // Assert
         coVerify { checkInRepository.saveCheckIn(date, DayStatus.HOME_OFFICE, "MANUAL") }
         coVerify { monthlySummaryRepository.refreshSummary(YearMonth.of(2026, 8)) }
+        coVerify { widgetRefresher.refresh() }
     }
 
     @Test
@@ -66,5 +75,6 @@ class UpdateDayStatusUseCaseTest {
         // Assert
         coVerify { checkInRepository.deleteCheckIn(date) }
         coVerify { monthlySummaryRepository.refreshSummary(YearMonth.of(2026, 8)) }
+        coVerify { widgetRefresher.refresh() }
     }
 }

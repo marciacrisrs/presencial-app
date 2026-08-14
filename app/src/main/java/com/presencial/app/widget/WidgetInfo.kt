@@ -12,7 +12,7 @@ data class WidgetInfo(
     val monthName: String,
     val achievedPercentage: Int,
     val status: WidgetStatus,
-    val todayIsPresencial: Boolean,
+    val todayStatus: WidgetTodayStatus,
     val todayIsWorkday: Boolean
 ) {
     companion object {
@@ -22,7 +22,7 @@ data class WidgetInfo(
             remaining: Int,
             remainingWorkdays: Int,
             achievedPercentage: Int,
-            todayIsPresencial: Boolean,
+            todayStatus: WidgetTodayStatus,
             todayIsWorkday: Boolean,
             yearMonth: YearMonth,
             locale: Locale = Locale.getDefault()
@@ -41,7 +41,7 @@ data class WidgetInfo(
                 monthName = monthName,
                 achievedPercentage = achievedPercentage,
                 status = resolveStatus(required, remaining, remainingWorkdays),
-                todayIsPresencial = todayIsPresencial,
+                todayStatus = todayStatus,
                 todayIsWorkday = todayIsWorkday
             )
         }
