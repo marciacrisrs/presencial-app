@@ -142,7 +142,7 @@ fun CircularProgressCard(
                     Text(
                         text = daysCaption,
                         style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = ON_SURFACE_ALPHA_MEDIUM),
+                        color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = ON_SURFACE_ALPHA_MEDIUM),
                         textAlign = TextAlign.Center
                     )
                 }
@@ -150,12 +150,13 @@ fun CircularProgressCard(
             Text(
                 text = remainingLine,
                 style = MaterialTheme.typography.titleMedium,
+                color = MaterialTheme.colorScheme.onPrimaryContainer,
                 textAlign = TextAlign.Center
             )
             Text(
                 text = policyLine,
                 style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurface.copy(alpha = ON_SURFACE_ALPHA_MEDIUM),
+                color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = ON_SURFACE_ALPHA_MEDIUM),
                 textAlign = TextAlign.Center
             )
         }

@@ -103,8 +103,6 @@ private fun WidgetContent(info: WidgetInfo) {
             )
         )
 
-        Spacer(modifier = GlanceModifier.height(4.dp))
-
         val remaining = remainingLine(info, context)
         if (remaining.isNotEmpty()) {
             Spacer(modifier = GlanceModifier.height(4.dp))
