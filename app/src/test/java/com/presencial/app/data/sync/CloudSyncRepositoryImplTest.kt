@@ -25,6 +25,7 @@ class CloudSyncRepositoryImplTest {
             com.presencial.app.domain.model.CloudStorageProvider.GOOGLE_DRIVE
         coEvery { preferences.getLastSyncEpochMillis() } returns null
         coEvery { folderSyncProvider.isFolderAccessible() } returns true
+        coEvery { folderSyncProvider.backupExists() } returns true
         repository = CloudSyncRepositoryImpl(folderSyncProvider, backupManager, preferences)
     }
 
@@ -61,11 +62,12 @@ class CloudSyncRepositoryImplTest {
     @Test
     fun `uploadBackup fails when folder not connected`() = runTest {
         coEvery { folderSyncProvider.isSignedIn() } returns false
+        coEvery { folderSyncProvider.isFolderAccessible() } returns false
 
         val result = repository.uploadBackup()
 
         assertTrue(result.isFailure)
-        assertEquals("Selecione uma pasta na nuvem primeiro", result.exceptionOrNull()?.message)
+        assertEquals("Escolha uma pasta de backup primeiro", result.exceptionOrNull()?.message)
     }
 
     @Test
@@ -91,29 +93,36 @@ class CloudSyncRepositoryImplTest {
     }
 
     @Test
-    fun `refreshState clears connection when folder is no longer accessible`() = runTest {
-        coEvery { folderSyncProvider.isSignedIn() } returnsMany listOf(true, false)
+    fun `refreshState keeps last sync when folder permission is revoked`() = runTest {
+        val syncTime = 1_700_000_000_000L
+        coEvery { folderSyncProvider.isSignedIn() } returns true
         coEvery { folderSyncProvider.isFolderAccessible() } returns false
-        coEvery { folderSyncProvider.signOut() } returns Unit
-        coEvery { preferences.clearLastSyncEpochMillis() } returns Unit
-        coEvery { folderSyncProvider.selectedProvider() } returns
-            com.presencial.app.domain.model.CloudStorageProvider.GOOGLE_DRIVE
-        coEvery { folderSyncProvider.getAccountEmail() } returns null
+        coEvery { folderSyncProvider.backupExists() } returns false
+        coEvery { preferences.getLastSyncEpochMillis() } returns syncTime
+        coEvery { folderSyncProvider.getAccountEmail() } returns "Presencial Backup"
 
         repository.refreshState()
 
-        coVerify { folderSyncProvider.signOut() }
-        assertTrue(!repository.syncState.value.isSignedIn)
+        coVerify(exactly = 0) { folderSyncProvider.signOut() }
+        coVerify(exactly = 0) { preferences.clearLastSyncEpochMillis() }
+        assertEquals(false, repository.syncState.value.isSignedIn)
+        assertEquals(
+            com.presencial.app.domain.model.BackupFolderStatus.PERMISSION_REVOKED,
+            repository.syncState.value.folderStatus
+        )
+        assertEquals(syncTime, repository.syncState.value.lastSyncEpochMillis)
+        assertEquals("Presencial Backup", repository.syncState.value.accountEmail)
     }
 
     @Test
     fun `restoreBackup fails when folder not connected`() = runTest {
         coEvery { folderSyncProvider.isSignedIn() } returns false
+        coEvery { folderSyncProvider.isFolderAccessible() } returns false
 
         val result = repository.restoreBackup()
 
         assertTrue(result.isFailure)
-        assertEquals("Selecione uma pasta na nuvem primeiro", result.exceptionOrNull()?.message)
+        assertEquals("Escolha uma pasta de backup primeiro", result.exceptionOrNull()?.message)
     }
 
     @Test

@@ -5,7 +5,6 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.presencial.app.data.backup.BackupManager
 import com.presencial.app.domain.model.AppSettings
-import com.presencial.app.domain.model.CloudStorageProvider
 import com.presencial.app.domain.model.CloudSyncState
 import com.presencial.app.domain.model.PolicyValidationResult
 import com.presencial.app.domain.model.PresencePolicy
@@ -56,6 +55,9 @@ class SettingsViewModel @Inject constructor(
     private val _message = MutableStateFlow<String?>(null)
     val message: StateFlow<String?> = _message
 
+    private val _pendingRestore = MutableStateFlow<PendingRestore?>(null)
+    val pendingRestore: StateFlow<PendingRestore?> = _pendingRestore
+
     init {
         viewModelScope.launch {
             cloudSyncRepository.refreshState()
@@ -90,6 +92,31 @@ class SettingsViewModel @Inject constructor(
         }
     }
 
+    fun prepareFileRestore(file: File) {
+        _pendingRestore.value = PendingRestore.File(file)
+    }
+
+    fun prepareFolderRestore() {
+        _pendingRestore.value = PendingRestore.Folder
+    }
+
+    fun cancelRestore() {
+        val pending = _pendingRestore.value
+        if (pending is PendingRestore.File) {
+            pending.file.delete()
+        }
+        _pendingRestore.value = null
+    }
+
+    fun confirmRestore() {
+        val pending = _pendingRestore.value ?: return
+        _pendingRestore.value = null
+        when (pending) {
+            is PendingRestore.File -> importBackup(pending.file)
+            PendingRestore.Folder -> restoreCloudBackup()
+        }
+    }
+
     fun importBackup(file: File) {
         viewModelScope.launch {
             backupManager.importFromFile(file)
@@ -102,18 +129,12 @@ class SettingsViewModel @Inject constructor(
         }
     }
 
-    fun selectCloudProvider(provider: CloudStorageProvider) {
-        viewModelScope.launch {
-            cloudSyncRepository.setSelectedProvider(provider)
-        }
-    }
-
     fun connectCloudFolder(treeUri: Uri) {
         viewModelScope.launch {
             val provider = cloudSyncState.value.provider
             cloudSyncRepository.connectFolder(treeUri, provider)
-                .onSuccess { _message.value = "Pasta na nuvem conectada!" }
-                .onFailure { _message.value = "Erro ao conectar pasta: ${it.message}" }
+                .onSuccess { _message.value = "Pasta de backup escolhida." }
+                .onFailure { _message.value = "Erro ao escolher pasta: ${it.message}" }
         }
     }
 
@@ -127,9 +148,9 @@ class SettingsViewModel @Inject constructor(
     fun uploadCloudBackup() {
         viewModelScope.launch {
             runCatching { cloudSyncRepository.uploadBackup().getOrThrow() }
-                .onSuccess { _message.value = "Backup enviado para a nuvem!" }
+                .onSuccess { _message.value = "Backup salvo na pasta." }
                 .onFailure {
-                    _message.value = "Erro na sincronização: ${it.message ?: "Erro desconhecido"}"
+                    _message.value = "Erro ao salvar backup: ${it.message ?: "Erro desconhecido"}"
                 }
         }
     }
@@ -140,10 +161,10 @@ class SettingsViewModel @Inject constructor(
                 .onSuccess {
                     syncGeofencesUseCase()
                     widgetRefresher.refresh()
-                    _message.value = "Backup restaurado da nuvem!"
+                    _message.value = "Backup restaurado com sucesso!"
                 }
                 .onFailure {
-                    _message.value = "Erro na sincronização: ${it.message ?: "Erro desconhecido"}"
+                    _message.value = "Erro ao restaurar: ${it.message ?: "Erro desconhecido"}"
                 }
         }
     }

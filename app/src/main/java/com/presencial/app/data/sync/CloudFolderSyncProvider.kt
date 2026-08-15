@@ -41,7 +41,7 @@ class CloudFolderSyncProvider @Inject constructor(
     override suspend fun uploadBackup(fileName: String, content: ByteArray): Result<Unit> =
         withContext(ioDispatcher) {
             runCatching {
-                val treeUri = getTreeUri() ?: error("Selecione uma pasta na nuvem")
+                val treeUri = getTreeUri() ?: error("Escolha uma pasta de backup")
                 val resolver = context.contentResolver
                 val backupUri = CloudFolderDocuments.findBackupUri(resolver, treeUri, fileName)
                     ?: CloudFolderDocuments.createBackupUri(resolver, treeUri, fileName)
@@ -52,7 +52,7 @@ class CloudFolderSyncProvider @Inject constructor(
     override suspend fun downloadBackup(fileName: String): Result<ByteArray> =
         withContext(ioDispatcher) {
             runCatching {
-                val treeUri = getTreeUri() ?: error("Selecione uma pasta na nuvem")
+                val treeUri = getTreeUri() ?: error("Escolha uma pasta de backup")
                 val resolver = context.contentResolver
                 val backupUri = CloudFolderDocuments.findBackupUri(resolver, treeUri, fileName)
                     ?: error("Nenhum backup encontrado na pasta")
@@ -82,6 +82,18 @@ class CloudFolderSyncProvider @Inject constructor(
     suspend fun isFolderAccessible(): Boolean {
         val treeUri = getTreeUri() ?: return false
         return CloudFolderDocuments.hasPersistedPermission(context.contentResolver, treeUri)
+    }
+
+    suspend fun backupExists(): Boolean {
+        val treeUri = getTreeUri() ?: return false
+        if (!isFolderAccessible()) return false
+        return runCatching {
+            CloudFolderDocuments.findBackupUri(
+                context.contentResolver,
+                treeUri,
+                BACKUP_FILE_NAME
+            ) != null
+        }.getOrDefault(false)
     }
 
     suspend fun selectedProvider(): CloudStorageProvider {
