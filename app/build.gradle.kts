@@ -242,7 +242,9 @@ dependencies {
     implementation(libs.androidx.glance.material3)
 
     // UI Libraries & Utils
-    implementation(libs.json.library)
+    // org.json da Maven nao vai no APK: no Android a classe do SDK e outra
+    // (JSONException extends Exception). Empacotar org.json:json no release
+    // gera VerifyError na abertura (Play/R8). Testes JVM continuam com a lib.
     implementation(libs.lottie.compose)
     implementation(libs.fastexcel)
     implementation(libs.kotlinx.coroutines.android)
