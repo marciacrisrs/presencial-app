@@ -18,7 +18,8 @@
 -keep class * extends androidx.work.ListenableWorker
 -keep class * extends android.content.BroadcastReceiver
 
-# JSON backup (org.json)
+# JSON backup: usar org.json do Android, nunca a lib Maven ofuscada
+-keep class org.json.** { *; }
 -keepclassmembers class * {
     public <init>(org.json.JSONObject);
 }
