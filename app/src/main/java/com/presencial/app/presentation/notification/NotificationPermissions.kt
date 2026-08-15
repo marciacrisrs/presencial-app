@@ -11,11 +11,12 @@ import com.google.accompanist.permissions.shouldShowRationale
 
 @OptIn(ExperimentalPermissionsApi::class)
 @Composable
-fun RequestNotificationPermissionOnLaunch() {
+fun RequestNotificationPermissionOnLaunch(enabled: Boolean = true) {
     if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) return
 
     val permissionState = rememberPermissionState(Manifest.permission.POST_NOTIFICATIONS)
-    LaunchedEffect(permissionState.status) {
+    LaunchedEffect(enabled, permissionState.status) {
+        if (!enabled) return@LaunchedEffect
         if (!permissionState.status.isGranted && !permissionState.status.shouldShowRationale) {
             permissionState.launchPermissionRequest()
         }

@@ -22,6 +22,8 @@ import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Modifier
+import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.NavHostController
 import androidx.navigation.NavType
@@ -37,6 +39,8 @@ import com.presencial.app.presentation.dashboard.DashboardScreen
 import com.presencial.app.presentation.history.HistoryScreen
 import com.presencial.app.presentation.location.WorkAddressScreen
 import com.presencial.app.presentation.notification.RequestNotificationPermissionOnLaunch
+import com.presencial.app.presentation.onboarding.OnboardingScreen
+import com.presencial.app.presentation.onboarding.OnboardingViewModel
 import com.presencial.app.presentation.settings.SettingsScreen
 import com.presencial.app.presentation.statistics.StatisticsScreen
 import kotlinx.coroutines.CoroutineScope
@@ -49,8 +53,17 @@ private const val ANIM_OFFSET = 300
 @Composable
 fun PresencialNavHost(
     openCheckIn: Boolean = false,
-    onCheckInHandled: () -> Unit = {}
+    onCheckInHandled: () -> Unit = {},
+    onboardingViewModel: OnboardingViewModel = hiltViewModel()
 ) {
+    val showOnboarding = onboardingViewModel.uiState.collectAsStateWithLifecycle().value?.visible
+    if (showOnboarding != false) {
+        if (showOnboarding == true) {
+            OnboardingNavHost(onboardingViewModel)
+        }
+        return
+    }
+
     val navController = rememberNavController()
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentRoute = navBackStackEntry?.destination?.route
@@ -66,7 +79,7 @@ fun PresencialNavHost(
         savedTab.intValue = pagerState.settledPage
     }
 
-    RequestNotificationPermissionOnLaunch()
+    RequestNotificationPermissionOnLaunch(enabled = true)
 
     HandleCheckInNavigation(
         openCheckIn = openCheckIn,
@@ -247,3 +260,29 @@ private fun PresencialBottomBar(
         }
     }
 }
+
+@Composable
+private fun OnboardingNavHost(viewModel: OnboardingViewModel) {
+    val navController = rememberNavController()
+    Scaffold { padding ->
+        NavHost(
+            navController = navController,
+            startDestination = ONBOARDING_ROUTE,
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(padding)
+        ) {
+            composable(ONBOARDING_ROUTE) {
+                OnboardingScreen(
+                    viewModel = viewModel,
+                    onAddWorkAddress = { navController.navigate(Screen.WorkAddresses.route) }
+                )
+            }
+            composable(Screen.WorkAddresses.route) {
+                WorkAddressScreen(onBack = { navController.popBackStack() })
+            }
+        }
+    }
+}
+
+private const val ONBOARDING_ROUTE = "onboarding"

@@ -63,6 +63,21 @@ class SettingsDataStoreTest {
     }
 
     @Test
+    fun `when onboarding keys exist, then map completed and step`() = runTest {
+        val prefs = preferencesOf(
+            booleanPreferencesKey("onboarding_completed") to true,
+            intPreferencesKey("onboarding_step") to 2
+        )
+        dataStoreFlow.value = prefs
+
+        settingsDataStore.settings.test {
+            val result = awaitItem()
+            assertEquals(true, result.onboardingCompleted)
+            assertEquals(2, result.onboardingStep)
+        }
+    }
+
+    @Test
     fun `when updateRequiredPercentage with valid value, then datastore is updated`() = runTest {
         val percentage = 60
         mockkStatic("androidx.datastore.preferences.core.PreferencesKt")
