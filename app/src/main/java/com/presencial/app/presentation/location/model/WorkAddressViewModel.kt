@@ -72,9 +72,15 @@ class WorkAddressViewModel @Inject constructor(
             } else {
                 repository.updateAddress(address)
             }
-            syncGeofencesUseCase()
+            syncGeofences()
             _message.value = "Local salvo com sucesso"
             clearDialogState()
+        }
+    }
+
+    fun syncGeofences() {
+        viewModelScope.launch {
+            syncGeofencesUseCase()
         }
     }
 
@@ -129,7 +135,7 @@ class WorkAddressViewModel @Inject constructor(
     fun deleteAddress(address: WorkAddress) {
         viewModelScope.launch {
             repository.deleteAddress(address)
-            syncGeofencesUseCase()
+            syncGeofences()
             _message.value = "Local removido"
         }
     }
@@ -137,7 +143,7 @@ class WorkAddressViewModel @Inject constructor(
     fun toggleActive(address: WorkAddress) {
         viewModelScope.launch {
             repository.updateAddress(address.copy(isActive = !address.isActive))
-            syncGeofencesUseCase()
+            syncGeofences()
         }
     }
 

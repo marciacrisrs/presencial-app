@@ -96,6 +96,13 @@ class WorkAddressViewModelTest {
     }
 
     @Test
+    fun `syncGeofences should delegate to sync use case`() = runTest {
+        viewModel.syncGeofences()
+
+        coVerify(exactly = 1) { syncGeofencesUseCase() }
+    }
+
+    @Test
     fun `geocodeAddress should update geocoded location on success`() = runTest {
         coEvery { geocodingHelper.geocodeAddress("Rua A") } returns Result.success(
             GeoCoordinates(-23.1, -46.1, "SP", "São Paulo")

@@ -22,7 +22,6 @@ import com.presencial.app.presentation.location.components.WorkAddressContent
 import com.presencial.app.presentation.location.components.WorkAddressContentParams
 import com.presencial.app.presentation.location.components.WorkAddressDialogParams
 import com.presencial.app.presentation.location.components.WorkAddressDialogs
-import com.presencial.app.presentation.location.components.WorkAddressDialogResult
 import com.presencial.app.presentation.location.components.WorkAddressTopBar
 import com.presencial.app.presentation.location.model.WorkAddressViewModel
 import com.presencial.app.presentation.location.rememberWorkLocationPermissions
@@ -46,6 +45,14 @@ fun WorkAddressScreen(
     var showBackgroundDialog by remember { mutableStateOf(false) }
 
     val (foregroundPermissions, backgroundPermission) = rememberWorkLocationPermissions()
+    val locationPermissionsGranted =
+        foregroundPermissions.allPermissionsGranted && backgroundPermission.allPermissionsGranted
+
+    LaunchedEffect(locationPermissionsGranted) {
+        if (locationPermissionsGranted) {
+            viewModel.syncGeofences()
+        }
+    }
 
     LaunchedEffect(message) {
         message?.let {
