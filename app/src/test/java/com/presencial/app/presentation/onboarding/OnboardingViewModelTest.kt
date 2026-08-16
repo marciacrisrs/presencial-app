@@ -85,7 +85,7 @@ class OnboardingViewModelTest {
         )
         val viewModel = createViewModel()
         viewModel.uiState.test {
-            awaitLoaded()
+            assertEquals(false, awaitLoaded().visible)
         }
         coVerify { settingsRepository.completeOnboarding() }
     }

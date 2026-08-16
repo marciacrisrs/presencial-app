@@ -11,5 +11,8 @@ object OnboardingEligibility {
 
     fun coerceStep(step: Int): Int = step.coerceIn(STEP_GOAL, STEP_LOCATION)
 
-    fun nextStep(step: Int): Int = (step + 1).coerceAtMost(STEP_LOCATION)
+    fun nextStep(step: Int): Int {
+        val current = coerceStep(step)
+        return (current + 1).coerceAtMost(STEP_LOCATION)
+    }
 }

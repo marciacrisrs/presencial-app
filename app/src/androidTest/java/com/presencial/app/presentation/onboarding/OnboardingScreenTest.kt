@@ -53,4 +53,41 @@ class OnboardingScreenTest {
         composeTestRule.onNodeWithText("Concluir").performClick()
         org.junit.Assert.assertTrue(skipped)
     }
+
+    @Test
+    fun reminderStep_showsEighteenHourCopy() {
+        composeTestRule.setContent {
+            PresencialTheme {
+                OnboardingContent(
+                    step = 1,
+                    selectedPercentage = 40,
+                    onSelectPercentage = {},
+                    onContinueGoal = {},
+                    onContinueReminder = {},
+                    onAddWorkAddress = {},
+                    onSkipLocation = {}
+                )
+            }
+        }
+        composeTestRule.onNodeWithText("Lembrete às 18h").assertIsDisplayed()
+        composeTestRule.onNodeWithText("Continuar").assertIsDisplayed()
+    }
+
+    @Test
+    fun outOfRangeStep_isNormalizedToLocation() {
+        composeTestRule.setContent {
+            PresencialTheme {
+                OnboardingContent(
+                    step = 99,
+                    selectedPercentage = 40,
+                    onSelectPercentage = {},
+                    onContinueGoal = {},
+                    onContinueReminder = {},
+                    onAddWorkAddress = {},
+                    onSkipLocation = {}
+                )
+            }
+        }
+        composeTestRule.onNodeWithText("Onde fica o escritório?").assertIsDisplayed()
+    }
 }

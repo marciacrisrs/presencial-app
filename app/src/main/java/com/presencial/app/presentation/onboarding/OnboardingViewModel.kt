@@ -73,14 +73,18 @@ class OnboardingViewModel @Inject constructor(
 
     fun continueFromGoal() {
         viewModelScope.launch {
-            settingsRepository.updateOnboardingStep(OnboardingEligibility.STEP_REMINDER)
+            settingsRepository.updateOnboardingStep(
+                OnboardingEligibility.nextStep(OnboardingEligibility.STEP_GOAL)
+            )
         }
     }
 
     fun continueFromReminder() {
         notificationScheduler.scheduleDailyReminder()
         viewModelScope.launch {
-            settingsRepository.updateOnboardingStep(OnboardingEligibility.STEP_LOCATION)
+            settingsRepository.updateOnboardingStep(
+                OnboardingEligibility.nextStep(OnboardingEligibility.STEP_REMINDER)
+            )
         }
     }
 

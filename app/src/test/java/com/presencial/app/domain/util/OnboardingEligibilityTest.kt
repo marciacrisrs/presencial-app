@@ -27,4 +27,12 @@ class OnboardingEligibilityTest {
         assertTrue(OnboardingEligibility.shouldShow(onboardingCompleted = false, hasExistingCheckIns = false))
         assertEquals(OnboardingEligibility.STEP_REMINDER, OnboardingEligibility.coerceStep(1))
     }
+
+    @Test
+    fun `nextStep normaliza extremos`() {
+        assertEquals(OnboardingEligibility.STEP_REMINDER, OnboardingEligibility.nextStep(-10))
+        assertEquals(OnboardingEligibility.STEP_LOCATION, OnboardingEligibility.nextStep(Int.MAX_VALUE))
+        assertEquals(OnboardingEligibility.STEP_LOCATION, OnboardingEligibility.nextStep(OnboardingEligibility.STEP_LOCATION))
+        assertEquals(OnboardingEligibility.STEP_REMINDER, OnboardingEligibility.nextStep(OnboardingEligibility.STEP_GOAL))
+    }
 }
