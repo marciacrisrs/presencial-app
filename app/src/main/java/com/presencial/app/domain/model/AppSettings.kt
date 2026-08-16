@@ -6,7 +6,9 @@ package com.presencial.app.domain.model
 data class AppSettings(
     val requiredPercentage: Int = 40,
     val countSaturdaysAsWorkdays: Boolean = false,
-    val presencePolicy: PresencePolicy = PresencePolicy.fromLegacyPercentage(40)
+    val presencePolicy: PresencePolicy = PresencePolicy.fromLegacyPercentage(40),
+    val onboardingCompleted: Boolean = false,
+    val onboardingStep: Int = 0
 ) {
     fun synced(): AppSettings {
         val effectivePercentage = presencePolicy.freePercentage

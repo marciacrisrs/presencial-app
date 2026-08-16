@@ -68,4 +68,17 @@
     <string name="location_permission_background_body">Para registrar a presença automaticamente, escolha \"Permitir o tempo todo\" nas configurações do Android.</string>
     <string name="location_permission_grant">Entendi, conceder permissão</string>
     <string name="location_permission_configure">Abrir configurações</string>
+    <string name="onboarding_title">Bem-vinda ao Presencial</string>
+    <string name="onboarding_step_indicator">Passo %1$d de %2$d</string>
+    <string name="onboarding_goal_title">Qual é a sua meta de presença?</string>
+    <string name="onboarding_goal_body">Escolha o percentual de dias úteis que você precisa estar no escritório. Você pode ajustar depois em Configurações.</string>
+    <string name="onboarding_goal_percent">%d%%</string>
+    <string name="onboarding_reminder_title">Lembrete às 18h</string>
+    <string name="onboarding_reminder_body">Todo dia útil, às 18h, perguntamos se você trabalhou presencialmente. Ative as notificações para receber o lembrete.</string>
+    <string name="onboarding_location_title">Onde fica o escritório?</string>
+    <string name="onboarding_location_body">Opcional. Cadastre o local para o check-in automático quando você chegar. Pode pular e configurar depois.</string>
+    <string name="onboarding_location_add">Adicionar local</string>
+    <string name="onboarding_location_skip">Pular por agora</string>
+    <string name="onboarding_continue">Continuar</string>
+    <string name="onboarding_finish">Concluir</string>
 </resources>
