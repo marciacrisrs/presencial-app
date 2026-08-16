@@ -103,7 +103,10 @@ class SettingsViewModel @Inject constructor(
     fun cancelRestore() {
         val pending = _pendingRestore.value
         if (pending is PendingRestore.File) {
-            pending.file.delete()
+            val deleted = !pending.file.exists() || pending.file.delete()
+            if (!deleted) {
+                _message.value = "Não foi possível limpar o arquivo temporário do backup."
+            }
         }
         _pendingRestore.value = null
     }
