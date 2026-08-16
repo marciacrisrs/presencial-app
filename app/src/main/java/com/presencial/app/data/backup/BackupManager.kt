@@ -9,8 +9,8 @@ import com.presencial.app.data.local.entity.AbsenceEntity
 import com.presencial.app.data.local.entity.CheckInEntity
 import com.presencial.app.data.local.entity.MonthlySummaryEntity
 import com.presencial.app.data.local.entity.WorkAddressEntity
-import com.presencial.app.di.IoDispatcher
 import com.presencial.app.data.preferences.PresencePolicyMapper
+import com.presencial.app.di.IoDispatcher
 import com.presencial.app.domain.model.CheckInSource
 import com.presencial.app.domain.model.PresencePolicy
 import com.presencial.app.domain.repository.SettingsRepository
@@ -123,49 +123,46 @@ class BackupManager @Inject constructor(
         }
 
     suspend fun importFromFile(file: File): Result<Unit> = withContext(ioDispatcher) {
-        runCatching {
-            restoreFromJson(JSONObject(file.readText()))
-        }
+        runCatching { restoreFromJson(JSONObject(file.readText())) }
     }
 
     suspend fun importFromBytes(bytes: ByteArray): Result<Unit> = withContext(ioDispatcher) {
-        runCatching {
-            restoreFromJson(JSONObject(bytes.toString(Charsets.UTF_8)))
-        }
+        runCatching { restoreFromJson(JSONObject(bytes.toString(Charsets.UTF_8))) }
     }
 
     private suspend fun restoreFromJson(json: JSONObject) {
         val data = parseAndValidateRestoreData(json)
         val previousSettings = settingsRepository.settings.first()
 
-        // Persist settings as one DataStore operation, then restore all Room tables.
-        // If Room fails, restore the previous settings as compensation so a failed
-        // restore does not intentionally leave the two persistence layers divergent.
         settingsRepository.restoreBackupSettings(
             requiredPercentage = data.requiredPercentage,
             countSaturdaysAsWorkdays = data.countSaturdaysAsWorkdays,
             presencePolicy = data.presencePolicy
         )
 
-        try {
+        val restoreResult = runCatching {
             backupDao.restoreAll(
                 checkIns = data.checkIns,
                 summaries = data.summaries,
                 workAddresses = data.workAddresses,
                 absences = data.absences
             )
-        } catch (restoreFailure: Throwable) {
-            runCatching {
+        }
+
+        restoreResult.onFailure { restoreFailure ->
+            val rollbackResult = runCatching {
                 settingsRepository.restoreBackupSettings(
                     requiredPercentage = previousSettings.requiredPercentage,
                     countSaturdaysAsWorkdays = previousSettings.countSaturdaysAsWorkdays,
                     presencePolicy = previousSettings.presencePolicy
                 )
-            }.onFailure { rollbackFailure ->
+            }
+            rollbackResult.onFailure { rollbackFailure ->
                 restoreFailure.addSuppressed(rollbackFailure)
             }
-            throw restoreFailure
         }
+
+        restoreResult.getOrThrow()
     }
 
     private fun parseAndValidateRestoreData(json: JSONObject): RestoreData {
