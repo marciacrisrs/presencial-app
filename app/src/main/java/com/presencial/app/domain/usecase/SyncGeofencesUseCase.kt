@@ -3,6 +3,7 @@ package com.presencial.app.domain.usecase
 import com.presencial.app.domain.location.GeofenceRegistrar
 import com.presencial.app.domain.repository.GeofenceSyncStatusRepository
 import com.presencial.app.domain.repository.WorkAddressRepository
+import java.util.concurrent.CancellationException
 import javax.inject.Inject
 
 class SyncGeofencesUseCase @Inject constructor(
@@ -19,7 +20,10 @@ class SyncGeofencesUseCase @Inject constructor(
                 geofenceRegistrar.registerGeofences(activeAddresses)
             }
             syncStatusRepository.markSuccess()
-        } catch (exception: RuntimeException) {
+        } catch (exception: IllegalStateException) {
+            if (exception is CancellationException) {
+                throw exception
+            }
             syncStatusRepository.markFailure(
                 exception.message ?: "Não foi possível atualizar o monitoramento de localização."
             )
