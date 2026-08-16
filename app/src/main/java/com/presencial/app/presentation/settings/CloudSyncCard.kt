@@ -31,15 +31,6 @@ import com.presencial.app.domain.model.CloudSyncState
 import java.text.DateFormat
 import java.util.Date
 
-data class CloudSyncCardActions(
-    val onConnectFolder: () -> Unit,
-    val onSignOut: () -> Unit,
-    val onUpload: () -> Unit,
-    val onRestore: () -> Unit,
-    val onExportFile: () -> Unit,
-    val onRestoreFile: () -> Unit
-)
-
 @Composable
 fun CloudSyncCard(
     state: CloudSyncState,
@@ -102,7 +93,10 @@ fun CloudSyncCard(
                         enabled = !state.isSyncing,
                         modifier = Modifier.fillMaxWidth()
                     ) {
-                        Icon(Icons.Default.CloudUpload, contentDescription = stringResource(R.string.cloud_sync_upload_icon))
+                        Icon(
+                            Icons.Default.CloudUpload,
+                            contentDescription = stringResource(R.string.cloud_sync_upload_icon)
+                        )
                         Text("  ${stringResource(R.string.cloud_sync_upload)}")
                     }
                     Button(
@@ -110,18 +104,27 @@ fun CloudSyncCard(
                         enabled = !state.isSyncing && state.backupExists,
                         modifier = Modifier.fillMaxWidth()
                     ) {
-                        Icon(Icons.Default.CloudDownload, contentDescription = stringResource(R.string.cloud_sync_restore_icon))
+                        Icon(
+                            Icons.Default.CloudDownload,
+                            contentDescription = stringResource(R.string.cloud_sync_restore_icon)
+                        )
                         Text("  ${stringResource(R.string.cloud_sync_restore)}")
                     }
                 }
             }
 
             Button(onClick = actions.onExportFile, modifier = Modifier.fillMaxWidth()) {
-                Icon(Icons.Default.Backup, contentDescription = stringResource(R.string.backup_export_content_description))
+                Icon(
+                    Icons.Default.Backup,
+                    contentDescription = stringResource(R.string.backup_export_content_description)
+                )
                 Text("  ${stringResource(R.string.backup_export_file)}")
             }
             Button(onClick = actions.onRestoreFile, modifier = Modifier.fillMaxWidth()) {
-                Icon(Icons.Default.Restore, contentDescription = stringResource(R.string.backup_restore_content_description))
+                Icon(
+                    Icons.Default.Restore,
+                    contentDescription = stringResource(R.string.backup_restore_content_description)
+                )
                 Text("  ${stringResource(R.string.backup_restore_file)}")
             }
         }
@@ -131,7 +134,10 @@ fun CloudSyncCard(
 @Composable
 private fun ConnectFolderButton(onConnectFolder: () -> Unit, enabled: Boolean) {
     Button(onClick = onConnectFolder, enabled = enabled, modifier = Modifier.fillMaxWidth()) {
-        Icon(Icons.Default.FolderOpen, contentDescription = stringResource(R.string.cloud_sync_connect_icon))
+        Icon(
+            Icons.Default.FolderOpen,
+            contentDescription = stringResource(R.string.cloud_sync_connect_icon)
+        )
         Text("  ${stringResource(R.string.cloud_sync_connect_folder)}")
     }
 }
