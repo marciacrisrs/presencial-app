@@ -218,7 +218,8 @@ private fun SettingsContent(params: SettingsContentParams, modifier: Modifier = 
         MonitoringStatusBanner(
             activeAddressCount = params.activeWorkAddressCount,
             foregroundGranted = params.foregroundGranted,
-            backgroundGranted = params.backgroundGranted
+            backgroundGranted = params.backgroundGranted,
+            onClick = params.onNavigateToWorkAddresses
         )
 
         PresencePolicyCard(
