@@ -25,7 +25,8 @@ import com.presencial.app.presentation.location.rememberWorkLocationPermissions
 fun DashboardScreen(
     viewModel: DashboardViewModel = hiltViewModel(),
     openCheckIn: Boolean = false,
-    onCheckInHandled: () -> Unit = {}
+    onCheckInHandled: () -> Unit = {},
+    onNavigateToWorkAddresses: () -> Unit = {}
 ) {
     val data by viewModel.dashboardData.collectAsStateWithLifecycle()
     val workAddresses by viewModel.workAddresses.collectAsStateWithLifecycle()
@@ -69,6 +70,7 @@ fun DashboardScreen(
                 backgroundGranted = backgroundPermission.allPermissionsGranted,
                 onToggleTodayCheckIn = { viewModel.toggleTodayCheckIn(!dashboard.todayIsPresencial) },
                 onMarkYesterdayPresencial = viewModel::markYesterdayPresencial,
+                onNavigateToWorkAddresses = onNavigateToWorkAddresses,
                 haptic = haptic,
                 scrollToActions = openCheckIn
             )
