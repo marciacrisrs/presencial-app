@@ -24,6 +24,7 @@ fun DashboardContent(
     backgroundGranted: Boolean,
     onToggleTodayCheckIn: () -> Unit,
     onMarkYesterdayPresencial: () -> Unit,
+    onNavigateToWorkAddresses: () -> Unit,
     haptic: HapticFeedback,
     scrollToActions: Boolean = false
 ) {
@@ -47,7 +48,8 @@ fun DashboardContent(
         MonitoringStatusBanner(
             activeAddressCount = activeWorkAddressCount,
             foregroundGranted = foregroundGranted,
-            backgroundGranted = backgroundGranted
+            backgroundGranted = backgroundGranted,
+            onClick = onNavigateToWorkAddresses
         )
 
         DashboardSmartMessageSection(dashboard)
