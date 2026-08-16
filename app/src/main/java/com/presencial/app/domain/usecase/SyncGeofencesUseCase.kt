@@ -1,19 +1,19 @@
 package com.presencial.app.domain.usecase
 
-import com.presencial.app.domain.location.GeofenceManager
+import com.presencial.app.domain.location.GeofenceRegistrar
 import com.presencial.app.domain.repository.WorkAddressRepository
 import javax.inject.Inject
 
 class SyncGeofencesUseCase @Inject constructor(
     private val workAddressRepository: WorkAddressRepository,
-    private val geofenceManager: GeofenceManager
+    private val geofenceRegistrar: GeofenceRegistrar
 ) {
     suspend operator fun invoke() {
         val activeAddresses = workAddressRepository.getActiveAddresses()
         if (activeAddresses.isEmpty()) {
-            geofenceManager.removeGeofences()
+            geofenceRegistrar.removeGeofences()
         } else {
-            geofenceManager.registerGeofences(activeAddresses)
+            geofenceRegistrar.registerGeofences(activeAddresses)
         }
     }
 }

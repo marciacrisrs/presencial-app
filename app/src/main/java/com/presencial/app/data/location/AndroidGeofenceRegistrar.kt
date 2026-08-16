@@ -1,24 +1,26 @@
-package com.presencial.app.domain.location
+package com.presencial.app.data.location
 
 import android.annotation.SuppressLint
 import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
 import android.os.Build
-import android.util.Log
 import com.google.android.gms.location.Geofence
 import com.google.android.gms.location.GeofencingRequest
 import com.google.android.gms.location.LocationServices
+import com.presencial.app.domain.location.GeofenceRegistrar
 import com.presencial.app.domain.model.WorkAddress
 import com.presencial.app.worker.GeofenceBroadcastReceiver
 import dagger.hilt.android.qualifiers.ApplicationContext
+import kotlinx.coroutines.tasks.await
 import javax.inject.Inject
 import javax.inject.Singleton
 
 @Singleton
-class GeofenceManager @Inject constructor(
+class AndroidGeofenceRegistrar @Inject constructor(
     @ApplicationContext private val context: Context
-) {
+) : GeofenceRegistrar {
+
     private val geofencingClient = LocationServices.getGeofencingClient(context)
 
     private val geofencePendingIntent: PendingIntent by lazy {
@@ -32,7 +34,7 @@ class GeofenceManager @Inject constructor(
     }
 
     @SuppressLint("MissingPermission")
-    fun registerGeofences(addresses: List<WorkAddress>) {
+    override suspend fun registerGeofences(addresses: List<WorkAddress>) {
         if (addresses.isEmpty()) {
             removeGeofences()
             return
@@ -58,22 +60,14 @@ class GeofenceManager @Inject constructor(
             addGeofences(geofences)
         }.build()
 
-        geofencingClient.addGeofences(request, geofencePendingIntent).addOnFailureListener {
-            Log.e(TAG, "Falha ao registrar geofences")
-        }.addOnSuccessListener {
-            Log.d(TAG, "Geofences registradas: ${geofences.size}")
-        }
+        geofencingClient.addGeofences(request, geofencePendingIntent).await()
     }
 
-    fun removeGeofences() {
-        geofencingClient.removeGeofences(geofencePendingIntent)
-            .addOnFailureListener {
-                Log.e(TAG, "Falha ao remover geofences")
-            }
+    override suspend fun removeGeofences() {
+        geofencingClient.removeGeofences(geofencePendingIntent).await()
     }
 
     companion object {
         const val LOITERING_DELAY_MS = 30_000L
-        private const val TAG = "GeofenceManager"
     }
 }

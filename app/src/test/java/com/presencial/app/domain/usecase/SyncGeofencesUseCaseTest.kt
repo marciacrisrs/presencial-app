@@ -1,6 +1,6 @@
 package com.presencial.app.domain.usecase
 
-import com.presencial.app.domain.location.GeofenceManager
+import com.presencial.app.domain.location.GeofenceRegistrar
 import com.presencial.app.domain.repository.WorkAddressRepository
 import com.presencial.app.util.TestDataFactory
 import io.mockk.coEvery
@@ -13,12 +13,12 @@ import org.junit.jupiter.api.Test
 class SyncGeofencesUseCaseTest {
 
     private val workAddressRepository = mockk<WorkAddressRepository>()
-    private val geofenceManager = mockk<GeofenceManager>(relaxed = true)
+    private val geofenceRegistrar = mockk<GeofenceRegistrar>(relaxed = true)
     private lateinit var useCase: SyncGeofencesUseCase
 
     @BeforeEach
     fun setup() {
-        useCase = SyncGeofencesUseCase(workAddressRepository, geofenceManager)
+        useCase = SyncGeofencesUseCase(workAddressRepository, geofenceRegistrar)
     }
 
     @Test
@@ -28,7 +28,7 @@ class SyncGeofencesUseCaseTest {
 
         useCase()
 
-        coVerify { geofenceManager.registerGeofences(addresses) }
+        coVerify { geofenceRegistrar.registerGeofences(addresses) }
     }
 
     @Test
@@ -37,6 +37,6 @@ class SyncGeofencesUseCaseTest {
 
         useCase()
 
-        coVerify { geofenceManager.removeGeofences() }
+        coVerify { geofenceRegistrar.removeGeofences() }
     }
 }
