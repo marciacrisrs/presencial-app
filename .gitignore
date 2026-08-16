@@ -19,7 +19,6 @@ out/
 *.ipr
 *.iws
 captures/
-navigation/
 asset-studio/
 
 # Local configuration and secrets
