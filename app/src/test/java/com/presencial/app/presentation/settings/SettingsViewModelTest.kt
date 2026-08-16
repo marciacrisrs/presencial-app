@@ -148,7 +148,7 @@ class SettingsViewModelTest {
 
         viewModel.uploadCloudBackup()
 
-        assertEquals("Backup enviado para a nuvem!", viewModel.message.value)
+        assertEquals("Backup salvo na pasta.", viewModel.message.value)
     }
 
     @Test
@@ -157,7 +157,7 @@ class SettingsViewModelTest {
 
         viewModel.uploadCloudBackup()
 
-        assertEquals("Erro na sincronização: Network error", viewModel.message.value)
+        assertEquals("Erro ao salvar backup: Network error", viewModel.message.value)
     }
 
     @Test
@@ -168,7 +168,7 @@ class SettingsViewModelTest {
 
         coVerify { syncGeofencesUseCase() }
         coVerify { widgetRefresher.refresh() }
-        assertEquals("Backup restaurado da nuvem!", viewModel.message.value)
+        assertEquals("Backup restaurado com sucesso!", viewModel.message.value)
     }
 
     @Test
@@ -180,7 +180,7 @@ class SettingsViewModelTest {
 
         viewModel.connectCloudFolder(uri)
 
-        assertEquals("Pasta na nuvem conectada!", viewModel.message.value)
+        assertEquals("Pasta de backup escolhida.", viewModel.message.value)
     }
 
     @Test
@@ -201,5 +201,40 @@ class SettingsViewModelTest {
         viewModel.clearMessage()
 
         assertNull(viewModel.message.value)
+    }
+
+    @Test
+    fun `cancel restore does not import backup`() = runTest {
+        val file = mockk<File>(relaxed = true)
+        viewModel.prepareFileRestore(file)
+
+        viewModel.cancelRestore()
+
+        coVerify(exactly = 0) { backupManager.importFromFile(any()) }
+        io.mockk.verify { file.delete() }
+        assertNull(viewModel.pendingRestore.value)
+    }
+
+    @Test
+    fun `confirm file restore imports backup`() = runTest {
+        val file = mockk<File>()
+        coEvery { backupManager.importFromFile(file) } returns Result.success(Unit)
+        viewModel.prepareFileRestore(file)
+
+        viewModel.confirmRestore()
+
+        coVerify { backupManager.importFromFile(file) }
+        assertNull(viewModel.pendingRestore.value)
+    }
+
+    @Test
+    fun `confirm folder restore downloads backup`() = runTest {
+        coEvery { cloudSyncRepository.restoreBackup() } returns Result.success(Unit)
+        viewModel.prepareFolderRestore()
+
+        viewModel.confirmRestore()
+
+        coVerify { cloudSyncRepository.restoreBackup() }
+        assertNull(viewModel.pendingRestore.value)
     }
 }

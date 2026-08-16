@@ -6,6 +6,7 @@ import androidx.room.Database
 import androidx.room.Room
 import androidx.room.RoomDatabase
 import com.presencial.app.data.local.dao.AbsenceDao
+import com.presencial.app.data.local.dao.BackupDao
 import com.presencial.app.data.local.dao.CheckInDao
 import com.presencial.app.data.local.dao.MonthlySummaryDao
 import com.presencial.app.data.local.dao.WorkAddressDao
@@ -25,6 +26,7 @@ abstract class PresencialDatabase : RoomDatabase() {
     abstract fun monthlySummaryDao(): MonthlySummaryDao
     abstract fun absenceDao(): AbsenceDao
     abstract fun workAddressDao(): WorkAddressDao
+    abstract fun backupDao(): BackupDao
 
     companion object {
         const val NAME = "presencial.db"
@@ -44,7 +46,9 @@ abstract class PresencialDatabase : RoomDatabase() {
         @VisibleForTesting
         fun create(context: Context, name: String): PresencialDatabase =
             Room.databaseBuilder(context, PresencialDatabase::class.java, name)
-                .addMigrations(*ALL_MIGRATIONS)
+                .apply {
+                    ALL_MIGRATIONS.forEach(::addMigrations)
+                }
                 .build()
     }
 }

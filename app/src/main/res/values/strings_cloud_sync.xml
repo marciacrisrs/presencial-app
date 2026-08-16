@@ -1,18 +1,25 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="cloud_sync_title">Sincronização na nuvem</string>
-    <string name="cloud_sync_description">Escolha o serviço e conecte uma pasta. O backup JSON será salvo em presencial_backup.json nessa pasta (funciona com Google Drive, OneDrive e Dropbox).</string>
-    <string name="cloud_sync_provider_label">Serviço de armazenamento</string>
-    <string name="cloud_sync_folder_connected">Pasta conectada: %1$s</string>
-    <string name="cloud_sync_not_connected">Nenhuma pasta conectada</string>
-    <string name="cloud_sync_last_sync">Última sincronização: %1$s</string>
+    <string name="cloud_sync_title">Backup</string>
+    <string name="cloud_sync_description">Escolha uma pasta no app de armazenamento que você usa. O arquivo presencial_backup.json fica nessa pasta e pode ser o mesmo JSON do export local.</string>
+    <string name="cloud_sync_folder_connected">Pasta escolhida: %1$s</string>
+    <string name="cloud_sync_not_connected">Nenhuma pasta escolhida</string>
+    <string name="cloud_sync_permission_revoked">A permissão desta pasta foi revogada. Escolha a pasta de novo para continuar. O último backup conhecido não foi apagado.</string>
+    <string name="cloud_sync_backup_missing">Nenhum backup encontrado nesta pasta.</string>
+    <string name="cloud_sync_last_sync">Último backup na pasta: %1$s</string>
     <string name="cloud_sync_never">Nunca</string>
-    <string name="cloud_sync_connect_folder">Conectar pasta no %1$s</string>
-    <string name="cloud_sync_sign_out">Desconectar pasta</string>
-    <string name="cloud_sync_upload">Enviar backup para nuvem</string>
-    <string name="cloud_sync_restore">Restaurar da nuvem</string>
-    <string name="cloud_sync_upload_icon">Enviar backup</string>
+    <string name="cloud_sync_connect_folder">Escolher pasta</string>
+    <string name="cloud_sync_sign_out">Parar de usar esta pasta</string>
+    <string name="cloud_sync_upload">Salvar backup na pasta</string>
+    <string name="cloud_sync_restore">Restaurar da pasta</string>
+    <string name="cloud_sync_upload_icon">Salvar backup</string>
     <string name="cloud_sync_restore_icon">Restaurar backup</string>
-    <string name="cloud_sync_connect_icon">Conectar pasta</string>
-    <string name="cloud_sync_syncing">Sincronizando…</string>
+    <string name="cloud_sync_connect_icon">Escolher pasta</string>
+    <string name="cloud_sync_syncing">Salvando backup…</string>
+    <string name="backup_export_file">Salvar uma cópia em arquivo</string>
+    <string name="backup_restore_file">Restaurar de um arquivo</string>
+    <string name="backup_restore_confirm_title">Restaurar backup?</string>
+    <string name="backup_restore_confirm_body">Os check-ins, ausências, locais e configurações atuais serão substituídos pelos dados do backup.</string>
+    <string name="backup_restore_confirm">Restaurar</string>
+    <string name="backup_restore_cancel">Cancelar</string>
 </resources>

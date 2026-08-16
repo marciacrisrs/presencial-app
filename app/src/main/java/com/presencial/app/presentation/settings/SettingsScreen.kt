@@ -4,27 +4,24 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Backup
-import androidx.compose.material.icons.filled.Restore
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -56,6 +53,7 @@ fun SettingsScreen(
     val message by viewModel.message.collectAsStateWithLifecycle()
     val policyValidation by viewModel.policyValidation.collectAsStateWithLifecycle()
     val cloudSyncState by viewModel.cloudSyncState.collectAsStateWithLifecycle()
+    val pendingRestore by viewModel.pendingRestore.collectAsStateWithLifecycle()
     val (foregroundPermissions, backgroundPermission) = rememberWorkLocationPermissions()
     val context = LocalContext.current
     val snackbarHostState = remember { SnackbarHostState() }
@@ -85,11 +83,10 @@ fun SettingsScreen(
             policyValidation = policyValidation,
             onToggleSaturdays = viewModel::updateSaturdays,
             cloudSyncState = cloudSyncState,
-            onCloudProviderSelected = viewModel::selectCloudProvider,
             onCloudConnectFolder = { cloudFolderLauncher.launch(null) },
             onCloudSignOut = viewModel::signOutCloud,
             onCloudUpload = viewModel::uploadCloudBackup,
-            onCloudRestore = viewModel::restoreCloudBackup,
+            onCloudRestore = viewModel::prepareFolderRestore,
             onExport = { exportLauncher.launch("presencial_backup.json") },
             onRestore = { importLauncher.launch(arrayOf("application/json")) },
             onNavigateToAbsences = onNavigateToAbsences,
@@ -98,6 +95,13 @@ fun SettingsScreen(
             snackbarHostState = snackbarHostState
         )
     )
+
+    if (pendingRestore != null) {
+        RestoreConfirmDialog(
+            onConfirm = viewModel::confirmRestore,
+            onDismiss = viewModel::cancelRestore
+        )
+    }
 }
 
 @Composable
@@ -125,7 +129,7 @@ private fun rememberSettingsImportLauncher(
         context.contentResolver.openInputStream(it)?.use { stream ->
             temp.outputStream().use { out -> stream.copyTo(out) }
         }
-        viewModel.importBackup(temp)
+        viewModel.prepareFileRestore(temp)
     }
 }
 
@@ -138,7 +142,6 @@ private data class SettingsScaffoldParams(
     val policyValidation: com.presencial.app.domain.model.PolicyValidationResult,
     val onToggleSaturdays: (Boolean) -> Unit,
     val cloudSyncState: com.presencial.app.domain.model.CloudSyncState,
-    val onCloudProviderSelected: (com.presencial.app.domain.model.CloudStorageProvider) -> Unit,
     val onCloudConnectFolder: () -> Unit,
     val onCloudSignOut: () -> Unit,
     val onCloudUpload: () -> Unit,
@@ -152,9 +155,7 @@ private data class SettingsScaffoldParams(
 )
 
 @Composable
-private fun SettingsScaffold(
-    params: SettingsScaffoldParams
-) {
+private fun SettingsScaffold(params: SettingsScaffoldParams) {
     Scaffold(
         snackbarHost = { SnackbarHost(hostState = params.snackbarHostState) }
     ) { padding ->
@@ -169,7 +170,6 @@ private fun SettingsScaffold(
                 policyValidation = params.policyValidation,
                 onToggleSaturdays = params.onToggleSaturdays,
                 cloudSyncState = params.cloudSyncState,
-                onCloudProviderSelected = params.onCloudProviderSelected,
                 onCloudConnectFolder = params.onCloudConnectFolder,
                 onCloudSignOut = params.onCloudSignOut,
                 onCloudUpload = params.onCloudUpload,
@@ -193,7 +193,6 @@ private data class SettingsContentParams(
     val policyValidation: com.presencial.app.domain.model.PolicyValidationResult,
     val onToggleSaturdays: (Boolean) -> Unit,
     val cloudSyncState: com.presencial.app.domain.model.CloudSyncState,
-    val onCloudProviderSelected: (com.presencial.app.domain.model.CloudStorageProvider) -> Unit,
     val onCloudConnectFolder: () -> Unit,
     val onCloudSignOut: () -> Unit,
     val onCloudUpload: () -> Unit,
@@ -206,10 +205,7 @@ private data class SettingsContentParams(
 )
 
 @Composable
-private fun SettingsContent(
-    params: SettingsContentParams,
-    modifier: Modifier = Modifier
-) {
+private fun SettingsContent(params: SettingsContentParams, modifier: Modifier = Modifier) {
     Column(
         modifier = modifier
             .fillMaxWidth()
@@ -238,16 +234,14 @@ private fun SettingsContent(
 
         CloudSyncCard(
             state = params.cloudSyncState,
-            onProviderSelected = params.onCloudProviderSelected,
-            onConnectFolder = params.onCloudConnectFolder,
-            onSignOut = params.onCloudSignOut,
-            onUpload = params.onCloudUpload,
-            onRestore = params.onCloudRestore
-        )
-
-        BackupRestoreCard(
-            onExport = params.onExport,
-            onRestore = params.onRestore
+            actions = CloudSyncCardActions(
+                onConnectFolder = params.onCloudConnectFolder,
+                onSignOut = params.onCloudSignOut,
+                onUpload = params.onCloudUpload,
+                onRestore = params.onCloudRestore,
+                onExportFile = params.onExport,
+                onRestoreFile = params.onRestore
+            )
         )
 
         OtherSettingsCard(
@@ -261,10 +255,26 @@ private fun SettingsContent(
 }
 
 @Composable
-private fun SaturdaysConfigCard(
-    countSaturdays: Boolean,
-    onToggle: (Boolean) -> Unit
-) {
+private fun RestoreConfirmDialog(onConfirm: () -> Unit, onDismiss: () -> Unit) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text(stringResource(R.string.backup_restore_confirm_title)) },
+        text = { Text(stringResource(R.string.backup_restore_confirm_body)) },
+        confirmButton = {
+            TextButton(onClick = onConfirm) {
+                Text(stringResource(R.string.backup_restore_confirm))
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) {
+                Text(stringResource(R.string.backup_restore_cancel))
+            }
+        }
+    )
+}
+
+@Composable
+private fun SaturdaysConfigCard(countSaturdays: Boolean, onToggle: (Boolean) -> Unit) {
     Card(
         shape = RoundedCornerShape(CORNER_RADIUS_CARD.dp),
         colors = CardDefaults.cardColors(
@@ -284,60 +294,13 @@ private fun SaturdaysConfigCard(
                     color = MaterialTheme.colorScheme.onSurface.copy(alpha = ALPHA_ON_SURFACE_MEDIUM)
                 )
             }
-            Switch(
-                checked = countSaturdays,
-                onCheckedChange = onToggle
-            )
+            Switch(checked = countSaturdays, onCheckedChange = onToggle)
         }
     }
 }
 
 @Composable
-private fun BackupRestoreCard(
-    onExport: () -> Unit,
-    onRestore: () -> Unit
-) {
-    Card(
-        shape = RoundedCornerShape(CORNER_RADIUS_CARD.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = ALPHA_SURFACE_VARIANT)
-        )
-    ) {
-        Column(
-            modifier = Modifier.padding(PADDING_SCREEN.dp),
-            verticalArrangement = Arrangement.spacedBy(SPACING_CARD_CONTENT.dp)
-        ) {
-            Text("Backup e restauração", style = MaterialTheme.typography.titleLarge)
-            Button(
-                onClick = onExport,
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                Icon(
-                    Icons.Default.Backup,
-                    contentDescription = stringResource(R.string.backup_export_content_description)
-                )
-                Text("  Exportar backup JSON")
-            }
-            Button(
-                onClick = onRestore,
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                Icon(
-                    Icons.Default.Restore,
-                    contentDescription = stringResource(R.string.backup_restore_content_description)
-                )
-                Text("  Restaurar backup")
-            }
-        }
-    }
-}
-
-@Composable
-private fun OtherSettingsCard(
-    onAbsences: () -> Unit,
-    onWorkAddresses: () -> Unit,
-    onAbout: () -> Unit
-) {
+private fun OtherSettingsCard(onAbsences: () -> Unit, onWorkAddresses: () -> Unit, onAbout: () -> Unit) {
     Card(
         shape = RoundedCornerShape(CORNER_RADIUS_CARD.dp),
         colors = CardDefaults.cardColors(

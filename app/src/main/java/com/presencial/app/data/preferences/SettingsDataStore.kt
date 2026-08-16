@@ -71,6 +71,26 @@ class SettingsDataStore @Inject constructor(
         persistPolicy(normalized.freePercentage, null, normalized)
     }
 
+    override suspend fun restoreBackupSettings(
+        requiredPercentage: Int,
+        countSaturdaysAsWorkdays: Boolean,
+        presencePolicy: PresencePolicy?
+    ) {
+        val percentage = requiredPercentage.coerceIn(PresencePolicy.MIN_PERCENTAGE, PresencePolicy.MAX_PERCENTAGE)
+        val current = settings.first()
+        val restoredPolicy = presencePolicy?.normalized()
+            ?: current.presencePolicy.copy(
+                freePercentageEnabled = true,
+                freePercentage = percentage
+            )
+        dataStore.edit { prefs ->
+            prefs[Keys.REQUIRED_PERCENTAGE] = percentage
+            prefs[Keys.COUNT_SATURDAYS] = countSaturdaysAsWorkdays
+            prefs[Keys.PRESENCE_POLICY] = PresencePolicyMapper.toJson(restoredPolicy)
+        }
+        syncToSharedPreferences(percentage, countSaturdaysAsWorkdays, restoredPolicy)
+    }
+
     override suspend fun updateOnboardingStep(step: Int) {
         dataStore.edit {
             it[Keys.ONBOARDING_STEP] = OnboardingEligibility.coerceStep(step)

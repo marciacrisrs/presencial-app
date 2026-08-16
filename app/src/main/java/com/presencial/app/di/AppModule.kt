@@ -5,6 +5,7 @@ import com.presencial.app.data.local.PresencialDatabase
 import com.google.android.gms.location.FusedLocationProviderClient
 import com.google.android.gms.location.LocationServices
 import com.presencial.app.data.local.dao.AbsenceDao
+import com.presencial.app.data.local.dao.BackupDao
 import com.presencial.app.data.local.dao.CheckInDao
 import com.presencial.app.data.local.dao.MonthlySummaryDao
 import com.presencial.app.data.local.dao.WorkAddressDao
@@ -94,6 +95,9 @@ object DatabaseModule {
 
     @Provides
     fun provideWorkAddressDao(db: PresencialDatabase): WorkAddressDao = db.workAddressDao()
+
+    @Provides
+    fun provideBackupDao(db: PresencialDatabase): BackupDao = db.backupDao()
 
     @Provides
     @Singleton

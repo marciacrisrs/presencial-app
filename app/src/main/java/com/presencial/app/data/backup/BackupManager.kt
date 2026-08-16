@@ -1,6 +1,7 @@
 package com.presencial.app.data.backup
 
 import com.presencial.app.data.local.dao.AbsenceDao
+import com.presencial.app.data.local.dao.BackupDao
 import com.presencial.app.data.local.dao.CheckInDao
 import com.presencial.app.data.local.dao.MonthlySummaryDao
 import com.presencial.app.data.local.dao.WorkAddressDao
@@ -8,8 +9,8 @@ import com.presencial.app.data.local.entity.AbsenceEntity
 import com.presencial.app.data.local.entity.CheckInEntity
 import com.presencial.app.data.local.entity.MonthlySummaryEntity
 import com.presencial.app.data.local.entity.WorkAddressEntity
-import com.presencial.app.di.IoDispatcher
 import com.presencial.app.data.preferences.PresencePolicyMapper
+import com.presencial.app.di.IoDispatcher
 import com.presencial.app.domain.model.CheckInSource
 import com.presencial.app.domain.model.PresencePolicy
 import com.presencial.app.domain.repository.SettingsRepository
@@ -29,6 +30,7 @@ class BackupManager @Inject constructor(
     private val monthlySummaryDao: MonthlySummaryDao,
     private val workAddressDao: WorkAddressDao,
     private val absenceDao: AbsenceDao,
+    private val backupDao: BackupDao,
     private val settingsRepository: SettingsRepository,
     @IoDispatcher private val ioDispatcher: CoroutineDispatcher
 ) {
@@ -121,28 +123,73 @@ class BackupManager @Inject constructor(
         }
 
     suspend fun importFromFile(file: File): Result<Unit> = withContext(ioDispatcher) {
-        runCatching {
-            importFromJson(JSONObject(file.readText()))
-        }
+        runCatching { restoreFromJson(JSONObject(file.readText())) }
     }
 
     suspend fun importFromBytes(bytes: ByteArray): Result<Unit> = withContext(ioDispatcher) {
-        runCatching {
-            importFromJson(JSONObject(bytes.toString(Charsets.UTF_8)))
-        }
+        runCatching { restoreFromJson(JSONObject(bytes.toString(Charsets.UTF_8))) }
     }
 
-    private suspend fun importFromJson(json: JSONObject) {
+    private suspend fun restoreFromJson(json: JSONObject) {
+        val data = parseAndValidateRestoreData(json)
+        val previousSettings = settingsRepository.settings.first()
+
+        settingsRepository.restoreBackupSettings(
+            requiredPercentage = data.requiredPercentage,
+            countSaturdaysAsWorkdays = data.countSaturdaysAsWorkdays,
+            presencePolicy = data.presencePolicy
+        )
+
+        val restoreResult = runCatching {
+            backupDao.restoreAll(
+                checkIns = data.checkIns,
+                summaries = data.summaries,
+                workAddresses = data.workAddresses,
+                absences = data.absences
+            )
+        }
+
+        restoreResult.onFailure { restoreFailure ->
+            val rollbackResult = runCatching {
+                settingsRepository.restoreBackupSettings(
+                    requiredPercentage = previousSettings.requiredPercentage,
+                    countSaturdaysAsWorkdays = previousSettings.countSaturdaysAsWorkdays,
+                    presencePolicy = previousSettings.presencePolicy
+                )
+            }
+            rollbackResult.onFailure { rollbackFailure ->
+                restoreFailure.addSuppressed(rollbackFailure)
+            }
+        }
+
+        restoreResult.getOrThrow()
+    }
+
+    private fun parseAndValidateRestoreData(json: JSONObject): RestoreData {
         validateBackupVersion(json)
-        checkInDao.deleteAll()
-        monthlySummaryDao.deleteAll()
-        workAddressDao.deleteAll()
-        absenceDao.deleteAll()
-        restoreCheckIns(json.getJSONArray("checkIns"))
-        restoreSummaries(json.getJSONArray("summaries"))
-        restoreWorkAddresses(json)
-        restoreAbsences(json)
-        restoreSettings(json)
+
+        val requiredPercentage = json.getInt("requiredPercentage").also {
+            require(it in 0..100) { "Percentual obrigatório inválido" }
+        }
+        val countSaturdaysAsWorkdays = json.getBoolean("countSaturdaysAsWorkdays")
+        val presencePolicy = json.optJSONObject("presencePolicy")?.let {
+            PresencePolicyMapper.fromJson(it.toString(), requiredPercentage)
+        }
+
+        val checkIns = parseCheckIns(json.getJSONArray("checkIns"))
+        val summaries = parseSummaries(json.getJSONArray("summaries"))
+        val workAddresses = parseWorkAddresses(json)
+        val absences = parseAbsences(json)
+
+        return RestoreData(
+            requiredPercentage = requiredPercentage,
+            countSaturdaysAsWorkdays = countSaturdaysAsWorkdays,
+            presencePolicy = presencePolicy,
+            checkIns = checkIns,
+            summaries = summaries,
+            workAddresses = workAddresses,
+            absences = absences
+        )
     }
 
     private fun validateBackupVersion(json: JSONObject) {
@@ -152,8 +199,8 @@ class BackupManager @Inject constructor(
         }
     }
 
-    private suspend fun restoreCheckIns(checkInsArray: org.json.JSONArray) {
-        val checkInEntities = (0 until checkInsArray.length()).map { i ->
+    private fun parseCheckIns(checkInsArray: JSONArray): List<CheckInEntity> =
+        (0 until checkInsArray.length()).map { i ->
             val obj = checkInsArray.getJSONObject(i)
             CheckInEntity(
                 dateEpochDay = obj.getLong("dateEpochDay"),
@@ -167,11 +214,9 @@ class BackupManager @Inject constructor(
                 }
             )
         }
-        checkInDao.insertAll(checkInEntities)
-    }
 
-    private suspend fun restoreSummaries(summariesArray: org.json.JSONArray) {
-        val summaryEntities = (0 until summariesArray.length()).map { i ->
+    private fun parseSummaries(summariesArray: JSONArray): List<MonthlySummaryEntity> =
+        (0 until summariesArray.length()).map { i ->
             val obj = summariesArray.getJSONObject(i)
             MonthlySummaryEntity(
                 yearMonthKey = obj.getString("yearMonthKey"),
@@ -183,13 +228,11 @@ class BackupManager @Inject constructor(
                 achievedPercentage = obj.getDouble("achievedPercentage").toFloat()
             )
         }
-        monthlySummaryDao.insertAll(summaryEntities)
-    }
 
-    private suspend fun restoreWorkAddresses(json: JSONObject) {
-        if (!json.has("workAddresses")) return
+    private fun parseWorkAddresses(json: JSONObject): List<WorkAddressEntity> {
+        if (!json.has("workAddresses")) return emptyList()
         val workAddressesArray = json.getJSONArray("workAddresses")
-        val workAddressEntities = (0 until workAddressesArray.length()).map { i ->
+        return (0 until workAddressesArray.length()).map { i ->
             val obj = workAddressesArray.getJSONObject(i)
             WorkAddressEntity(
                 id = obj.getLong("id"),
@@ -203,13 +246,12 @@ class BackupManager @Inject constructor(
                 cityName = obj.optString("cityName").takeIf { it.isNotBlank() }
             )
         }
-        workAddressDao.insertAll(workAddressEntities)
     }
 
-    private suspend fun restoreAbsences(json: JSONObject) {
-        if (!json.has("absences")) return
+    private fun parseAbsences(json: JSONObject): List<AbsenceEntity> {
+        if (!json.has("absences")) return emptyList()
         val absencesArray = json.getJSONArray("absences")
-        val absenceEntities = (0 until absencesArray.length()).map { i ->
+        return (0 until absencesArray.length()).map { i ->
             val obj = absencesArray.getJSONObject(i)
             AbsenceEntity(
                 id = obj.getLong("id"),
@@ -222,19 +264,17 @@ class BackupManager @Inject constructor(
                 isCounted = obj.optBoolean("isCounted", false)
             )
         }
-        absenceDao.insertAll(absenceEntities)
     }
 
-    private suspend fun restoreSettings(json: JSONObject) {
-        settingsRepository.updateRequiredPercentage(json.getInt("requiredPercentage"))
-        settingsRepository.updateCountSaturdaysAsWorkdays(json.getBoolean("countSaturdaysAsWorkdays"))
-        if (json.has("presencePolicy")) {
-            val policyJson = json.getJSONObject("presencePolicy")
-            settingsRepository.updatePresencePolicy(
-                PresencePolicyMapper.fromJson(policyJson.toString(), json.getInt("requiredPercentage"))
-            )
-        }
-    }
+    private data class RestoreData(
+        val requiredPercentage: Int,
+        val countSaturdaysAsWorkdays: Boolean,
+        val presencePolicy: PresencePolicy?,
+        val checkIns: List<CheckInEntity>,
+        val summaries: List<MonthlySummaryEntity>,
+        val workAddresses: List<WorkAddressEntity>,
+        val absences: List<AbsenceEntity>
+    )
 
     companion object {
         const val BACKUP_VERSION = 4

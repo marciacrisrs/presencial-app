@@ -21,7 +21,7 @@ All notable changes to Presencial are documented in this file.
 - Acessibilidade no calendário: descrição por dia e ícone de presencial
 
 ### Changed
-- Widget usa a mesma instância Room do app (`PresencialDatabase.getInstance`), sem fallback destrutivo (issue #61)
+- Backup em pasta via SAF, com confirmação antes de restaurar; permissão revogada não apaga o último sync (issue #62)
 - Backup JSON v4 inclui ausências; importação valida versões suportadas (3 e 4)
 - Home com scroll vertical para evitar clipping em telas pequenas
 - Botão de check-in com labels e contentDescription para TalkBack

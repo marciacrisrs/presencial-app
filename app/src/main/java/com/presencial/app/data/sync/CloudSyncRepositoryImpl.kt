@@ -2,6 +2,7 @@ package com.presencial.app.data.sync
 
 import android.net.Uri
 import com.presencial.app.data.backup.BackupManager
+import com.presencial.app.domain.model.BackupFolderStatus
 import com.presencial.app.domain.model.CloudStorageProvider
 import com.presencial.app.domain.model.CloudSyncState
 import com.presencial.app.domain.repository.CloudSyncRepository
@@ -40,8 +41,8 @@ class CloudSyncRepositoryImpl @Inject constructor(
     }
 
     override suspend fun uploadBackup(): Result<Unit> {
-        if (!folderSyncProvider.isSignedIn()) {
-            return Result.failure(IllegalStateException("Selecione uma pasta na nuvem primeiro"))
+        if (!folderSyncProvider.isFolderAccessible()) {
+            return Result.failure(IllegalStateException("Escolha uma pasta de backup primeiro"))
         }
         _syncState.update { it.copy(isSyncing = true) }
         val result = runCatching {
@@ -58,8 +59,8 @@ class CloudSyncRepositoryImpl @Inject constructor(
     }
 
     override suspend fun restoreBackup(): Result<Unit> {
-        if (!folderSyncProvider.isSignedIn()) {
-            return Result.failure(IllegalStateException("Selecione uma pasta na nuvem primeiro"))
+        if (!folderSyncProvider.isFolderAccessible()) {
+            return Result.failure(IllegalStateException("Escolha uma pasta de backup primeiro"))
         }
         _syncState.update { it.copy(isSyncing = true) }
         val result = runCatching {
@@ -75,14 +76,20 @@ class CloudSyncRepositoryImpl @Inject constructor(
     }
 
     override suspend fun refreshState() {
-        if (folderSyncProvider.isSignedIn() && !folderSyncProvider.isFolderAccessible()) {
-            folderSyncProvider.signOut()
-            cloudSyncPreferences.clearLastSyncEpochMillis()
+        val hasFolder = folderSyncProvider.isSignedIn()
+        val accessible = hasFolder && folderSyncProvider.isFolderAccessible()
+        val backupExists = accessible && folderSyncProvider.backupExists()
+        val folderStatus = when {
+            !hasFolder -> BackupFolderStatus.NOT_CHOSEN
+            !accessible -> BackupFolderStatus.PERMISSION_REVOKED
+            else -> BackupFolderStatus.ACCESSIBLE
         }
         _syncState.update {
             CloudSyncState(
                 provider = folderSyncProvider.selectedProvider(),
-                isSignedIn = folderSyncProvider.isSignedIn(),
+                isSignedIn = accessible,
+                folderStatus = folderStatus,
+                backupExists = backupExists,
                 accountEmail = folderSyncProvider.getAccountEmail(),
                 lastSyncEpochMillis = cloudSyncPreferences.getLastSyncEpochMillis(),
                 isSyncing = it.isSyncing

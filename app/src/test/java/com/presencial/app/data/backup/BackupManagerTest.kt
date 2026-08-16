@@ -1,11 +1,14 @@
 package com.presencial.app.data.backup
 
 import com.presencial.app.data.local.dao.AbsenceDao
+import com.presencial.app.data.local.dao.BackupDao
 import com.presencial.app.data.local.dao.CheckInDao
 import com.presencial.app.data.local.dao.MonthlySummaryDao
 import com.presencial.app.data.local.dao.WorkAddressDao
 import com.presencial.app.domain.model.AppSettings
 import com.presencial.app.domain.model.CheckInSource
+import com.presencial.app.domain.model.PresencePolicy
+import com.presencial.app.domain.model.WeekParity
 import com.presencial.app.domain.repository.SettingsRepository
 import com.presencial.app.util.TestDataFactory
 import io.mockk.coEvery
@@ -15,14 +18,12 @@ import io.mockk.mockk
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.runTest
-import com.presencial.app.domain.model.PresencePolicy
-import com.presencial.app.domain.model.WeekParity
-import java.time.DayOfWeek
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import java.io.ByteArrayOutputStream
 import java.io.File
+import java.time.DayOfWeek
 
 class BackupManagerTest {
 
@@ -30,6 +31,7 @@ class BackupManagerTest {
     private val monthlySummaryDao: MonthlySummaryDao = mockk()
     private val workAddressDao: WorkAddressDao = mockk()
     private val absenceDao: AbsenceDao = mockk()
+    private val backupDao: BackupDao = mockk()
     private val settingsRepository: SettingsRepository = mockk()
     private val ioDispatcher = Dispatchers.IO
 
@@ -42,12 +44,11 @@ class BackupManagerTest {
             monthlySummaryDao,
             workAddressDao,
             absenceDao,
+            backupDao,
             settingsRepository,
             ioDispatcher
         )
         every { absenceDao.getAllAbsences() } returns flowOf(emptyList())
-        coEvery { absenceDao.deleteAll() } returns Unit
-        coEvery { absenceDao.insertAll(any()) } returns Unit
     }
 
     @Test
@@ -55,14 +56,14 @@ class BackupManagerTest {
         val settings = AppSettings(requiredPercentage = 40, countSaturdaysAsWorkdays = false)
         every { settingsRepository.settings } returns flowOf(settings)
         every { checkInDao.observeAll() } returns flowOf(
-            listOf(
-                TestDataFactory.createCheckInEntity(
-                    source = CheckInSource.AUTO_GEOFENCE
-                )
-            )
+            listOf(TestDataFactory.createCheckInEntity(source = CheckInSource.AUTO_GEOFENCE))
         )
-        every { monthlySummaryDao.observeAll() } returns flowOf(listOf(TestDataFactory.createMonthlySummaryEntity()))
-        coEvery { workAddressDao.getAllAddressesSync() } returns listOf(TestDataFactory.createWorkAddressEntity())
+        every { monthlySummaryDao.observeAll() } returns flowOf(
+            listOf(TestDataFactory.createMonthlySummaryEntity())
+        )
+        coEvery { workAddressDao.getAllAddressesSync() } returns listOf(
+            TestDataFactory.createWorkAddressEntity()
+        )
 
         val outputStream = ByteArrayOutputStream()
         val result = backupManager.exportToStream(outputStream)
@@ -128,21 +129,19 @@ class BackupManagerTest {
         """.trimIndent()
         val tempFile = File.createTempFile("backup_v3", ".json")
         tempFile.writeText(json)
-
-        coEvery { checkInDao.deleteAll() } returns Unit
-        coEvery { monthlySummaryDao.deleteAll() } returns Unit
-        coEvery { workAddressDao.deleteAll() } returns Unit
-        coEvery { absenceDao.deleteAll() } returns Unit
-        coEvery { checkInDao.insertAll(any()) } returns Unit
-        coEvery { monthlySummaryDao.insertAll(any()) } returns Unit
-        coEvery { settingsRepository.updateRequiredPercentage(35) } returns Unit
-        coEvery { settingsRepository.updateCountSaturdaysAsWorkdays(false) } returns Unit
-        coEvery { settingsRepository.updatePresencePolicy(any()) } returns Unit
+        stubSuccessfulImport(AppSettings(requiredPercentage = 40))
 
         val result = backupManager.importFromFile(tempFile)
 
         assertTrue(result.isSuccess)
-        coVerify { settingsRepository.updatePresencePolicy(match { it.companyName == "Acme" }) }
+        coVerify {
+            settingsRepository.restoreBackupSettings(
+                requiredPercentage = 35,
+                countSaturdaysAsWorkdays = false,
+                presencePolicy = match { it.companyName == "Acme" }
+            )
+        }
+        coVerify { backupDao.restoreAll(emptyList(), emptyList(), emptyList(), emptyList()) }
         tempFile.delete()
     }
 
@@ -165,76 +164,41 @@ class BackupManagerTest {
     }
 
     @Test
-    fun `when importFromFile with invalid JSON, then return failure`() = runTest {
+    fun `when importFromFile with invalid JSON, then return failure without touching database`() = runTest {
         val tempFile = File.createTempFile("invalid_backup", ".json")
         tempFile.writeText("invalid json")
 
         val result = backupManager.importFromFile(tempFile)
 
         assertTrue(result.isFailure)
+        coVerify(exactly = 0) { backupDao.restoreAll(any(), any(), any(), any()) }
         tempFile.delete()
     }
 
     @Test
     fun `when importFromFile, then restore check-ins work addresses and settings`() = runTest {
-        val json = """
-            {
-              "version": 3,
-              "requiredPercentage": 60,
-              "countSaturdaysAsWorkdays": true,
-              "checkIns": [
-                {
-                  "dateEpochDay": 20672,
-                  "status": "PRESENCIAL",
-                  "updatedAt": 1723000000000,
-                  "source": "auto_geofence",
-                  "workAddressId": 3
-                }
-              ],
-              "summaries": [
-                {
-                  "yearMonthKey": "2026-08",
-                  "workdays": 21,
-                  "requiredDays": 9,
-                  "completedDays": 5,
-                  "homeOfficeDays": 2,
-                  "requiredPercentage": 40,
-                  "achievedPercentage": 55.5
-                }
-              ],
-              "workAddresses": [
-                {
-                  "id": 3,
-                  "name": "Escritório",
-                  "addressText": "Rua A",
-                  "latitude": -23.55,
-                  "longitude": -46.63,
-                  "radius": 50.0,
-                  "isActive": true
-                }
-              ]
-            }
-        """.trimIndent()
-
         val tempFile = File.createTempFile("backup_test", ".json")
-        tempFile.writeText(json)
-
-        coEvery { checkInDao.deleteAll() } returns Unit
-        coEvery { monthlySummaryDao.deleteAll() } returns Unit
-        coEvery { workAddressDao.deleteAll() } returns Unit
-        coEvery { absenceDao.deleteAll() } returns Unit
-        coEvery { checkInDao.insertAll(any()) } returns Unit
-        coEvery { monthlySummaryDao.insertAll(any()) } returns Unit
-        coEvery { workAddressDao.insertAll(any()) } returns Unit
-        coEvery { settingsRepository.updateRequiredPercentage(any()) } returns Unit
-        coEvery { settingsRepository.updateCountSaturdaysAsWorkdays(any()) } returns Unit
+        tempFile.writeText(createBackupWithCheckInsAndAddress())
+        stubSuccessfulImport(AppSettings(requiredPercentage = 40))
 
         val result = backupManager.importFromFile(tempFile)
 
         assertTrue(result.isSuccess)
-        coVerify { workAddressDao.deleteAll() }
-        coVerify { workAddressDao.insertAll(match { it.size == 1 }) }
-        coVerify { checkInDao.insertAll(match { it.first().source == CheckInSource.AUTO_GEOFENCE }) }
+        coVerify {
+            backupDao.restoreAll(
+                match { it.size == 1 && it.first().source == CheckInSource.AUTO_GEOFENCE },
+                match { it.size == 1 },
+                match { it.size == 1 && it.first().name == "Escritório" },
+                match { it.isEmpty() }
+            )
+        }
+        coVerify {
+            settingsRepository.restoreBackupSettings(
+                requiredPercentage = 60,
+                countSaturdaysAsWorkdays = true,
+                presencePolicy = null
+            )
+        }
         tempFile.delete()
     }
 
@@ -287,6 +251,7 @@ class BackupManagerTest {
         val result = backupManager.importFromFile(tempFile)
 
         assertTrue(result.isFailure)
+        coVerify(exactly = 0) { backupDao.restoreAll(any(), any(), any(), any()) }
         tempFile.delete()
     }
 
@@ -304,27 +269,45 @@ class BackupManagerTest {
         val result = backupManager.importFromFile(tempFile)
 
         assertTrue(result.isFailure)
+        coVerify(exactly = 0) { backupDao.restoreAll(any(), any(), any(), any()) }
         tempFile.delete()
     }
 
     @Test
-    fun `when importFromFile and dao fails, then return failure`() = runTest {
+    fun `when importFromFile and dao fails, then return failure and restore previous settings`() = runTest {
+        val previousSettings = AppSettings(requiredPercentage = 40, countSaturdaysAsWorkdays = false)
         val json = """
-            {"version":3,"requiredPercentage":40,"countSaturdaysAsWorkdays":false,"checkIns":[],"summaries":[]}
+            {"version":3,"requiredPercentage":60,"countSaturdaysAsWorkdays":true,"checkIns":[],"summaries":[]}
         """.trimIndent()
         val tempFile = File.createTempFile("dao_fail", ".json")
         tempFile.writeText(json)
 
-        coEvery { checkInDao.deleteAll() } throws RuntimeException("Database error")
+        every { settingsRepository.settings } returns flowOf(previousSettings)
+        coEvery { settingsRepository.restoreBackupSettings(any(), any(), any()) } returns Unit
+        coEvery { backupDao.restoreAll(any(), any(), any(), any()) } throws RuntimeException("Database error")
 
         val result = backupManager.importFromFile(tempFile)
 
         assertTrue(result.isFailure)
+        coVerify(exactly = 1) {
+            settingsRepository.restoreBackupSettings(
+                requiredPercentage = 60,
+                countSaturdaysAsWorkdays = true,
+                presencePolicy = null
+            )
+        }
+        coVerify(exactly = 1) {
+            settingsRepository.restoreBackupSettings(
+                requiredPercentage = previousSettings.requiredPercentage,
+                countSaturdaysAsWorkdays = previousSettings.countSaturdaysAsWorkdays,
+                presencePolicy = previousSettings.presencePolicy
+            )
+        }
         tempFile.delete()
     }
 
     @Test
-    fun `when importFromBytes v4, then restore absences`() = runTest {
+    fun `when importFromBytes v4, then restore absences atomically`() = runTest {
         val json = """
             {
               "version": 4,
@@ -346,17 +329,22 @@ class BackupManagerTest {
               ]
             }
         """.trimIndent()
-        stubSuccessfulImport()
+        stubSuccessfulImport(AppSettings(requiredPercentage = 40))
 
         val result = backupManager.importFromBytes(json.toByteArray())
 
         assertTrue(result.isSuccess)
         coVerify {
-            absenceDao.insertAll(match { absences ->
-                absences.size == 1 &&
-                    absences.first().type == "VACATION" &&
-                    absences.first().notes == "Férias"
-            })
+            backupDao.restoreAll(
+                match { it.isEmpty() },
+                match { it.isEmpty() },
+                match { it.isEmpty() },
+                match {
+                    it.size == 1 &&
+                        it.first().type == "VACATION" &&
+                        it.first().notes == "Férias"
+                }
+            )
         }
     }
 
@@ -365,6 +353,7 @@ class BackupManagerTest {
         val result = backupManager.importFromBytes("invalid json".toByteArray())
 
         assertTrue(result.isFailure)
+        coVerify(exactly = 0) { backupDao.restoreAll(any(), any(), any(), any()) }
     }
 
     @Test
@@ -382,6 +371,7 @@ class BackupManagerTest {
         val result = backupManager.importFromBytes(json.toByteArray())
 
         assertTrue(result.isFailure)
+        coVerify(exactly = 0) { backupDao.restoreAll(any(), any(), any(), any()) }
     }
 
     @Test
@@ -397,24 +387,84 @@ class BackupManagerTest {
         """.trimIndent()
         val tempFile = File.createTempFile("backup_v4_no_absences", ".json")
         tempFile.writeText(json)
-        stubSuccessfulImport()
+        stubSuccessfulImport(AppSettings(requiredPercentage = 40))
 
         val result = backupManager.importFromFile(tempFile)
 
         assertTrue(result.isSuccess)
-        coVerify(exactly = 0) { absenceDao.insertAll(any()) }
+        coVerify {
+            backupDao.restoreAll(
+                match { it.isEmpty() },
+                match { it.isEmpty() },
+                match { it.isEmpty() },
+                match { it.isEmpty() }
+            )
+        }
         tempFile.delete()
     }
 
-    private fun stubSuccessfulImport() {
-        coEvery { checkInDao.deleteAll() } returns Unit
-        coEvery { monthlySummaryDao.deleteAll() } returns Unit
-        coEvery { workAddressDao.deleteAll() } returns Unit
-        coEvery { absenceDao.deleteAll() } returns Unit
-        coEvery { checkInDao.insertAll(any()) } returns Unit
-        coEvery { monthlySummaryDao.insertAll(any()) } returns Unit
-        coEvery { settingsRepository.updateRequiredPercentage(any()) } returns Unit
-        coEvery { settingsRepository.updateCountSaturdaysAsWorkdays(any()) } returns Unit
-        coEvery { absenceDao.insertAll(any()) } returns Unit
+    @Test
+    fun `when restore payload is invalid, then current data is not touched`() = runTest {
+        val json = """
+            {
+              "version": 4,
+              "requiredPercentage": 40,
+              "countSaturdaysAsWorkdays": false,
+              "checkIns": [
+                {"dateEpochDay": 20672}
+              ],
+              "summaries": []
+            }
+        """.trimIndent()
+
+        val result = backupManager.importFromBytes(json.toByteArray())
+
+        assertTrue(result.isFailure)
+        coVerify(exactly = 0) { backupDao.restoreAll(any(), any(), any(), any()) }
     }
+
+    private fun stubSuccessfulImport(previousSettings: AppSettings) {
+        every { settingsRepository.settings } returns flowOf(previousSettings)
+        coEvery { backupDao.restoreAll(any(), any(), any(), any()) } returns Unit
+        coEvery { settingsRepository.restoreBackupSettings(any(), any(), any()) } returns Unit
+    }
+
+    private fun createBackupWithCheckInsAndAddress(): String = """
+        {
+          "version": 3,
+          "requiredPercentage": 60,
+          "countSaturdaysAsWorkdays": true,
+          "checkIns": [
+            {
+              "dateEpochDay": 20672,
+              "status": "PRESENCIAL",
+              "updatedAt": 1723000000000,
+              "source": "auto_geofence",
+              "workAddressId": 3
+            }
+          ],
+          "summaries": [
+            {
+              "yearMonthKey": "2026-08",
+              "workdays": 21,
+              "requiredDays": 9,
+              "completedDays": 5,
+              "homeOfficeDays": 2,
+              "requiredPercentage": 40,
+              "achievedPercentage": 55.5
+            }
+          ],
+          "workAddresses": [
+            {
+              "id": 3,
+              "name": "Escritório",
+              "addressText": "Rua A",
+              "latitude": -23.55,
+              "longitude": -46.63,
+              "radius": 50.0,
+              "isActive": true
+            }
+          ]
+        }
+    """.trimIndent()
 }

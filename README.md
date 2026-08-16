@@ -24,7 +24,7 @@ Aplicativo Android para controle de comparecimento presencial no trabalho. Calcu
 
 - **Estatísticas** — gráficos de evolução, média anual, sequências e exportação PDF, CSV e Excel
 
-- **Configurações** — política de presença (percentual livre, dias fixos, semanas alternadas), sábados como dias úteis, backup/restauração JSON e sincronização opcional com Google Drive
+- **Configurações** — política de presença (percentual livre, dias fixos, semanas alternadas), sábados como dias úteis e backup JSON via pasta escolhida no Android
 
 - **Ausências** — registro de férias, day off, licenças e ausências com desconto automático na meta mensal
 
@@ -32,7 +32,7 @@ Aplicativo Android para controle de comparecimento presencial no trabalho. Calcu
 
 - **Widget** — progresso mensal, status do dia, alerta quando a meta exige atenção e toque para abrir o app
 
-- **Sobre** — versão do app, política de privacidade (dados locais por padrão; sync na nuvem opcional) e link para o desenvolvedor
+- **Sobre** — versão do app, política de privacidade (dados locais por padrão; backup em pasta opcional) e link para o desenvolvedor
 
 - **Tema claro/escuro** — Material Design 3 com suporte a Dynamic Color (Material You)
 
@@ -172,11 +172,11 @@ UI (Compose) → ViewModel → UseCase → Repository → Room / DataStore
 
 
 
-### Sincronização na nuvem (opcional)
+### Backup (opcional)
 
-Em **Configurações → Sincronização na nuvem**, escolha Google Drive, OneDrive ou Dropbox e conecte uma pasta. O app grava `presencial_backup.json` nessa pasta via Storage Access Framework (sem servidor próprio).
+Em **Configurações → Backup**, escolha uma pasta no app de armazenamento que você usa. O app grava `presencial_backup.json` nessa pasta via Storage Access Framework (sem login OAuth). Restaurar pede confirmação porque substitui os dados atuais.
 
-Pesquisa comparativa e plano de evolução (OAuth nativo Google Drive): [`docs/cloud-sync-research.md`](docs/cloud-sync-research.md)
+Pesquisa comparativa histórica: [`docs/cloud-sync-research.md`](docs/cloud-sync-research.md)
 
 
 

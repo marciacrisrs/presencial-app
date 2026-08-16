@@ -42,6 +42,7 @@ class SettingsFlowTest {
         every { viewModel.workAddresses } returns workAddressesFlow
         every { viewModel.policyValidation } returns policyValidationFlow
         every { viewModel.cloudSyncState } returns cloudSyncStateFlow
+        every { viewModel.pendingRestore } returns MutableStateFlow(null)
     }
 
     @Test
@@ -77,7 +78,30 @@ class SettingsFlowTest {
         // "Sobre o Aplicativo" está dentro de um Card de configurações extras
         composeTestRule.onNodeWithText("Sobre o Aplicativo").performScrollTo().performClick()
         
-        assert(navigatedToAbout)
+        org.junit.Assert.assertTrue(navigatedToAbout)
+    }
+
+    @Test
+    fun restoreConfirmation_cancelDoesNotRestore() {
+        val pendingRestoreFlow = MutableStateFlow<PendingRestore?>(PendingRestore.Folder)
+        every { viewModel.pendingRestore } returns pendingRestoreFlow
+        startSettingsScreen()
+
+        composeTestRule.onNodeWithText("Restaurar backup?").assertIsDisplayed()
+        composeTestRule.onNodeWithText("Cancelar").performClick()
+        verify { viewModel.cancelRestore() }
+        verify(exactly = 0) { viewModel.confirmRestore() }
+        verify(exactly = 0) { viewModel.restoreCloudBackup() }
+    }
+
+    @Test
+    fun restoreConfirmation_confirmCallsViewModel() {
+        val pendingRestoreFlow = MutableStateFlow<PendingRestore?>(PendingRestore.Folder)
+        every { viewModel.pendingRestore } returns pendingRestoreFlow
+        startSettingsScreen()
+
+        composeTestRule.onNodeWithText("Restaurar").performClick()
+        verify { viewModel.confirmRestore() }
     }
 
     private fun startSettingsScreen(
