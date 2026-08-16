@@ -97,23 +97,21 @@ private fun WidgetContent(info: WidgetInfo) {
             text = headlineFor(info, context),
             style = TextStyle(
                 color = colors.headline(info.status),
-                fontSize = 13.sp,
+                fontSize = 15.sp,
                 fontWeight = FontWeight.Bold,
                 textAlign = TextAlign.Center
             )
         )
 
-        if (info.status != WidgetStatus.GOAL_MET && info.required > 0) {
+        val remaining = remainingLine(info, context)
+        if (remaining.isNotEmpty()) {
             Spacer(modifier = GlanceModifier.height(4.dp))
             Text(
-                text = context.getString(
-                    R.string.widget_compact_progress,
-                    info.completed,
-                    info.required
-                ),
+                text = remaining,
                 style = TextStyle(
                     color = colors.secondaryText,
-                    fontSize = 11.sp,
+                    fontSize = 12.sp,
+                    fontWeight = FontWeight.Medium,
                     textAlign = TextAlign.Center
                 )
             )
@@ -143,9 +141,16 @@ private fun todayLabel(status: WidgetTodayStatus, context: Context): String = wh
     WidgetTodayStatus.PENDING -> context.getString(R.string.widget_today_pending)
 }
 
-private fun headlineFor(info: WidgetInfo, context: Context): String = when (info.status) {
-    WidgetStatus.GOAL_MET -> context.getString(R.string.widget_goal_met)
-    WidgetStatus.NO_GOAL -> context.getString(R.string.widget_configure_goal)
+private fun headlineFor(info: WidgetInfo, context: Context): String =
+    if (info.required <= 0) {
+        context.getString(R.string.widget_configure_goal)
+    } else {
+        context.getString(R.string.widget_compact_progress, info.completed, info.required)
+    }
+
+private fun remainingLine(info: WidgetInfo, context: Context): String = when {
+    info.required <= 0 -> ""
+    info.status == WidgetStatus.GOAL_MET -> context.getString(R.string.widget_goal_met)
     else -> context.resources.getQuantityString(
         R.plurals.widget_remaining_days,
         info.remaining,

@@ -45,22 +45,11 @@ import com.airbnb.lottie.compose.rememberLottieComposition
 import androidx.compose.ui.res.stringResource
 import com.presencial.app.R
 import com.presencial.app.domain.model.DashboardData
+import com.presencial.app.domain.util.PresenceProgressPresentation
 import com.presencial.app.ui.components.CircularProgressCard
-import com.presencial.app.ui.components.DashboardProgressBar
 import com.presencial.app.ui.components.SmartMessageCard
-import com.presencial.app.ui.components.StatCard
 import java.time.format.TextStyle
 import java.util.Locale
-
-@Composable
-private fun dashboardGoalLabel(dashboard: DashboardData): String {
-    val company = dashboard.policyCompanyName.trim()
-    return if (company.isNotEmpty()) {
-        stringResource(R.string.dashboard_goal_with_company, dashboard.requiredPercentage, company)
-    } else {
-        stringResource(R.string.dashboard_goal_default, dashboard.requiredPercentage)
-    }
-}
 
 @Composable
 fun DashboardSmartMessageSection(dashboard: DashboardData) {
@@ -76,25 +65,25 @@ fun DashboardSmartMessageSection(dashboard: DashboardData) {
 
 @Composable
 fun DashboardProgressSection(dashboard: DashboardData) {
+    val copy = PresenceProgressPresentation.from(
+        completedDays = dashboard.completedDays,
+        requiredDays = dashboard.requiredDays,
+        remainingDays = dashboard.remainingDays,
+        policyPercentage = dashboard.requiredPercentage,
+        companyName = dashboard.policyCompanyName
+    )
     AnimatedVisibility(
         visible = true,
         enter = fadeIn() + slideInVertically(initialOffsetY = { ANIM_OFFSET_PROGRESS })
     ) {
         CircularProgressCard(
             progress = dashboard.progressFraction,
-            label = dashboardGoalLabel(dashboard),
+            completedDays = dashboard.completedDays,
+            requiredDays = dashboard.requiredDays,
+            remainingLine = copy.remainingLine,
+            policyLine = copy.policyLine,
             modifier = Modifier.fillMaxWidth()
         )
-    }
-}
-
-@Composable
-fun DashboardProgressBarSection(dashboard: DashboardData) {
-    AnimatedVisibility(
-        visible = true,
-        enter = fadeIn() + slideInVertically(initialOffsetY = { ANIM_OFFSET_BAR })
-    ) {
-        DashboardProgressBar(data = dashboard)
     }
 }
 
@@ -122,35 +111,6 @@ fun DashboardHeader(dashboard: DashboardData) {
             Text(
                 text = "${monthName.replaceFirstChar { it.uppercase() }} ${dashboard.yearMonth.year}",
                 style = MaterialTheme.typography.headlineSmall
-            )
-        }
-    }
-}
-
-@Composable
-fun DashboardStats(dashboard: DashboardData) {
-    AnimatedVisibility(
-        visible = true,
-        enter = fadeIn() + slideInVertically(initialOffsetY = { ANIM_OFFSET_STATS })
-    ) {
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(STATS_SPACING)
-        ) {
-            StatCard(
-                title = "Úteis",
-                value = "${dashboard.workdays}",
-                modifier = Modifier.weight(WEIGHT_EQUAL)
-            )
-            StatCard(
-                title = "Meta",
-                value = "${dashboard.requiredDays}",
-                modifier = Modifier.weight(WEIGHT_EQUAL)
-            )
-            StatCard(
-                title = "Feito",
-                value = "${dashboard.completedDays}",
-                modifier = Modifier.weight(WEIGHT_EQUAL)
             )
         }
     }
@@ -288,7 +248,6 @@ internal fun CheckInButton(
 
 private val LOGO_SIZE = 32.dp
 private val HEADER_SPACING = 8.dp
-private val STATS_SPACING = 8.dp
 private val CONTENT_SPACING = 12.dp
 private val SUCCESS_ANIM_HEIGHT = 120.dp
 private val BUTTON_HEIGHT = 60.dp
@@ -303,7 +262,5 @@ private const val WEIGHT_EQUAL = 1f
 private const val ANIM_OFFSET_HEADER = 40
 private const val ANIM_OFFSET_SMART_MESSAGE = 60
 private const val ANIM_OFFSET_PROGRESS = 80
-private const val ANIM_OFFSET_STATS = 100
-private const val ANIM_OFFSET_BAR = 120
 private const val YESTERDAY_CARD_ALPHA = 0.5f
 private const val DISABLED_BUTTON_ALPHA = 0.5f

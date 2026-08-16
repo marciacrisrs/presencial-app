@@ -17,6 +17,13 @@
     <string name="policy_week_remote">remota</string>
     <string name="policy_validation_error">⚠ %1$s</string>
     <string name="policy_validation_warning">ℹ %1$s</string>
-    <string name="dashboard_goal_with_company">Meta: %1$d%% · %2$s</string>
-    <string name="dashboard_goal_default">Meta: %1$d%%</string>
+    <string name="dashboard_goal_with_company">Regra: %1$d%% dos dias úteis · %2$s</string>
+    <string name="dashboard_goal_default">Regra: %1$d%% dos dias úteis</string>
+    <string name="dashboard_days_progress">%1$d de %2$d dias presenciais</string>
+    <string name="dashboard_days_center">%1$d de %2$d</string>
+    <string name="dashboard_days_center_caption">dias presenciais</string>
+    <string name="dashboard_remaining_none">Meta atingida</string>
+    <string name="dashboard_remaining_one">Falta 1 dia</string>
+    <string name="dashboard_remaining_many">Faltam %d dias</string>
+    <string name="dashboard_workdays_context">%d dias úteis neste mês</string>
 </resources>
