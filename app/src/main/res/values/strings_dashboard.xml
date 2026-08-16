@@ -8,4 +8,5 @@
     <string name="dashboard_check_in_success">Presença registrada com sucesso</string>
     <string name="dashboard_check_in_removed">Check-in desfeito</string>
     <string name="dashboard_yesterday_check_in_success">Presença de ontem registrada</string>
+    <string name="notification_checkin_title">Lembrete de presença</string>
 </resources>
