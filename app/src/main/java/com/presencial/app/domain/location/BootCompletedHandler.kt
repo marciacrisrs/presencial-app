@@ -14,6 +14,7 @@ class BootCompletedHandler @Inject constructor(
     private val notificationScheduler: NotificationScheduler
 ) {
     suspend fun handleBootCompleted() {
+        notificationScheduler.scheduleDailyReminder()
         notificationScheduler.scheduleWidgetRefresh(ExistingWorkPolicy.REPLACE)
         syncGeofencesUseCase()
         widgetRefresher.refresh()
