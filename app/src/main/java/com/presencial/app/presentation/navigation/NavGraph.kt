@@ -235,7 +235,8 @@ private fun MainTabPager(
         when (page) {
             0 -> DashboardScreen(
                 openCheckIn = openCheckIn,
-                onCheckInHandled = onCheckInHandled
+                onCheckInHandled = onCheckInHandled,
+                onNavigateToWorkAddresses = { navController.navigate(Screen.WorkAddresses.route) }
             )
             1 -> CalendarScreen(
                 onNavigateToAbsences = { navController.navigate(Screen.Absences.route) }
