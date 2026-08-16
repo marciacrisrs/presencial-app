@@ -136,21 +136,36 @@ class BackupManager @Inject constructor(
 
     private suspend fun restoreFromJson(json: JSONObject) {
         val data = parseAndValidateRestoreData(json)
+        val previousSettings = settingsRepository.settings.first()
 
-        // All Room tables are replaced in one transaction. Parsing and validation
-        // happen before this point, so an invalid backup cannot delete current data.
-        backupDao.restoreAll(
-            checkIns = data.checkIns,
-            summaries = data.summaries,
-            workAddresses = data.workAddresses,
-            absences = data.absences
+        // Persist settings as one DataStore operation, then restore all Room tables.
+        // If Room fails, restore the previous settings as compensation so a failed
+        // restore does not intentionally leave the two persistence layers divergent.
+        settingsRepository.restoreBackupSettings(
+            requiredPercentage = data.requiredPercentage,
+            countSaturdaysAsWorkdays = data.countSaturdaysAsWorkdays,
+            presencePolicy = data.presencePolicy
         )
 
-        // Settings live in DataStore, outside the Room transaction. They are parsed
-        // and validated above before any database mutation is made.
-        settingsRepository.updateRequiredPercentage(data.requiredPercentage)
-        settingsRepository.updateCountSaturdaysAsWorkdays(data.countSaturdaysAsWorkdays)
-        data.presencePolicy?.let { settingsRepository.updatePresencePolicy(it) }
+        try {
+            backupDao.restoreAll(
+                checkIns = data.checkIns,
+                summaries = data.summaries,
+                workAddresses = data.workAddresses,
+                absences = data.absences
+            )
+        } catch (restoreFailure: Throwable) {
+            runCatching {
+                settingsRepository.restoreBackupSettings(
+                    requiredPercentage = previousSettings.requiredPercentage,
+                    countSaturdaysAsWorkdays = previousSettings.countSaturdaysAsWorkdays,
+                    presencePolicy = previousSettings.presencePolicy
+                )
+            }.onFailure { rollbackFailure ->
+                restoreFailure.addSuppressed(rollbackFailure)
+            }
+            throw restoreFailure
+        }
     }
 
     private fun parseAndValidateRestoreData(json: JSONObject): RestoreData {
