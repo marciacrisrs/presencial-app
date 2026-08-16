@@ -57,9 +57,7 @@ fun DashboardSmartMessageSection(dashboard: DashboardData) {
         visible = true,
         enter = fadeIn() + slideInVertically(initialOffsetY = { ANIM_OFFSET_SMART_MESSAGE })
     ) {
-        SmartMessageCard(
-            message = dashboard.smartMessage
-        )
+        SmartMessageCard(message = dashboard.smartMessage)
     }
 }
 
@@ -90,10 +88,10 @@ fun DashboardProgressSection(dashboard: DashboardData) {
 @Composable
 fun DashboardHeader(dashboard: DashboardData) {
     val monthName = dashboard.yearMonth.month.getDisplayName(
-        TextStyle.FULL, 
+        TextStyle.FULL,
         Locale.forLanguageTag("pt-BR")
     )
-    
+
     AnimatedVisibility(
         visible = true,
         enter = fadeIn() + slideInVertically(initialOffsetY = { ANIM_OFFSET_HEADER })
@@ -134,9 +132,7 @@ fun DashboardActionSection(
     }
 
     if (dashboard.yesterdayIsPending) {
-        YesterdayCheckInCard(
-            onConfirm = onMarkYesterdayPresencial
-        )
+        YesterdayCheckInCard(onConfirm = onMarkYesterdayPresencial)
     }
 
     if (dashboard.completedDays >= dashboard.requiredDays && dashboard.requiredDays > 0) {
@@ -185,6 +181,7 @@ internal fun CheckInButton(
 ) {
     val registerLabel = stringResource(R.string.dashboard_check_in_register)
     val registeredLabel = stringResource(R.string.dashboard_check_in_registered)
+    val undoLabel = stringResource(R.string.dashboard_check_in_undo)
 
     Column(
         modifier = Modifier.fillMaxWidth().padding(vertical = BUTTON_VERTICAL_PADDING),
@@ -209,37 +206,29 @@ internal fun CheckInButton(
                     ),
                     elevation = ButtonDefaults.elevatedButtonElevation(defaultElevation = BUTTON_ELEVATION)
                 ) {
-                    Icon(
-                        Icons.Default.Check,
-                        contentDescription = null,
-                        modifier = Modifier.size(ICON_SIZE)
-                    )
+                    Icon(Icons.Default.Check, contentDescription = null, modifier = Modifier.size(ICON_SIZE))
                     Spacer(Modifier.width(ICON_SPACING))
-                    Text(
-                        text = registerLabel,
-                        style = MaterialTheme.typography.titleMedium
-                    )
+                    Text(text = registerLabel, style = MaterialTheme.typography.titleMedium)
                 }
             } else {
                 Button(
-                    onClick = { },
-                    enabled = false,
+                    onClick = onConfirm,
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(BUTTON_HEIGHT)
-                        .semantics { contentDescription = registeredLabel },
+                        .semantics { contentDescription = undoLabel },
                     shape = RoundedCornerShape(CORNER_RADIUS_LARGE),
                     colors = ButtonDefaults.buttonColors(
-                        disabledContainerColor = MaterialTheme.colorScheme.primary.copy(alpha = DISABLED_BUTTON_ALPHA),
-                        disabledContentColor = MaterialTheme.colorScheme.onPrimary
+                        containerColor = MaterialTheme.colorScheme.primary.copy(alpha = DISABLED_BUTTON_ALPHA),
+                        contentColor = MaterialTheme.colorScheme.onPrimary
                     )
                 ) {
                     Icon(Icons.Default.CheckCircle, contentDescription = null)
                     Spacer(Modifier.width(ICON_SPACING))
-                    Text(
-                        text = registeredLabel,
-                        style = MaterialTheme.typography.titleMedium
-                    )
+                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                        Text(text = registeredLabel, style = MaterialTheme.typography.titleMedium)
+                        Text(text = undoLabel, style = MaterialTheme.typography.labelMedium)
+                    }
                 }
             }
         }
