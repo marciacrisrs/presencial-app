@@ -46,7 +46,9 @@ abstract class PresencialDatabase : RoomDatabase() {
         @VisibleForTesting
         fun create(context: Context, name: String): PresencialDatabase =
             Room.databaseBuilder(context, PresencialDatabase::class.java, name)
-                .addMigrations(*ALL_MIGRATIONS)
+                .apply {
+                    ALL_MIGRATIONS.forEach(::addMigrations)
+                }
                 .build()
     }
 }
