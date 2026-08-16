@@ -4,6 +4,7 @@ import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onNodeWithText
+import androidx.compose.ui.test.performClick
 import com.presencial.app.domain.model.DashboardData
 import com.presencial.app.ui.components.CircularProgressCard
 import com.presencial.app.ui.components.SmartMessageCard
@@ -96,13 +97,17 @@ class DashboardComponentsTest {
     }
 
     @Test
-    fun CheckInButton_registered_showsSuccessText() {
+    fun CheckInButton_registered_isUndoable() {
+        var clicked = false
         composeTestRule.setContent {
             PresencialTheme {
-                CheckInButton(isPresencial = true, onConfirm = {})
+                CheckInButton(isPresencial = true, onConfirm = { clicked = true })
             }
         }
+
         composeTestRule.onNodeWithText("Presença registrada").assertIsDisplayed()
+        composeTestRule.onNodeWithText("Desfazer check-in").assertIsDisplayed().performClick()
+        assertTrue(clicked)
     }
 
     @Test
