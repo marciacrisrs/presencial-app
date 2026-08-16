@@ -2,7 +2,6 @@ package com.presencial.app.presentation.components
 
 import androidx.compose.ui.test.hasClickAction
 import androidx.compose.ui.test.junit4.createComposeRule
-import androidx.compose.ui.test.onNode
 import androidx.compose.ui.test.performClick
 import com.presencial.app.ui.theme.PresencialTheme
 import org.junit.Assert.assertTrue
