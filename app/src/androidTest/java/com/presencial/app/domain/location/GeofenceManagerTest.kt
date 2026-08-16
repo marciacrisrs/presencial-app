@@ -7,7 +7,7 @@ import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.google.android.gms.location.GeofencingClient
 import com.google.android.gms.location.GeofencingRequest
 import com.google.android.gms.location.LocationServices
-import com.google.android.gms.tasks.Task
+import com.google.android.gms.tasks.Tasks
 import com.presencial.app.data.location.AndroidGeofenceRegistrar
 import com.presencial.app.domain.model.WorkAddress
 import io.mockk.every
@@ -42,11 +42,8 @@ class GeofenceManagerTest {
 
     @Test
     fun registerGeofences_withEmptyList_callsRemoveGeofences() = runBlocking {
-        val mockTask: Task<Void> = mockk()
-        every { mockTask.isComplete } returns true
-        every { mockTask.isSuccessful } returns true
-        every { mockTask.exception } returns null
-        every { geofencingClient.removeGeofences(any<PendingIntent>()) } returns mockTask
+        val completedTask = Tasks.forResult<Void>(null)
+        every { geofencingClient.removeGeofences(any<PendingIntent>()) } returns completedTask
 
         geofenceRegistrar.registerGeofences(emptyList())
 
@@ -62,17 +59,14 @@ class GeofenceManagerTest {
             )
         )
 
-        val mockTask: Task<Void> = mockk()
-        every { mockTask.isComplete } returns true
-        every { mockTask.isSuccessful } returns true
-        every { mockTask.exception } returns null
-        every { geofencingClient.addGeofences(any(), any()) } returns mockTask
+        val completedTask = Tasks.forResult<Void>(null)
+        every { geofencingClient.addGeofences(any(), any()) } returns completedTask
 
         geofenceRegistrar.registerGeofences(addresses)
 
         verify {
             geofencingClient.addGeofences(
-                match { it is GeofencingRequest && it.geofences.size == 1 },
+                match { it.geofences.size == 1 },
                 any()
             )
         }
