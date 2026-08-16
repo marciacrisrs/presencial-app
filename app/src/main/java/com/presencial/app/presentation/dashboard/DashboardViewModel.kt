@@ -37,9 +37,13 @@ class DashboardViewModel @Inject constructor(
     fun toggleTodayCheckIn(markPresencial: Boolean) {
         viewModelScope.launch {
             toggleTodayCheckInUseCase(markPresencial = markPresencial)
-            if (markPresencial) {
-                uiEventChannel.send(DashboardUiEvent.CheckInRegistered)
-            }
+            uiEventChannel.send(
+                if (markPresencial) {
+                    DashboardUiEvent.CheckInRegistered
+                } else {
+                    DashboardUiEvent.CheckInRemoved
+                }
+            )
         }
     }
 

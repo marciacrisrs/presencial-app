@@ -33,12 +33,14 @@ fun DashboardScreen(
     val haptic = LocalHapticFeedback.current
     val snackbarHostState = remember { SnackbarHostState() }
     val checkInSuccessMessage = stringResource(R.string.dashboard_check_in_success)
+    val checkInRemovedMessage = stringResource(R.string.dashboard_check_in_removed)
     val yesterdaySuccessMessage = stringResource(R.string.dashboard_yesterday_check_in_success)
 
     LaunchedEffect(Unit) {
         viewModel.uiEvents.collect { event ->
             val message = when (event) {
                 DashboardUiEvent.CheckInRegistered -> checkInSuccessMessage
+                DashboardUiEvent.CheckInRemoved -> checkInRemovedMessage
                 DashboardUiEvent.YesterdayCheckInRegistered -> yesterdaySuccessMessage
             }
             snackbarHostState.showSnackbar(message)
@@ -65,7 +67,7 @@ fun DashboardScreen(
                 activeWorkAddressCount = workAddresses.count { it.isActive },
                 foregroundGranted = foregroundPermissions.allPermissionsGranted,
                 backgroundGranted = backgroundPermission.allPermissionsGranted,
-                onToggleTodayCheckIn = { viewModel.toggleTodayCheckIn(true) },
+                onToggleTodayCheckIn = { viewModel.toggleTodayCheckIn(!dashboard.todayIsPresencial) },
                 onMarkYesterdayPresencial = viewModel::markYesterdayPresencial,
                 haptic = haptic,
                 scrollToActions = openCheckIn
