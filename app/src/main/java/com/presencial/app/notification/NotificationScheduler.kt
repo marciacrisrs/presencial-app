@@ -33,11 +33,11 @@ class NotificationScheduler @Inject constructor(
         val target = java.util.Calendar.getInstance().apply {
             set(java.util.Calendar.HOUR_OF_DAY, WIDGET_REFRESH_HOUR)
             set(java.util.Calendar.MINUTE, WIDGET_REFRESH_MINUTE)
-            set(java.util.Calendar.SECOND, 0)
-            set(java.util.Calendar.MILLISECOND, 0)
-            if (!after(now)) add(java.util.Calendar.DAY_OF_MONTH, 1)
+            set(java.util.Calendar.SECOND, ZERO_SECONDS)
+            set(java.util.Calendar.MILLISECOND, ZERO_MILLISECONDS)
+            if (!after(now)) add(java.util.Calendar.DAY_OF_MONTH, ONE_DAY)
         }
-        val initialDelay = (target.timeInMillis - now.timeInMillis).coerceAtLeast(1L)
+        val initialDelay = (target.timeInMillis - now.timeInMillis).coerceAtLeast(MINIMUM_DELAY_MILLIS)
 
         val workRequest = OneTimeWorkRequestBuilder<WidgetRefreshWorker>()
             .setInitialDelay(initialDelay, TimeUnit.MILLISECONDS)
@@ -51,8 +51,8 @@ class NotificationScheduler @Inject constructor(
     }
 
     private fun scheduleCheckInReminder(hour: Int, minute: Int) {
-        require(hour in 0..23) { "Reminder hour must be between 0 and 23" }
-        require(minute in 0..59) { "Reminder minute must be between 0 and 59" }
+        require(hour in MIN_HOUR..MAX_HOUR) { "Reminder hour must be between 0 and 23" }
+        require(minute in MIN_MINUTE..MAX_MINUTE) { "Reminder minute must be between 0 and 59" }
 
         val initialDelay = ReminderScheduleCalculator.initialDelayMillis(
             now = LocalDateTime.now(),
@@ -79,5 +79,13 @@ class NotificationScheduler @Inject constructor(
         private const val WIDGET_REFRESH_HOUR = 0
         private const val WIDGET_REFRESH_MINUTE = 5
         private const val INTERVAL_HOURS = 24L
+        private const val MIN_HOUR = 0
+        private const val MAX_HOUR = 23
+        private const val MIN_MINUTE = 0
+        private const val MAX_MINUTE = 59
+        private const val ZERO_SECONDS = 0
+        private const val ZERO_MILLISECONDS = 0
+        private const val ONE_DAY = 1
+        private const val MINIMUM_DELAY_MILLIS = 1L
     }
 }
