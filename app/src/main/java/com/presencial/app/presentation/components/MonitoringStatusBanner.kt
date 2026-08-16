@@ -27,6 +27,7 @@ fun MonitoringStatusBanner(
     activeAddressCount: Int,
     foregroundGranted: Boolean,
     backgroundGranted: Boolean,
+    onClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     if (activeAddressCount == 0) return
@@ -60,6 +61,7 @@ fun MonitoringStatusBanner(
     }
 
     Card(
+        onClick = onClick,
         modifier = modifier
             .fillMaxWidth()
             .semantics { this.contentDescription = contentDescription },
