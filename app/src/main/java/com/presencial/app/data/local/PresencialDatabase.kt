@@ -1,6 +1,7 @@
 package com.presencial.app.data.local
 
 import android.content.Context
+import androidx.annotation.VisibleForTesting
 import androidx.room.Database
 import androidx.room.Room
 import androidx.room.RoomDatabase
@@ -12,8 +13,7 @@ import com.presencial.app.data.local.entity.AbsenceEntity
 import com.presencial.app.data.local.entity.CheckInEntity
 import com.presencial.app.data.local.entity.MonthlySummaryEntity
 import com.presencial.app.data.local.entity.WorkAddressEntity
-import com.presencial.app.data.local.migration.MIGRATION_3_4
-import com.presencial.app.data.local.migration.MIGRATION_4_5
+import com.presencial.app.data.local.migration.ALL_MIGRATIONS
 
 @Database(
     entities = [CheckInEntity::class, MonthlySummaryEntity::class, AbsenceEntity::class, WorkAddressEntity::class],
@@ -27,27 +27,24 @@ abstract class PresencialDatabase : RoomDatabase() {
     abstract fun workAddressDao(): WorkAddressDao
 
     companion object {
+        const val NAME = "presencial.db"
+
         @Volatile
         private var INSTANCE: PresencialDatabase? = null
 
         fun getInstance(context: Context): PresencialDatabase {
             return INSTANCE ?: synchronized(this) {
-                val instance = INSTANCE
-                if (instance != null) {
-                    instance
-                } else {
-                    val newInstance = Room.databaseBuilder(
-                        context.applicationContext,
-                        PresencialDatabase::class.java,
-                        "presencial.db"
-                    )
-                        .addMigrations(MIGRATION_3_4, MIGRATION_4_5)
-                        .fallbackToDestructiveMigration(dropAllTables = false)
-                        .build()
-                    INSTANCE = newInstance
-                    newInstance
-                }
+                INSTANCE ?: create(context.applicationContext, NAME).also { INSTANCE = it }
             }
         }
+
+        /**
+         * App (Hilt) e widget usam [getInstance]. Sem fallback destrutivo.
+         */
+        @VisibleForTesting
+        fun create(context: Context, name: String): PresencialDatabase =
+            Room.databaseBuilder(context, PresencialDatabase::class.java, name)
+                .addMigrations(*ALL_MIGRATIONS)
+                .build()
     }
 }

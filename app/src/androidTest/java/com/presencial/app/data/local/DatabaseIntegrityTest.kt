@@ -14,6 +14,7 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.runBlocking
 import org.junit.After
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertSame
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -38,6 +39,97 @@ class DatabaseIntegrityTest {
     @After
     fun closeDb() {
         db.close()
+    }
+
+    @Test
+    fun appAndWidgetShareTheSameDatabaseInstance() {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val fromApp = PresencialDatabase.getInstance(context)
+        val fromWidget = PresencialDatabase.getInstance(context)
+        assertSame(fromApp, fromWidget)
+    }
+
+    @Test
+    fun migrationFromVersion4KeepsCheckInsAndAddsLocationColumns() = runBlocking {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val name = "migration_4_5.db"
+        context.deleteDatabase(name)
+
+        context.openOrCreateDatabase(name, Context.MODE_PRIVATE, null).use { sqlite ->
+            sqlite.execSQL(
+                """
+                CREATE TABLE IF NOT EXISTS `check_ins` (
+                    `dateEpochDay` INTEGER NOT NULL,
+                    `status` TEXT NOT NULL,
+                    `updatedAt` INTEGER NOT NULL,
+                    `source` TEXT NOT NULL,
+                    `workAddressId` INTEGER,
+                    PRIMARY KEY(`dateEpochDay`)
+                )
+                """.trimIndent()
+            )
+            sqlite.execSQL(
+                """
+                CREATE TABLE IF NOT EXISTS `monthly_summaries` (
+                    `yearMonthKey` TEXT NOT NULL,
+                    `workdays` INTEGER NOT NULL,
+                    `requiredDays` INTEGER NOT NULL,
+                    `completedDays` INTEGER NOT NULL,
+                    `homeOfficeDays` INTEGER NOT NULL,
+                    `requiredPercentage` INTEGER NOT NULL,
+                    `achievedPercentage` REAL NOT NULL,
+                    PRIMARY KEY(`yearMonthKey`)
+                )
+                """.trimIndent()
+            )
+            sqlite.execSQL(
+                """
+                CREATE TABLE IF NOT EXISTS `absences` (
+                    `id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+                    `type` TEXT NOT NULL,
+                    `startDateEpochDay` INTEGER NOT NULL,
+                    `endDateEpochDay` INTEGER NOT NULL,
+                    `isFullDay` INTEGER NOT NULL,
+                    `hours` REAL NOT NULL,
+                    `notes` TEXT,
+                    `isCounted` INTEGER NOT NULL
+                )
+                """.trimIndent()
+            )
+            sqlite.execSQL(
+                """
+                CREATE TABLE IF NOT EXISTS `work_addresses` (
+                    `id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+                    `name` TEXT NOT NULL,
+                    `addressText` TEXT NOT NULL,
+                    `latitude` REAL NOT NULL,
+                    `longitude` REAL NOT NULL,
+                    `radius` REAL NOT NULL,
+                    `isActive` INTEGER NOT NULL
+                )
+                """.trimIndent()
+            )
+            sqlite.execSQL(
+                "INSERT INTO check_ins (dateEpochDay, status, updatedAt, source) VALUES (12345, 'PRESENCIAL', 1000, 'MANUAL')"
+            )
+            sqlite.execSQL(
+                "INSERT INTO work_addresses (name, addressText, latitude, longitude, radius, isActive) VALUES ('Escritorio', 'Rua 1', 1.0, 2.0, 50.0, 1)"
+            )
+            sqlite.execSQL("PRAGMA user_version = 4")
+        }
+
+        val migrated = PresencialDatabase.create(context, name)
+        try {
+            val checkIn = migrated.checkInDao().getByDate(12345L)
+            assertEquals("PRESENCIAL", checkIn?.status)
+            val addresses = migrated.workAddressDao().getAllAddresses().first()
+            assertEquals(1, addresses.size)
+            assertEquals(null, addresses[0].stateCode)
+            assertEquals(null, addresses[0].cityName)
+        } finally {
+            migrated.close()
+            context.deleteDatabase(name)
+        }
     }
 
     @Test
