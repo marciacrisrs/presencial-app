@@ -29,6 +29,7 @@ fun OnboardingScreen(
     viewModel: OnboardingViewModel,
     onAddWorkAddress: () -> Unit
 ) {
+    RequestNotificationPermissionOnLaunch()
     val settings by viewModel.uiState.collectAsStateWithLifecycle()
     val state = settings ?: return
     OnboardingContent(
@@ -115,7 +116,6 @@ private fun GoalStep(
 
 @Composable
 private fun ReminderStep(onContinue: () -> Unit) {
-    RequestNotificationPermissionOnLaunch()
     Text(stringResource(R.string.onboarding_reminder_title), style = MaterialTheme.typography.titleLarge)
     Text(
         stringResource(R.string.onboarding_reminder_body),
