@@ -3,7 +3,6 @@ package com.presencial.app.notification
 import android.content.Context
 import androidx.test.core.app.ApplicationProvider
 import androidx.work.WorkInfo
-import androidx.work.testing.WorkManagerTestInitHelper
 import com.presencial.app.worker.CheckInReminderWorker
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Assertions.assertEquals
@@ -19,7 +18,6 @@ class NotificationSchedulerTest {
     @BeforeEach
     fun setUp() {
         context = ApplicationProvider.getApplicationContext()
-        WorkManagerTestInitHelper.initializeTestWorkManager(context)
         scheduler = NotificationScheduler(context)
     }
 
