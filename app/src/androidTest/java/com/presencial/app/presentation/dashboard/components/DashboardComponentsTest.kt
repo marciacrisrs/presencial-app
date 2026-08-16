@@ -6,7 +6,6 @@ import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onNodeWithText
 import com.presencial.app.domain.model.DashboardData
 import com.presencial.app.ui.components.CircularProgressCard
-import com.presencial.app.ui.components.DashboardProgressBar
 import com.presencial.app.ui.components.SmartMessageCard
 import com.presencial.app.ui.components.StatCard
 import com.presencial.app.ui.theme.PresencialTheme
@@ -66,27 +65,24 @@ class DashboardComponentsTest {
     }
 
     @Test
-    fun CircularProgressCard_displaysLabelWithoutPercentage() {
-        val label = "Meta: 60%"
+    fun CircularProgressCard_displaysDaysAndRemainingWithoutRingPercentage() {
         composeTestRule.setContent {
             PresencialTheme {
-                CircularProgressCard(progress = 0.5f, label = label)
+                CircularProgressCard(
+                    progress = 0.5f,
+                    completedDays = 4,
+                    requiredDays = 8,
+                    remainingLine = "Faltam 4 dias",
+                    policyLine = "Regra: 40% dos dias úteis"
+                )
             }
         }
-        composeTestRule.onNodeWithText(label).assertIsDisplayed()
+        composeTestRule.onNodeWithText("4 de 8").assertIsDisplayed()
+        composeTestRule.onNodeWithText("Faltam 4 dias").assertIsDisplayed()
+        composeTestRule.onNodeWithText("Regra: 40% dos dias úteis").assertIsDisplayed()
         assertTrue(
             composeTestRule.onAllNodesWithText("50%").fetchSemanticsNodes().isEmpty()
         )
-    }
-
-    @Test
-    fun DashboardProgressBar_displaysProgressText() {
-        composeTestRule.setContent {
-            PresencialTheme {
-                DashboardProgressBar(data = mockDashboardData)
-            }
-        }
-        composeTestRule.onNodeWithText("8 de 15 dias presenciais").assertIsDisplayed()
     }
 
     @Test

@@ -63,6 +63,21 @@ class SettingsDataStoreTest {
     }
 
     @Test
+    fun `when onboarding keys exist, then map completed and step`() = runTest {
+        val prefs = preferencesOf(
+            booleanPreferencesKey("onboarding_completed") to true,
+            intPreferencesKey("onboarding_step") to 2
+        )
+        dataStoreFlow.value = prefs
+
+        settingsDataStore.settings.test {
+            val result = awaitItem()
+            assertEquals(true, result.onboardingCompleted)
+            assertEquals(2, result.onboardingStep)
+        }
+    }
+
+    @Test
     fun `when updateRequiredPercentage with valid value, then datastore is updated`() = runTest {
         val percentage = 60
         mockkStatic("androidx.datastore.preferences.core.PreferencesKt")
@@ -150,5 +165,35 @@ class SettingsDataStoreTest {
 
         coVerify { dataStore.updateData(any()) }
         coVerify { sharedPrefsEditor.putBoolean("count_saturdays_as_workdays", count) }
+    }
+
+    @Test
+    fun `when updateOnboardingStep is out of range, then value is coerced`() = runTest {
+        mockkStatic("androidx.datastore.preferences.core.PreferencesKt")
+        val mutablePrefs = mockk<MutablePreferences>(relaxed = true)
+        val transform = slot<suspend (Preferences) -> Preferences>()
+        coEvery { dataStore.updateData(capture(transform)) } coAnswers {
+            transform.captured(mutablePrefs)
+            mutablePrefs
+        }
+
+        settingsDataStore.updateOnboardingStep(99)
+
+        coVerify { dataStore.updateData(any()) }
+    }
+
+    @Test
+    fun `when completeOnboarding, then persist completed and last step`() = runTest {
+        mockkStatic("androidx.datastore.preferences.core.PreferencesKt")
+        val mutablePrefs = mockk<MutablePreferences>(relaxed = true)
+        val transform = slot<suspend (Preferences) -> Preferences>()
+        coEvery { dataStore.updateData(capture(transform)) } coAnswers {
+            transform.captured(mutablePrefs)
+            mutablePrefs
+        }
+
+        settingsDataStore.completeOnboarding()
+
+        coVerify { dataStore.updateData(any()) }
     }
 }

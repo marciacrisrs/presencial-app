@@ -10,6 +10,7 @@ import androidx.datastore.preferences.core.stringPreferencesKey
 import com.presencial.app.domain.model.AppSettings
 import com.presencial.app.domain.model.PresencePolicy
 import com.presencial.app.domain.repository.SettingsRepository
+import com.presencial.app.domain.util.OnboardingEligibility
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
@@ -32,6 +33,8 @@ class SettingsDataStore @Inject constructor(
         val REQUIRED_PERCENTAGE = intPreferencesKey("required_percentage")
         val COUNT_SATURDAYS = booleanPreferencesKey("count_saturdays_as_workdays")
         val PRESENCE_POLICY = stringPreferencesKey("presence_policy_json")
+        val ONBOARDING_COMPLETED = booleanPreferencesKey("onboarding_completed")
+        val ONBOARDING_STEP = intPreferencesKey("onboarding_step")
     }
 
     override val settings: Flow<AppSettings> = dataStore.data.map { prefs ->
@@ -40,7 +43,11 @@ class SettingsDataStore @Inject constructor(
         AppSettings(
             requiredPercentage = percentage,
             countSaturdaysAsWorkdays = prefs[Keys.COUNT_SATURDAYS] ?: false,
-            presencePolicy = policy
+            presencePolicy = policy,
+            onboardingCompleted = prefs[Keys.ONBOARDING_COMPLETED] ?: false,
+            onboardingStep = OnboardingEligibility.coerceStep(
+                prefs[Keys.ONBOARDING_STEP] ?: OnboardingEligibility.STEP_GOAL
+            )
         ).synced()
     }
 
@@ -62,6 +69,19 @@ class SettingsDataStore @Inject constructor(
     override suspend fun updatePresencePolicy(policy: PresencePolicy) {
         val normalized = policy.normalized()
         persistPolicy(normalized.freePercentage, null, normalized)
+    }
+
+    override suspend fun updateOnboardingStep(step: Int) {
+        dataStore.edit {
+            it[Keys.ONBOARDING_STEP] = OnboardingEligibility.coerceStep(step)
+        }
+    }
+
+    override suspend fun completeOnboarding() {
+        dataStore.edit {
+            it[Keys.ONBOARDING_COMPLETED] = true
+            it[Keys.ONBOARDING_STEP] = OnboardingEligibility.STEP_LOCATION
+        }
     }
 
     private suspend fun persistPolicy(

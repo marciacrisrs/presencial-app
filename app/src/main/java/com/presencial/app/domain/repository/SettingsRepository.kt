@@ -9,4 +9,6 @@ interface SettingsRepository {
     suspend fun updateRequiredPercentage(percentage: Int)
     suspend fun updateCountSaturdaysAsWorkdays(count: Boolean)
     suspend fun updatePresencePolicy(policy: PresencePolicy)
+    suspend fun updateOnboardingStep(step: Int)
+    suspend fun completeOnboarding()
 }

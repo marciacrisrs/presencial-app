@@ -5,6 +5,7 @@ All notable changes to Presencial are documented in this file.
 ## [Unreleased]
 
 ### Added
+- Onboarding inicial de meta, lembrete das 18h e local opcional (issue #60)
 - Exportação de relatório mensal em CSV e Excel (.xlsx) na tela de estatísticas (issue #11)
 - Dashboard analítico: gráfico semanal, linha de evolução, resumo anual e heatmap anual (issue #12)
 - Integração Firebase Crashlytics (opt-in via `app/google-services.json`) (issue #13)

@@ -54,10 +54,6 @@ fun DashboardContent(
 
         DashboardProgressSection(dashboard)
 
-        DashboardStats(dashboard)
-
-        DashboardProgressBarSection(dashboard)
-
         DashboardActionSection(
             dashboard = dashboard,
             onToggleTodayCheckIn = onToggleTodayCheckIn,
