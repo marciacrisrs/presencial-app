@@ -155,9 +155,7 @@ private data class SettingsScaffoldParams(
 )
 
 @Composable
-private fun SettingsScaffold(
-    params: SettingsScaffoldParams
-) {
+private fun SettingsScaffold(params: SettingsScaffoldParams) {
     Scaffold(
         snackbarHost = { SnackbarHost(hostState = params.snackbarHostState) }
     ) { padding ->
@@ -207,10 +205,7 @@ private data class SettingsContentParams(
 )
 
 @Composable
-private fun SettingsContent(
-    params: SettingsContentParams,
-    modifier: Modifier = Modifier
-) {
+private fun SettingsContent(params: SettingsContentParams, modifier: Modifier = Modifier) {
     Column(
         modifier = modifier
             .fillMaxWidth()
@@ -239,12 +234,14 @@ private fun SettingsContent(
 
         CloudSyncCard(
             state = params.cloudSyncState,
-            onConnectFolder = params.onCloudConnectFolder,
-            onSignOut = params.onCloudSignOut,
-            onUpload = params.onCloudUpload,
-            onRestore = params.onCloudRestore,
-            onExportFile = params.onExport,
-            onRestoreFile = params.onRestore
+            actions = CloudSyncCardActions(
+                onConnectFolder = params.onCloudConnectFolder,
+                onSignOut = params.onCloudSignOut,
+                onUpload = params.onCloudUpload,
+                onRestore = params.onCloudRestore,
+                onExportFile = params.onExport,
+                onRestoreFile = params.onRestore
+            )
         )
 
         OtherSettingsCard(
@@ -258,10 +255,7 @@ private fun SettingsContent(
 }
 
 @Composable
-private fun RestoreConfirmDialog(
-    onConfirm: () -> Unit,
-    onDismiss: () -> Unit
-) {
+private fun RestoreConfirmDialog(onConfirm: () -> Unit, onDismiss: () -> Unit) {
     AlertDialog(
         onDismissRequest = onDismiss,
         title = { Text(stringResource(R.string.backup_restore_confirm_title)) },
@@ -280,10 +274,7 @@ private fun RestoreConfirmDialog(
 }
 
 @Composable
-private fun SaturdaysConfigCard(
-    countSaturdays: Boolean,
-    onToggle: (Boolean) -> Unit
-) {
+private fun SaturdaysConfigCard(countSaturdays: Boolean, onToggle: (Boolean) -> Unit) {
     Card(
         shape = RoundedCornerShape(CORNER_RADIUS_CARD.dp),
         colors = CardDefaults.cardColors(
@@ -303,20 +294,13 @@ private fun SaturdaysConfigCard(
                     color = MaterialTheme.colorScheme.onSurface.copy(alpha = ALPHA_ON_SURFACE_MEDIUM)
                 )
             }
-            Switch(
-                checked = countSaturdays,
-                onCheckedChange = onToggle
-            )
+            Switch(checked = countSaturdays, onCheckedChange = onToggle)
         }
     }
 }
 
 @Composable
-private fun OtherSettingsCard(
-    onAbsences: () -> Unit,
-    onWorkAddresses: () -> Unit,
-    onAbout: () -> Unit
-) {
+private fun OtherSettingsCard(onAbsences: () -> Unit, onWorkAddresses: () -> Unit, onAbout: () -> Unit) {
     Card(
         shape = RoundedCornerShape(CORNER_RADIUS_CARD.dp),
         colors = CardDefaults.cardColors(
