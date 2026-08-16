@@ -121,6 +121,7 @@ fun WorkAddressContent(params: WorkAddressContentParams) {
             activeAddressCount = params.addresses.count { it.isActive },
             foregroundGranted = params.foregroundPermissions.allPermissionsGranted,
             backgroundGranted = params.backgroundPermission.allPermissionsGranted,
+            onClick = params.onBackgroundClick,
             modifier = Modifier.padding(horizontal = SPACING_MEDIUM, vertical = SPACING_SMALL)
         )
 
