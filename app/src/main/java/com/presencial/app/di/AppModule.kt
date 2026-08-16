@@ -1,41 +1,43 @@
 package com.presencial.app.di
 
 import android.content.Context
-import com.presencial.app.data.local.PresencialDatabase
+import androidx.datastore.core.DataStore
+import androidx.datastore.preferences.core.Preferences
+import androidx.datastore.preferences.preferencesDataStore
 import com.google.android.gms.location.FusedLocationProviderClient
 import com.google.android.gms.location.LocationServices
+import com.presencial.app.data.holidays.RegionalHolidayCatalog
+import com.presencial.app.data.local.AndroidSmartMessageTextProvider
+import com.presencial.app.data.local.PresencialDatabase
 import com.presencial.app.data.local.dao.AbsenceDao
 import com.presencial.app.data.local.dao.BackupDao
 import com.presencial.app.data.local.dao.CheckInDao
 import com.presencial.app.data.local.dao.MonthlySummaryDao
 import com.presencial.app.data.local.dao.WorkAddressDao
+import com.presencial.app.data.location.AndroidGeocodingHelper
+import com.presencial.app.data.preferences.GeofenceSyncStatusDataStore
 import com.presencial.app.data.preferences.SettingsDataStore
 import com.presencial.app.data.repository.AbsenceRepositoryImpl
 import com.presencial.app.data.repository.CheckInRepositoryImpl
 import com.presencial.app.data.repository.MonthlySummaryRepositoryImpl
 import com.presencial.app.data.repository.WorkAddressRepositoryImpl
-import com.presencial.app.domain.repository.AbsenceRepository
-import com.presencial.app.domain.repository.CheckInRepository
-import com.presencial.app.domain.repository.MonthlySummaryRepository
-import com.presencial.app.domain.repository.SettingsRepository
-import com.presencial.app.data.location.AndroidGeocodingHelper
-import com.presencial.app.domain.location.GeocodingHelper
-import com.presencial.app.domain.repository.WorkAddressRepository
-import com.presencial.app.domain.util.DefaultTimeProvider
-import com.presencial.app.domain.util.TimeProvider
-import com.presencial.app.data.holidays.RegionalHolidayCatalog
-import com.presencial.app.data.local.AndroidSmartMessageTextProvider
 import com.presencial.app.data.sync.CloudFolderSyncProvider
 import com.presencial.app.data.sync.CloudSyncRepositoryImpl
+import com.presencial.app.domain.location.GeocodingHelper
+import com.presencial.app.domain.repository.AbsenceRepository
+import com.presencial.app.domain.repository.CheckInRepository
 import com.presencial.app.domain.repository.CloudSyncRepository
+import com.presencial.app.domain.repository.GeofenceSyncStatusRepository
+import com.presencial.app.domain.repository.MonthlySummaryRepository
+import com.presencial.app.domain.repository.SettingsRepository
+import com.presencial.app.domain.repository.WorkAddressRepository
 import com.presencial.app.domain.sync.CloudSyncProvider
+import com.presencial.app.domain.util.DefaultTimeProvider
 import com.presencial.app.domain.util.RegionalHolidayLookup
 import com.presencial.app.domain.util.SmartMessageTextProvider
+import com.presencial.app.domain.util.TimeProvider
 import com.presencial.app.domain.widget.WidgetRefresher
 import com.presencial.app.widget.AndroidWidgetRefresher
-import androidx.datastore.core.DataStore
-import androidx.datastore.preferences.core.Preferences
-import androidx.datastore.preferences.preferencesDataStore
 import dagger.Binds
 import dagger.Module
 import dagger.Provides
@@ -131,6 +133,10 @@ interface RepositoryModule {
     @Binds
     @Singleton
     fun bindSettingsRepository(impl: SettingsDataStore): SettingsRepository
+
+    @Binds
+    @Singleton
+    fun bindGeofenceSyncStatusRepository(impl: GeofenceSyncStatusDataStore): GeofenceSyncStatusRepository
 
     @Binds
     @Singleton
