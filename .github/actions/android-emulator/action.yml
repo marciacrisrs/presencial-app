@@ -20,12 +20,5 @@ runs:
       with:
         api-level: ${{ inputs.api-level }}
         arch: ${{ inputs.arch }}
-        target: google_apis
-        profile: pixel_5
-        cores: 2
-        ram-size: 2048M
-        heap-size: 512M
-        emulator-options: -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none -camera-front none -no-snapshot-load -no-snapshot-save
         disable-animations: true
-        disable-linux-hw-accel: false
         script: ${{ inputs.script }}
