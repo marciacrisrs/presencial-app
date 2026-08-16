@@ -18,7 +18,6 @@ import io.mockk.mockk
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.runTest
-import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
@@ -59,8 +58,12 @@ class BackupManagerTest {
         every { checkInDao.observeAll() } returns flowOf(
             listOf(TestDataFactory.createCheckInEntity(source = CheckInSource.AUTO_GEOFENCE))
         )
-        every { monthlySummaryDao.observeAll() } returns flowOf(listOf(TestDataFactory.createMonthlySummaryEntity()))
-        coEvery { workAddressDao.getAllAddressesSync() } returns listOf(TestDataFactory.createWorkAddressEntity())
+        every { monthlySummaryDao.observeAll() } returns flowOf(
+            listOf(TestDataFactory.createMonthlySummaryEntity())
+        )
+        coEvery { workAddressDao.getAllAddressesSync() } returns listOf(
+            TestDataFactory.createWorkAddressEntity()
+        )
 
         val outputStream = ByteArrayOutputStream()
         val result = backupManager.exportToStream(outputStream)
@@ -174,46 +177,8 @@ class BackupManagerTest {
 
     @Test
     fun `when importFromFile, then restore check-ins work addresses and settings`() = runTest {
-        val json = """
-            {
-              "version": 3,
-              "requiredPercentage": 60,
-              "countSaturdaysAsWorkdays": true,
-              "checkIns": [
-                {
-                  "dateEpochDay": 20672,
-                  "status": "PRESENCIAL",
-                  "updatedAt": 1723000000000,
-                  "source": "auto_geofence",
-                  "workAddressId": 3
-                }
-              ],
-              "summaries": [
-                {
-                  "yearMonthKey": "2026-08",
-                  "workdays": 21,
-                  "requiredDays": 9,
-                  "completedDays": 5,
-                  "homeOfficeDays": 2,
-                  "requiredPercentage": 40,
-                  "achievedPercentage": 55.5
-                }
-              ],
-              "workAddresses": [
-                {
-                  "id": 3,
-                  "name": "Escritório",
-                  "addressText": "Rua A",
-                  "latitude": -23.55,
-                  "longitude": -46.63,
-                  "radius": 50.0,
-                  "isActive": true
-                }
-              ]
-            }
-        """.trimIndent()
         val tempFile = File.createTempFile("backup_test", ".json")
-        tempFile.writeText(json)
+        tempFile.writeText(createBackupWithCheckInsAndAddress())
         stubSuccessfulImport(AppSettings(requiredPercentage = 40))
 
         val result = backupManager.importFromFile(tempFile)
@@ -463,4 +428,43 @@ class BackupManagerTest {
         coEvery { backupDao.restoreAll(any(), any(), any(), any()) } returns Unit
         coEvery { settingsRepository.restoreBackupSettings(any(), any(), any()) } returns Unit
     }
+
+    private fun createBackupWithCheckInsAndAddress(): String = """
+        {
+          "version": 3,
+          "requiredPercentage": 60,
+          "countSaturdaysAsWorkdays": true,
+          "checkIns": [
+            {
+              "dateEpochDay": 20672,
+              "status": "PRESENCIAL",
+              "updatedAt": 1723000000000,
+              "source": "auto_geofence",
+              "workAddressId": 3
+            }
+          ],
+          "summaries": [
+            {
+              "yearMonthKey": "2026-08",
+              "workdays": 21,
+              "requiredDays": 9,
+              "completedDays": 5,
+              "homeOfficeDays": 2,
+              "requiredPercentage": 40,
+              "achievedPercentage": 55.5
+            }
+          ],
+          "workAddresses": [
+            {
+              "id": 3,
+              "name": "Escritório",
+              "addressText": "Rua A",
+              "latitude": -23.55,
+              "longitude": -46.63,
+              "radius": 50.0,
+              "isActive": true
+            }
+          ]
+        }
+    """.trimIndent()
 }
