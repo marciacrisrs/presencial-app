@@ -31,15 +31,19 @@ import com.presencial.app.domain.model.CloudSyncState
 import java.text.DateFormat
 import java.util.Date
 
+data class CloudSyncCardActions(
+    val onConnectFolder: () -> Unit,
+    val onSignOut: () -> Unit,
+    val onUpload: () -> Unit,
+    val onRestore: () -> Unit,
+    val onExportFile: () -> Unit,
+    val onRestoreFile: () -> Unit
+)
+
 @Composable
 fun CloudSyncCard(
     state: CloudSyncState,
-    onConnectFolder: () -> Unit,
-    onSignOut: () -> Unit,
-    onUpload: () -> Unit,
-    onRestore: () -> Unit,
-    onExportFile: () -> Unit,
-    onRestoreFile: () -> Unit,
+    actions: CloudSyncCardActions,
     modifier: Modifier = Modifier
 ) {
     Card(
@@ -73,66 +77,62 @@ fun CloudSyncCard(
 
             when (state.folderStatus) {
                 BackupFolderStatus.NOT_CHOSEN -> {
-                    Button(onClick = onConnectFolder, enabled = !state.isSyncing, modifier = Modifier.fillMaxWidth()) {
-                        Icon(
-                            Icons.Default.FolderOpen,
-                            contentDescription = stringResource(R.string.cloud_sync_connect_icon)
-                        )
-                        Text("  ${stringResource(R.string.cloud_sync_connect_folder)}")
-                    }
+                    ConnectFolderButton(actions.onConnectFolder, !state.isSyncing)
                 }
                 BackupFolderStatus.PERMISSION_REVOKED -> {
-                    Button(onClick = onConnectFolder, enabled = !state.isSyncing, modifier = Modifier.fillMaxWidth()) {
-                        Icon(
-                            Icons.Default.FolderOpen,
-                            contentDescription = stringResource(R.string.cloud_sync_connect_icon)
-                        )
-                        Text("  ${stringResource(R.string.cloud_sync_connect_folder)}")
-                    }
-                    OutlinedButton(onClick = onSignOut, enabled = !state.isSyncing, modifier = Modifier.fillMaxWidth()) {
+                    ConnectFolderButton(actions.onConnectFolder, !state.isSyncing)
+                    OutlinedButton(
+                        onClick = actions.onSignOut,
+                        enabled = !state.isSyncing,
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
                         Text(stringResource(R.string.cloud_sync_sign_out))
                     }
                 }
                 BackupFolderStatus.ACCESSIBLE -> {
-                    OutlinedButton(onClick = onSignOut, enabled = !state.isSyncing, modifier = Modifier.fillMaxWidth()) {
+                    OutlinedButton(
+                        onClick = actions.onSignOut,
+                        enabled = !state.isSyncing,
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
                         Text(stringResource(R.string.cloud_sync_sign_out))
                     }
-                    Button(onClick = onUpload, enabled = !state.isSyncing, modifier = Modifier.fillMaxWidth()) {
-                        Icon(
-                            Icons.Default.CloudUpload,
-                            contentDescription = stringResource(R.string.cloud_sync_upload_icon)
-                        )
+                    Button(
+                        onClick = actions.onUpload,
+                        enabled = !state.isSyncing,
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Icon(Icons.Default.CloudUpload, contentDescription = stringResource(R.string.cloud_sync_upload_icon))
                         Text("  ${stringResource(R.string.cloud_sync_upload)}")
                     }
                     Button(
-                        onClick = onRestore,
+                        onClick = actions.onRestore,
                         enabled = !state.isSyncing && state.backupExists,
                         modifier = Modifier.fillMaxWidth()
                     ) {
-                        Icon(
-                            Icons.Default.CloudDownload,
-                            contentDescription = stringResource(R.string.cloud_sync_restore_icon)
-                        )
+                        Icon(Icons.Default.CloudDownload, contentDescription = stringResource(R.string.cloud_sync_restore_icon))
                         Text("  ${stringResource(R.string.cloud_sync_restore)}")
                     }
                 }
             }
 
-            Button(onClick = onExportFile, modifier = Modifier.fillMaxWidth()) {
-                Icon(
-                    Icons.Default.Backup,
-                    contentDescription = stringResource(R.string.backup_export_content_description)
-                )
+            Button(onClick = actions.onExportFile, modifier = Modifier.fillMaxWidth()) {
+                Icon(Icons.Default.Backup, contentDescription = stringResource(R.string.backup_export_content_description))
                 Text("  ${stringResource(R.string.backup_export_file)}")
             }
-            Button(onClick = onRestoreFile, modifier = Modifier.fillMaxWidth()) {
-                Icon(
-                    Icons.Default.Restore,
-                    contentDescription = stringResource(R.string.backup_restore_content_description)
-                )
+            Button(onClick = actions.onRestoreFile, modifier = Modifier.fillMaxWidth()) {
+                Icon(Icons.Default.Restore, contentDescription = stringResource(R.string.backup_restore_content_description))
                 Text("  ${stringResource(R.string.backup_restore_file)}")
             }
         }
+    }
+}
+
+@Composable
+private fun ConnectFolderButton(onConnectFolder: () -> Unit, enabled: Boolean) {
+    Button(onClick = onConnectFolder, enabled = enabled, modifier = Modifier.fillMaxWidth()) {
+        Icon(Icons.Default.FolderOpen, contentDescription = stringResource(R.string.cloud_sync_connect_icon))
+        Text("  ${stringResource(R.string.cloud_sync_connect_folder)}")
     }
 }
 
