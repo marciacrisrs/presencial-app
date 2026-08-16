@@ -17,7 +17,7 @@ class GeofenceSyncStatusDataStore @Inject constructor(
 ) : GeofenceSyncStatusRepository {
 
     override val status: Flow<GeofenceSyncStatus> = dataStore.data.map { prefs ->
-        when (val value = prefs[STATUS]) {
+        when (prefs[STATUS]) {
             SUCCESS -> GeofenceSyncStatus.Success
             FAILURE -> GeofenceSyncStatus.Failure(prefs[MESSAGE].orEmpty())
             else -> GeofenceSyncStatus.Unknown
