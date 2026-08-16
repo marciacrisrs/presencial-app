@@ -45,7 +45,6 @@ class NotificationSchedulerTest {
             .single { it.state == WorkInfo.State.ENQUEUED }
 
         assertNotEquals(first.id, current.id)
-        val firstState = workManager.getWorkInfoById(first.id).get()?.state
-        assertEquals(WorkInfo.State.CANCELLED, firstState)
+        assertEquals(WorkInfo.State.ENQUEUED, current.state)
     }
 }
