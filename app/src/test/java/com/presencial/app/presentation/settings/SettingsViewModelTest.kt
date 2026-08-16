@@ -5,8 +5,10 @@ import com.presencial.app.data.backup.BackupManager
 import com.presencial.app.domain.model.AppSettings
 import com.presencial.app.domain.model.CloudStorageProvider
 import com.presencial.app.domain.model.CloudSyncState
+import com.presencial.app.domain.model.GeofenceSyncStatus
 import com.presencial.app.domain.model.PresencePolicy
 import com.presencial.app.domain.repository.CloudSyncRepository
+import com.presencial.app.domain.repository.GeofenceSyncStatusRepository
 import com.presencial.app.domain.repository.SettingsRepository
 import com.presencial.app.domain.repository.WorkAddressRepository
 import com.presencial.app.domain.usecase.SyncGeofencesUseCase
@@ -37,6 +39,7 @@ class SettingsViewModelTest {
     private val backupManager = mockk<BackupManager>()
     private val cloudSyncRepository = mockk<CloudSyncRepository>()
     private val syncGeofencesUseCase = mockk<SyncGeofencesUseCase>()
+    private val geofenceSyncStatusRepository = mockk<GeofenceSyncStatusRepository>()
     private val workAddressRepository = mockk<WorkAddressRepository>()
     private val widgetRefresher = mockk<WidgetRefresher>()
     private lateinit var viewModel: SettingsViewModel
@@ -46,6 +49,7 @@ class SettingsViewModelTest {
         every { settingsRepository.settings } returns flowOf(AppSettings())
         every { workAddressRepository.getAllAddresses() } returns flowOf(emptyList())
         every { cloudSyncRepository.syncState } returns MutableStateFlow(CloudSyncState())
+        every { geofenceSyncStatusRepository.status } returns flowOf(GeofenceSyncStatus.Unknown)
         coEvery { cloudSyncRepository.refreshState() } returns Unit
         coEvery { syncGeofencesUseCase() } returns Unit
         coEvery { widgetRefresher.refresh() } returns Unit
@@ -57,6 +61,7 @@ class SettingsViewModelTest {
         backupManager,
         cloudSyncRepository,
         syncGeofencesUseCase,
+        geofenceSyncStatusRepository,
         workAddressRepository,
         widgetRefresher
     )
@@ -71,6 +76,27 @@ class SettingsViewModelTest {
         viewModel.settings.test {
             assertEquals(appSettings, awaitItem())
         }
+    }
+
+    @Test
+    fun `geofence sync status should reflect repository flow`() = runTest {
+        every { geofenceSyncStatusRepository.status } returns flowOf(
+            GeofenceSyncStatus.Failure("permission denied")
+        )
+
+        viewModel = createViewModel()
+
+        viewModel.geofenceSyncStatus.test {
+            assertEquals(GeofenceSyncStatus.Failure("permission denied"), awaitItem())
+        }
+    }
+
+    @Test
+    fun `retryGeofenceSync should call sync use case`() = runTest {
+        viewModel.retryGeofenceSync()
+
+        coVerify { syncGeofencesUseCase() }
+        assertEquals("Monitoramento atualizado com sucesso.", viewModel.message.value)
     }
 
     @Test
