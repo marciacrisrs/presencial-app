@@ -76,12 +76,6 @@ class AndroidGeofenceRegistrar @Inject constructor(
                 retryable = isRetryable(exception.statusCode),
                 cause = exception
             )
-        } catch (exception: Exception) {
-            throw GeofenceRegistrationException(
-                message = exception.message ?: "Falha ao atualizar o monitoramento de localização.",
-                retryable = false,
-                cause = exception
-            )
         }
     }
 
@@ -94,12 +88,6 @@ class AndroidGeofenceRegistrar @Inject constructor(
             throw GeofenceRegistrationException(
                 message = exception.message ?: "Falha ao remover o monitoramento de localização.",
                 retryable = isRetryable(exception.statusCode),
-                cause = exception
-            )
-        } catch (exception: Exception) {
-            throw GeofenceRegistrationException(
-                message = exception.message ?: "Falha ao remover o monitoramento de localização.",
-                retryable = false,
                 cause = exception
             )
         }
