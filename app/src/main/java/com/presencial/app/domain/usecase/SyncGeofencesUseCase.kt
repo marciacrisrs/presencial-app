@@ -20,10 +20,9 @@ class SyncGeofencesUseCase @Inject constructor(
                 geofenceRegistrar.registerGeofences(activeAddresses)
             }
             syncStatusRepository.markSuccess()
+        } catch (exception: CancellationException) {
+            throw exception
         } catch (exception: IllegalStateException) {
-            if (exception is CancellationException) {
-                throw exception
-            }
             syncStatusRepository.markFailure(
                 exception.message ?: "Não foi possível atualizar o monitoramento de localização."
             )
