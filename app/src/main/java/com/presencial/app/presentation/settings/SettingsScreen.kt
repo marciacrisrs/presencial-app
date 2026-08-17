@@ -35,6 +35,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
+import com.presencial.app.domain.model.GeofenceSyncStatus
 import com.presencial.app.presentation.components.MonitoringStatusBanner
 import com.presencial.app.presentation.location.rememberWorkLocationPermissions
 import androidx.compose.ui.res.stringResource
@@ -50,6 +51,7 @@ fun SettingsScreen(
 ) {
     val settings by viewModel.settings.collectAsStateWithLifecycle()
     val workAddresses by viewModel.workAddresses.collectAsStateWithLifecycle()
+    val geofenceSyncStatus by viewModel.geofenceSyncStatus.collectAsStateWithLifecycle()
     val message by viewModel.message.collectAsStateWithLifecycle()
     val policyValidation by viewModel.policyValidation.collectAsStateWithLifecycle()
     val cloudSyncState by viewModel.cloudSyncState.collectAsStateWithLifecycle()
@@ -79,6 +81,8 @@ fun SettingsScreen(
             activeWorkAddressCount = workAddresses.count { it.isActive },
             foregroundGranted = foregroundPermissions.allPermissionsGranted,
             backgroundGranted = backgroundPermission.allPermissionsGranted,
+            geofenceSyncStatus = geofenceSyncStatus,
+            onGeofenceRetry = viewModel::retryGeofenceSync,
             onPresencePolicyChange = viewModel::updatePresencePolicy,
             policyValidation = policyValidation,
             onToggleSaturdays = viewModel::updateSaturdays,
@@ -138,6 +142,8 @@ private data class SettingsScaffoldParams(
     val activeWorkAddressCount: Int,
     val foregroundGranted: Boolean,
     val backgroundGranted: Boolean,
+    val geofenceSyncStatus: GeofenceSyncStatus,
+    val onGeofenceRetry: () -> Unit,
     val onPresencePolicyChange: (com.presencial.app.domain.model.PresencePolicy) -> Unit,
     val policyValidation: com.presencial.app.domain.model.PolicyValidationResult,
     val onToggleSaturdays: (Boolean) -> Unit,
@@ -166,6 +172,8 @@ private fun SettingsScaffold(params: SettingsScaffoldParams) {
                 activeWorkAddressCount = params.activeWorkAddressCount,
                 foregroundGranted = params.foregroundGranted,
                 backgroundGranted = params.backgroundGranted,
+                geofenceSyncStatus = params.geofenceSyncStatus,
+                onGeofenceRetry = params.onGeofenceRetry,
                 onPresencePolicyChange = params.onPresencePolicyChange,
                 policyValidation = params.policyValidation,
                 onToggleSaturdays = params.onToggleSaturdays,
@@ -189,6 +197,8 @@ private data class SettingsContentParams(
     val activeWorkAddressCount: Int,
     val foregroundGranted: Boolean,
     val backgroundGranted: Boolean,
+    val geofenceSyncStatus: GeofenceSyncStatus,
+    val onGeofenceRetry: () -> Unit,
     val onPresencePolicyChange: (com.presencial.app.domain.model.PresencePolicy) -> Unit,
     val policyValidation: com.presencial.app.domain.model.PolicyValidationResult,
     val onToggleSaturdays: (Boolean) -> Unit,
@@ -220,6 +230,11 @@ private fun SettingsContent(params: SettingsContentParams, modifier: Modifier = 
             foregroundGranted = params.foregroundGranted,
             backgroundGranted = params.backgroundGranted,
             onClick = params.onNavigateToWorkAddresses
+        )
+
+        GeofenceSyncStatusCard(
+            status = params.geofenceSyncStatus,
+            onRetry = params.onGeofenceRetry
         )
 
         PresencePolicyCard(

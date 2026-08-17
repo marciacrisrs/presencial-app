@@ -6,10 +6,12 @@ import androidx.lifecycle.viewModelScope
 import com.presencial.app.data.backup.BackupManager
 import com.presencial.app.domain.model.AppSettings
 import com.presencial.app.domain.model.CloudSyncState
+import com.presencial.app.domain.model.GeofenceSyncStatus
 import com.presencial.app.domain.model.PolicyValidationResult
 import com.presencial.app.domain.model.PresencePolicy
 import com.presencial.app.domain.model.WorkAddress
 import com.presencial.app.domain.repository.CloudSyncRepository
+import com.presencial.app.domain.repository.GeofenceSyncStatusRepository
 import com.presencial.app.domain.repository.SettingsRepository
 import com.presencial.app.domain.repository.WorkAddressRepository
 import com.presencial.app.domain.usecase.SyncGeofencesUseCase
@@ -32,6 +34,7 @@ class SettingsViewModel @Inject constructor(
     private val backupManager: BackupManager,
     private val cloudSyncRepository: CloudSyncRepository,
     private val syncGeofencesUseCase: SyncGeofencesUseCase,
+    private val geofenceSyncStatusRepository: GeofenceSyncStatusRepository,
     workAddressRepository: WorkAddressRepository,
     private val widgetRefresher: WidgetRefresher
 ) : ViewModel() {
@@ -41,6 +44,9 @@ class SettingsViewModel @Inject constructor(
 
     val workAddresses: StateFlow<List<WorkAddress>> = workAddressRepository.getAllAddresses()
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(STOP_TIMEOUT_MS), emptyList())
+
+    val geofenceSyncStatus: StateFlow<GeofenceSyncStatus> = geofenceSyncStatusRepository.status
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(STOP_TIMEOUT_MS), GeofenceSyncStatus.Unknown)
 
     val policyValidation: StateFlow<PolicyValidationResult> = settings
         .map { PresencePolicyCalculator.validate(it.presencePolicy) }
@@ -80,6 +86,14 @@ class SettingsViewModel @Inject constructor(
         viewModelScope.launch {
             settingsRepository.updateCountSaturdaysAsWorkdays(count)
             widgetRefresher.refresh()
+        }
+    }
+
+    fun retryGeofenceSync() {
+        viewModelScope.launch {
+            runCatching { syncGeofencesUseCase() }
+                .onSuccess { _message.value = "Monitoramento atualizado com sucesso." }
+                .onFailure { _message.value = "Não foi possível atualizar o monitoramento." }
         }
     }
 
@@ -124,7 +138,7 @@ class SettingsViewModel @Inject constructor(
         viewModelScope.launch {
             backupManager.importFromFile(file)
                 .onSuccess {
-                    syncGeofencesUseCase()
+                    runCatching { syncGeofencesUseCase() }
                     widgetRefresher.refresh()
                     _message.value = "Backup restaurado com sucesso!"
                 }
@@ -162,7 +176,7 @@ class SettingsViewModel @Inject constructor(
         viewModelScope.launch {
             runCatching { cloudSyncRepository.restoreBackup().getOrThrow() }
                 .onSuccess {
-                    syncGeofencesUseCase()
+                    runCatching { syncGeofencesUseCase() }
                     widgetRefresher.refresh()
                     _message.value = "Backup restaurado com sucesso!"
                 }

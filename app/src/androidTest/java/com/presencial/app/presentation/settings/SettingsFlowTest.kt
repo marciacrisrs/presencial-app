@@ -11,6 +11,7 @@ import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performScrollTo
 import com.presencial.app.domain.model.AppSettings
 import com.presencial.app.domain.model.CloudSyncState
+import com.presencial.app.domain.model.GeofenceSyncStatus
 import com.presencial.app.domain.model.PolicyValidationResult
 import com.presencial.app.domain.model.PresencePolicy
 import com.presencial.app.domain.model.WorkAddress
@@ -32,6 +33,7 @@ class SettingsFlowTest {
     private val settingsFlow = MutableStateFlow(AppSettings())
     private val messageFlow = MutableStateFlow<String?>(null)
     private val workAddressesFlow = MutableStateFlow<List<WorkAddress>>(emptyList())
+    private val geofenceSyncStatusFlow = MutableStateFlow<GeofenceSyncStatus>(GeofenceSyncStatus.Unknown)
     private val policyValidationFlow = MutableStateFlow(PolicyValidationResult(isValid = true))
     private val cloudSyncStateFlow = MutableStateFlow(CloudSyncState())
 
@@ -40,6 +42,7 @@ class SettingsFlowTest {
         every { viewModel.settings } returns settingsFlow
         every { viewModel.message } returns messageFlow
         every { viewModel.workAddresses } returns workAddressesFlow
+        every { viewModel.geofenceSyncStatus } returns geofenceSyncStatusFlow
         every { viewModel.policyValidation } returns policyValidationFlow
         every { viewModel.cloudSyncState } returns cloudSyncStateFlow
         every { viewModel.pendingRestore } returns MutableStateFlow(null)
@@ -75,9 +78,8 @@ class SettingsFlowTest {
         var navigatedToAbout = false
         startSettingsScreen(onNavigateToAbout = { navigatedToAbout = true })
 
-        // "Sobre o Aplicativo" está dentro de um Card de configurações extras
         composeTestRule.onNodeWithText("Sobre o Aplicativo").performScrollTo().performClick()
-        
+
         org.junit.Assert.assertTrue(navigatedToAbout)
     }
 
