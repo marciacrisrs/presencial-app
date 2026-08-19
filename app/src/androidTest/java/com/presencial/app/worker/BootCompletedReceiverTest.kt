@@ -23,4 +23,25 @@ class BootCompletedReceiverTest {
         val receiver = BootCompletedReceiver()
         receiver.onReceive(context, Intent(Intent.ACTION_BOOT_COMPLETED))
     }
+
+    @Test
+    fun onReceive_withLockedBootCompleted_doesNotCrash() {
+        val receiver = BootCompletedReceiver()
+        receiver.onReceive(context, Intent(Intent.ACTION_LOCKED_BOOT_COMPLETED))
+    }
+
+    @Test
+    fun onReceive_withPackageReplaced_doesNotCrash() {
+        val receiver = BootCompletedReceiver()
+        receiver.onReceive(context, Intent(Intent.ACTION_MY_PACKAGE_REPLACED))
+    }
+
+    @Test
+    fun onReceive_withQuickBootPowerOn_doesNotCrash() {
+        val receiver = BootCompletedReceiver()
+        receiver.onReceive(
+            context,
+            Intent(GeofenceRestoreEvents.ACTION_QUICKBOOT_POWERON)
+        )
+    }
 }
