@@ -26,7 +26,6 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import java.io.File
-import java.io.InputStream
 import java.io.OutputStream
 import javax.inject.Inject
 
@@ -108,17 +107,11 @@ class SettingsViewModel @Inject constructor(
         }
     }
 
-    fun stageBackupFile(cacheDir: File, inputStream: InputStream?) {
-        if (inputStream == null) {
+    fun prepareFileRestore(file: File?) {
+        if (file == null) {
             _message.value = UNREADABLE_BACKUP_MESSAGE
             return
         }
-        runCatching { BackupImportCache.copyFromStream(cacheDir, inputStream) }
-            .onSuccess { prepareFileRestore(it) }
-            .onFailure { _message.value = UNREADABLE_BACKUP_MESSAGE }
-    }
-
-    fun prepareFileRestore(file: File) {
         _pendingRestore.value = PendingRestore.File(file)
     }
 

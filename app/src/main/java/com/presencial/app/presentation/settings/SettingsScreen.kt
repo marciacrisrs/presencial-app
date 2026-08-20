@@ -35,6 +35,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
+import com.presencial.app.data.backup.BackupImportCache
 import com.presencial.app.domain.model.GeofenceSyncStatus
 import com.presencial.app.presentation.components.MonitoringStatusBanner
 import com.presencial.app.presentation.location.rememberWorkLocationPermissions
@@ -129,10 +130,12 @@ private fun rememberSettingsImportLauncher(
     ActivityResultContracts.OpenDocument()
 ) { uri ->
     uri?.let { selectedUri ->
-        val inputStream = runCatching {
-            context.contentResolver.openInputStream(selectedUri)
+        val staged = runCatching {
+            val inputStream = context.contentResolver.openInputStream(selectedUri)
+                ?: error("unreadable")
+            BackupImportCache.copyFromStream(context.cacheDir, inputStream)
         }.getOrNull()
-        viewModel.stageBackupFile(context.cacheDir, inputStream)
+        viewModel.prepareFileRestore(staged)
     }
 }
 
