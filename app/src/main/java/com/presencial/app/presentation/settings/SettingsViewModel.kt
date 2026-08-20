@@ -3,6 +3,7 @@ package com.presencial.app.presentation.settings
 import android.net.Uri
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.presencial.app.data.backup.BackupImportCache
 import com.presencial.app.data.backup.BackupManager
 import com.presencial.app.domain.model.AppSettings
 import com.presencial.app.domain.model.CloudSyncState
@@ -25,6 +26,7 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import java.io.File
+import java.io.InputStream
 import java.io.OutputStream
 import javax.inject.Inject
 
@@ -106,6 +108,16 @@ class SettingsViewModel @Inject constructor(
         }
     }
 
+    fun stageBackupFile(cacheDir: File, inputStream: InputStream?) {
+        if (inputStream == null) {
+            _message.value = UNREADABLE_BACKUP_MESSAGE
+            return
+        }
+        runCatching { BackupImportCache.copyFromStream(cacheDir, inputStream) }
+            .onSuccess { prepareFileRestore(it) }
+            .onFailure { _message.value = UNREADABLE_BACKUP_MESSAGE }
+    }
+
     fun prepareFileRestore(file: File) {
         _pendingRestore.value = PendingRestore.File(file)
     }
@@ -143,6 +155,11 @@ class SettingsViewModel @Inject constructor(
                     _message.value = "Backup restaurado com sucesso!"
                 }
                 .onFailure { _message.value = "Erro ao restaurar: ${it.message}" }
+            runCatching {
+                if (file.name == BackupImportCache.FILE_NAME) {
+                    file.delete()
+                }
+            }
         }
     }
 
@@ -192,3 +209,4 @@ class SettingsViewModel @Inject constructor(
 }
 
 private const val STOP_TIMEOUT_MS = 5000L
+private const val UNREADABLE_BACKUP_MESSAGE = "Não foi possível ler o arquivo de backup."

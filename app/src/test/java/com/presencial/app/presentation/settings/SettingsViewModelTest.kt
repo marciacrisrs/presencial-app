@@ -1,6 +1,7 @@
 package com.presencial.app.presentation.settings
 
 import app.cash.turbine.test
+import com.presencial.app.data.backup.BackupImportCache
 import com.presencial.app.data.backup.BackupManager
 import com.presencial.app.domain.model.AppSettings
 import com.presencial.app.domain.model.CloudStorageProvider
@@ -27,6 +28,7 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.RegisterExtension
 import java.io.File
+import java.io.InputStream
 import java.io.OutputStream
 
 class SettingsViewModelTest {
@@ -227,6 +229,90 @@ class SettingsViewModelTest {
         viewModel.clearMessage()
 
         assertNull(viewModel.message.value)
+    }
+
+    @Test
+    fun `stageBackupFile with null stream does not restore stale cache`() = runTest {
+        val cacheDir = File.createTempFile("stage_backup", "").apply {
+            delete()
+            mkdir()
+        }
+        try {
+            File(cacheDir, BackupImportCache.FILE_NAME).writeText("stale-backup")
+
+            viewModel.stageBackupFile(cacheDir, null)
+
+            assertNull(viewModel.pendingRestore.value)
+            assertEquals("Não foi possível ler o arquivo de backup.", viewModel.message.value)
+            assertEquals(
+                "stale-backup",
+                File(cacheDir, BackupImportCache.FILE_NAME).readText()
+            )
+        } finally {
+            cacheDir.deleteRecursively()
+        }
+    }
+
+    @Test
+    fun `stageBackupFile with unreadable stream does not restore stale cache`() = runTest {
+        val cacheDir = File.createTempFile("stage_backup", "").apply {
+            delete()
+            mkdir()
+        }
+        try {
+            File(cacheDir, BackupImportCache.FILE_NAME).writeText("stale-backup")
+            val failingStream = object : InputStream() {
+                override fun read(): Int = throw java.io.IOException("unavailable")
+            }
+
+            viewModel.stageBackupFile(cacheDir, failingStream)
+
+            assertNull(viewModel.pendingRestore.value)
+            assertEquals("Não foi possível ler o arquivo de backup.", viewModel.message.value)
+            assertEquals(
+                "stale-backup",
+                File(cacheDir, BackupImportCache.FILE_NAME).readText()
+            )
+        } finally {
+            cacheDir.deleteRecursively()
+        }
+    }
+
+    @Test
+    fun `stageBackupFile with readable stream prepares restore of copied file`() = runTest {
+        val cacheDir = File.createTempFile("stage_backup", "").apply {
+            delete()
+            mkdir()
+        }
+        try {
+            File(cacheDir, BackupImportCache.FILE_NAME).writeText("stale-backup")
+
+            viewModel.stageBackupFile(cacheDir, "fresh-backup".byteInputStream())
+
+            val pending = viewModel.pendingRestore.value as PendingRestore.File
+            assertEquals("fresh-backup", pending.file.readText())
+            assertNull(viewModel.message.value)
+        } finally {
+            cacheDir.deleteRecursively()
+        }
+    }
+
+    @Test
+    fun `importBackup deletes staged cache file`() = runTest {
+        val cacheDir = File.createTempFile("stage_backup", "").apply {
+            delete()
+            mkdir()
+        }
+        try {
+            val file = File(cacheDir, BackupImportCache.FILE_NAME).apply { writeText("{}") }
+            coEvery { backupManager.importFromFile(file) } returns Result.success(Unit)
+
+            viewModel.importBackup(file)
+
+            assertEquals(false, file.exists())
+        } finally {
+            cacheDir.deleteRecursively()
+        }
     }
 
     @Test

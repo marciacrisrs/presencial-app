@@ -128,12 +128,11 @@ private fun rememberSettingsImportLauncher(
 ) = rememberLauncherForActivityResult(
     ActivityResultContracts.OpenDocument()
 ) { uri ->
-    uri?.let {
-        val temp = java.io.File(context.cacheDir, "import_backup.json")
-        context.contentResolver.openInputStream(it)?.use { stream ->
-            temp.outputStream().use { out -> stream.copyTo(out) }
-        }
-        viewModel.prepareFileRestore(temp)
+    uri?.let { selectedUri ->
+        val inputStream = runCatching {
+            context.contentResolver.openInputStream(selectedUri)
+        }.getOrNull()
+        viewModel.stageBackupFile(context.cacheDir, inputStream)
     }
 }
 
