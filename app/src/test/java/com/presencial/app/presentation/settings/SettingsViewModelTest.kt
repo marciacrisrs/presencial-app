@@ -170,6 +170,27 @@ class SettingsViewModelTest {
     }
 
     @Test
+    fun `failed staged import removes staged cache file`() = runTest {
+        val cacheDir = File.createTempFile("failed_stage_backup", "").apply {
+            delete()
+            mkdir()
+        }
+        try {
+            val file = File(cacheDir, BackupImportCache.FILE_NAME).apply { writeText("{}") }
+            coEvery {
+                backupManager.importFromFile(file)
+            } returns Result.failure(Exception("Invalid file"))
+
+            viewModel.importBackup(file)
+
+            assertEquals("Erro ao restaurar: Invalid file", viewModel.message.value)
+            assertEquals(false, file.exists())
+        } finally {
+            cacheDir.deleteRecursively()
+        }
+    }
+
+    @Test
     fun `uploadCloudBackup should show success message`() = runTest {
         coEvery { cloudSyncRepository.uploadBackup() } returns Result.success(Unit)
 
