@@ -46,6 +46,7 @@ import com.presencial.app.presentation.location.rememberWorkLocationPermissions
 @Composable
 fun SettingsScreen(
     viewModel: SettingsViewModel = hiltViewModel(),
+    weeklySummaryViewModel: WeeklyPolicySummaryViewModel = hiltViewModel(),
     onNavigateToAbout: () -> Unit = {},
     onNavigateToAbsences: () -> Unit = {},
     onNavigateToWorkAddresses: () -> Unit = {}
@@ -53,7 +54,7 @@ fun SettingsScreen(
     val settings by viewModel.settings.collectAsStateWithLifecycle()
     val workAddresses by viewModel.workAddresses.collectAsStateWithLifecycle()
     val geofenceSyncStatus by viewModel.geofenceSyncStatus.collectAsStateWithLifecycle()
-    val weeklySummaries by viewModel.weeklySummaries.collectAsStateWithLifecycle()
+    val weeklySummaries by weeklySummaryViewModel.summaries.collectAsStateWithLifecycle()
     val message by viewModel.message.collectAsStateWithLifecycle()
     val policyValidation by viewModel.policyValidation.collectAsStateWithLifecycle()
     val cloudSyncState by viewModel.cloudSyncState.collectAsStateWithLifecycle()
