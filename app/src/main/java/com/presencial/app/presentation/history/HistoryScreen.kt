@@ -14,6 +14,8 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Share
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -23,6 +25,7 @@ import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.platform.LocalContext
@@ -32,8 +35,6 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.presencial.app.domain.model.HistoryMonthData
 import com.presencial.app.domain.model.MonthlySummary
 import com.presencial.app.ui.components.ShimmerBox
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Share
 import java.time.format.TextStyle
 import java.util.Locale
 
