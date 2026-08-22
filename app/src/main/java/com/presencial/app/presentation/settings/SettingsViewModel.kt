@@ -148,10 +148,8 @@ class SettingsViewModel @Inject constructor(
                     _message.value = "Backup restaurado com sucesso!"
                 }
                 .onFailure { _message.value = "Erro ao restaurar: ${it.message}" }
-            runCatching {
-                if (file.name == BackupImportCache.FILE_NAME) {
-                    file.delete()
-                }
+            if (file.name == BackupImportCache.FILE_NAME && file.exists() && !file.delete()) {
+                _message.value = "Backup restaurado, mas não foi possível limpar o arquivo temporário."
             }
         }
     }
