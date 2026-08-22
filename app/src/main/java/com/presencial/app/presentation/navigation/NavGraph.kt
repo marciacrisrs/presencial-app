@@ -197,7 +197,7 @@ private fun PresencialNavGraph(
             val tab = backStackEntry.arguments?.getInt(Screen.TAB_ARG) ?: 0
             LaunchedEffect(tab) {
                 if (pagerState.currentPage != tab) {
-                    pagerState.scrollToPage(tab)
+                    pagerState.scrollToPage(tab.coerceIn(0, Screen.bottomNavItems.lastIndex))
                 }
             }
             MainTabPager(
@@ -206,6 +206,9 @@ private fun PresencialNavGraph(
                 openCheckIn = openCheckIn,
                 onCheckInHandled = onCheckInHandled
             )
+        }
+        composable(Screen.Statistics.route) {
+            StatisticsScreen()
         }
         composable(Screen.About.route) {
             AboutScreen(onBack = { navController.popBackStack() })
@@ -241,9 +244,10 @@ private fun MainTabPager(
             1 -> CalendarScreen(
                 onNavigateToAbsences = { navController.navigate(Screen.Absences.route) }
             )
-            2 -> HistoryScreen()
-            3 -> StatisticsScreen()
-            4 -> SettingsScreen(
+            2 -> HistoryScreen(
+                onNavigateToStatistics = { navController.navigate(Screen.Statistics.route) }
+            )
+            3 -> SettingsScreen(
                 onNavigateToAbout = { navController.navigate(Screen.About.route) },
                 onNavigateToAbsences = { navController.navigate(Screen.Absences.route) },
                 onNavigateToWorkAddresses = { navController.navigate(Screen.WorkAddresses.route) }
