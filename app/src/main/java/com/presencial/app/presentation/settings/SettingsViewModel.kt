@@ -9,13 +9,16 @@ import com.presencial.app.domain.model.CloudSyncState
 import com.presencial.app.domain.model.GeofenceSyncStatus
 import com.presencial.app.domain.model.PolicyValidationResult
 import com.presencial.app.domain.model.PresencePolicy
+import com.presencial.app.domain.model.WeeklyPolicySummary
 import com.presencial.app.domain.model.WorkAddress
 import com.presencial.app.domain.repository.CloudSyncRepository
 import com.presencial.app.domain.repository.GeofenceSyncStatusRepository
 import com.presencial.app.domain.repository.SettingsRepository
 import com.presencial.app.domain.repository.WorkAddressRepository
+import com.presencial.app.domain.usecase.GetWeeklyPolicySummaryUseCase
 import com.presencial.app.domain.usecase.SyncGeofencesUseCase
 import com.presencial.app.domain.util.PresencePolicyCalculator
+import com.presencial.app.domain.util.TimeProvider
 import com.presencial.app.domain.widget.WidgetRefresher
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -35,6 +38,8 @@ class SettingsViewModel @Inject constructor(
     private val cloudSyncRepository: CloudSyncRepository,
     private val syncGeofencesUseCase: SyncGeofencesUseCase,
     private val geofenceSyncStatusRepository: GeofenceSyncStatusRepository,
+    private val getWeeklyPolicySummaryUseCase: GetWeeklyPolicySummaryUseCase,
+    private val timeProvider: TimeProvider,
     workAddressRepository: WorkAddressRepository,
     private val widgetRefresher: WidgetRefresher
 ) : ViewModel() {
@@ -47,6 +52,10 @@ class SettingsViewModel @Inject constructor(
 
     val geofenceSyncStatus: StateFlow<GeofenceSyncStatus> = geofenceSyncStatusRepository.status
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(STOP_TIMEOUT_MS), GeofenceSyncStatus.Unknown)
+
+    val weeklySummaries: StateFlow<List<WeeklyPolicySummary>> =
+        getWeeklyPolicySummaryUseCase(timeProvider.currentMonth())
+            .stateIn(viewModelScope, SharingStarted.WhileSubscribed(STOP_TIMEOUT_MS), emptyList())
 
     val policyValidation: StateFlow<PolicyValidationResult> = settings
         .map { PresencePolicyCalculator.validate(it.presencePolicy) }
