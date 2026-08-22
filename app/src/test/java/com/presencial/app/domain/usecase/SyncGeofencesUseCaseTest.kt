@@ -51,6 +51,38 @@ class SyncGeofencesUseCaseTest {
     }
 
     @Test
+    fun `when transient removal fails, then retry and mark success after recovery`() = runTest {
+        coEvery { workAddressRepository.getActiveAddresses() } returns emptyList()
+        var attempts = 0
+        coEvery { geofenceRegistrar.removeGeofences() } coAnswers {
+            attempts++
+            if (attempts < 3) {
+                throw GeofenceRegistrationException("network unavailable", retryable = true)
+            }
+        }
+
+        useCase()
+
+        assert(attempts == 3)
+        coVerify(exactly = 3) { geofenceRegistrar.removeGeofences() }
+        coVerify { syncStatusRepository.markSuccess() }
+        coVerify(exactly = 0) { syncStatusRepository.markFailure(any()) }
+    }
+
+    @Test
+    fun `when transient removal never recovers, then persist final failure`() = runTest {
+        coEvery { workAddressRepository.getActiveAddresses() } returns emptyList()
+        coEvery { geofenceRegistrar.removeGeofences() } throws
+            GeofenceRegistrationException("network unavailable", retryable = true)
+
+        assertThrows<GeofenceRegistrationException> { useCase() }
+
+        coVerify(exactly = 3) { geofenceRegistrar.removeGeofences() }
+        coVerify { syncStatusRepository.markFailure("network unavailable") }
+        coVerify(exactly = 0) { syncStatusRepository.markSuccess() }
+    }
+
+    @Test
     fun `when transient registration fails, then retry and mark success after recovery`() = runTest {
         val addresses = listOf(TestDataFactory.createWorkAddress(isActive = true))
         coEvery { workAddressRepository.getActiveAddresses() } returns addresses
