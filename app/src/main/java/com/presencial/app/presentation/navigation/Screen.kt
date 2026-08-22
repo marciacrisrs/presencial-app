@@ -22,7 +22,7 @@ sealed class Screen(val route: String, val title: String, val icon: ImageVector?
         const val MAIN_ROUTE = "main"
         const val TAB_ARG = "tab"
 
-        val bottomNavItems = listOf(Dashboard, Calendar, History, Statistics, Settings)
+        val bottomNavItems = listOf(Dashboard, Calendar, History, Settings)
 
         fun mainRoute(tab: Int = 0): String = "$MAIN_ROUTE?$TAB_ARG=$tab"
 
