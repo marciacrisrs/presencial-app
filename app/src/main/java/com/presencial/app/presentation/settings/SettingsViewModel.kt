@@ -3,6 +3,7 @@ package com.presencial.app.presentation.settings
 import android.net.Uri
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.presencial.app.data.backup.BackupImportCache
 import com.presencial.app.data.backup.BackupManager
 import com.presencial.app.domain.model.AppSettings
 import com.presencial.app.domain.model.CloudSyncState
@@ -106,7 +107,11 @@ class SettingsViewModel @Inject constructor(
         }
     }
 
-    fun prepareFileRestore(file: File) {
+    fun prepareFileRestore(file: File?) {
+        if (file == null) {
+            _message.value = UNREADABLE_BACKUP_MESSAGE
+            return
+        }
         _pendingRestore.value = PendingRestore.File(file)
     }
 
@@ -143,6 +148,9 @@ class SettingsViewModel @Inject constructor(
                     _message.value = "Backup restaurado com sucesso!"
                 }
                 .onFailure { _message.value = "Erro ao restaurar: ${it.message}" }
+            if (file.name == BackupImportCache.FILE_NAME && file.exists() && !file.delete()) {
+                _message.value = "Backup restaurado, mas não foi possível limpar o arquivo temporário."
+            }
         }
     }
 
@@ -192,3 +200,4 @@ class SettingsViewModel @Inject constructor(
 }
 
 private const val STOP_TIMEOUT_MS = 5000L
+private const val UNREADABLE_BACKUP_MESSAGE = "Não foi possível ler o arquivo de backup."

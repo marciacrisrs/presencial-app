@@ -1,6 +1,7 @@
 package com.presencial.app.presentation.settings
 
 import app.cash.turbine.test
+import com.presencial.app.data.backup.BackupImportCache
 import com.presencial.app.data.backup.BackupManager
 import com.presencial.app.domain.model.AppSettings
 import com.presencial.app.domain.model.CloudStorageProvider
@@ -169,6 +170,27 @@ class SettingsViewModelTest {
     }
 
     @Test
+    fun `failed staged import removes staged cache file`() = runTest {
+        val cacheDir = File.createTempFile("failed_stage_backup", "").apply {
+            delete()
+            mkdir()
+        }
+        try {
+            val file = File(cacheDir, BackupImportCache.FILE_NAME).apply { writeText("{}") }
+            coEvery {
+                backupManager.importFromFile(file)
+            } returns Result.failure(Exception("Invalid file"))
+
+            viewModel.importBackup(file)
+
+            assertEquals("Erro ao restaurar: Invalid file", viewModel.message.value)
+            assertEquals(false, file.exists())
+        } finally {
+            cacheDir.deleteRecursively()
+        }
+    }
+
+    @Test
     fun `uploadCloudBackup should show success message`() = runTest {
         coEvery { cloudSyncRepository.uploadBackup() } returns Result.success(Unit)
 
@@ -227,6 +249,55 @@ class SettingsViewModelTest {
         viewModel.clearMessage()
 
         assertNull(viewModel.message.value)
+    }
+
+    @Test
+    fun `prepareFileRestore with null file does not restore stale cache`() = runTest {
+        viewModel.prepareFileRestore(null)
+
+        assertNull(viewModel.pendingRestore.value)
+        assertEquals("Não foi possível ler o arquivo de backup.", viewModel.message.value)
+    }
+
+    @Test
+    fun `prepareFileRestore with copied backup stages that file`() = runTest {
+        val cacheDir = File.createTempFile("stage_backup", "").apply {
+            delete()
+            mkdir()
+        }
+        try {
+            File(cacheDir, BackupImportCache.FILE_NAME).writeText("stale-backup")
+            val staged = BackupImportCache.copyFromStream(
+                cacheDir,
+                "fresh-backup".byteInputStream()
+            )
+
+            viewModel.prepareFileRestore(staged)
+
+            val pending = viewModel.pendingRestore.value as PendingRestore.File
+            assertEquals("fresh-backup", pending.file.readText())
+            assertNull(viewModel.message.value)
+        } finally {
+            cacheDir.deleteRecursively()
+        }
+    }
+
+    @Test
+    fun `importBackup deletes staged cache file`() = runTest {
+        val cacheDir = File.createTempFile("stage_backup", "").apply {
+            delete()
+            mkdir()
+        }
+        try {
+            val file = File(cacheDir, BackupImportCache.FILE_NAME).apply { writeText("{}") }
+            coEvery { backupManager.importFromFile(file) } returns Result.success(Unit)
+
+            viewModel.importBackup(file)
+
+            assertEquals(false, file.exists())
+        } finally {
+            cacheDir.deleteRecursively()
+        }
     }
 
     @Test
