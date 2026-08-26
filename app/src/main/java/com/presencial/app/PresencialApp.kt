@@ -15,6 +15,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.launch
+import java.util.concurrent.CancellationException
 import javax.inject.Inject
 
 @HiltAndroidApp
@@ -44,7 +45,11 @@ class PresencialApp : Application(), Configuration.Provider {
         notificationScheduler.scheduleDailyReminder()
         appScope.launch {
             resolveWorkAddressLocationUseCase.backfillMissingLocations()
-            syncGeofencesUseCase()
+            runCatching { syncGeofencesUseCase() }
+                .onFailure { error ->
+                    if (error is CancellationException) throw error
+                    crashReporter.log("Geofence sync failed on startup: ${error.message}")
+                }
             widgetRefresher.refresh()
         }
     }

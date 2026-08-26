@@ -16,6 +16,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
+import java.util.concurrent.CancellationException
 import javax.inject.Inject
 
 @HiltViewModel
@@ -72,7 +73,7 @@ class WorkAddressViewModel @Inject constructor(
             } else {
                 repository.updateAddress(address)
             }
-            syncGeofences()
+            syncGeofencesQuietly()
             _message.value = "Local salvo com sucesso"
             clearDialogState()
         }
@@ -80,7 +81,9 @@ class WorkAddressViewModel @Inject constructor(
 
     fun syncGeofences() {
         viewModelScope.launch {
-            syncGeofencesUseCase()
+            if (!syncGeofencesQuietly()) {
+                _message.value = "Não foi possível atualizar o monitoramento."
+            }
         }
     }
 
@@ -135,7 +138,7 @@ class WorkAddressViewModel @Inject constructor(
     fun deleteAddress(address: WorkAddress) {
         viewModelScope.launch {
             repository.deleteAddress(address)
-            syncGeofences()
+            syncGeofencesQuietly()
             _message.value = "Local removido"
         }
     }
@@ -143,7 +146,7 @@ class WorkAddressViewModel @Inject constructor(
     fun toggleActive(address: WorkAddress) {
         viewModelScope.launch {
             repository.updateAddress(address.copy(isActive = !address.isActive))
-            syncGeofences()
+            syncGeofencesQuietly()
         }
     }
 
@@ -163,6 +166,13 @@ class WorkAddressViewModel @Inject constructor(
         _editingAddress.value = null
         _geocodedLocation.value = null
         _currentGpsLocation.value = null
+    }
+
+    private suspend fun syncGeofencesQuietly(): Boolean {
+        val result = runCatching { syncGeofencesUseCase() }
+        val error = result.exceptionOrNull() ?: return true
+        if (error is CancellationException) throw error
+        return false
     }
 }
 

@@ -103,6 +103,34 @@ class WorkAddressViewModelTest {
     }
 
     @Test
+    fun `syncGeofences should surface failure without crashing`() = runTest {
+        coEvery { syncGeofencesUseCase() } throws IllegalStateException("permission denied")
+
+        viewModel.syncGeofences()
+
+        assertEquals("Não foi possível atualizar o monitoramento.", viewModel.message.value)
+    }
+
+    @Test
+    fun `saveWorkAddress should keep saved address when geofence sync fails`() = runTest {
+        coEvery { repository.insertAddress(any()) } returns Unit
+        coEvery { syncGeofencesUseCase() } throws IllegalStateException("permission denied")
+
+        viewModel.saveWorkAddress(
+            id = 0L,
+            name = "Office",
+            addressText = "Rua A",
+            latitude = -23.0,
+            longitude = -46.0,
+            radius = 50f,
+            isActive = true
+        )
+
+        coVerify { repository.insertAddress(any()) }
+        assertEquals("Local salvo com sucesso", viewModel.message.value)
+    }
+
+    @Test
     fun `geocodeAddress should update geocoded location on success`() = runTest {
         coEvery { geocodingHelper.geocodeAddress("Rua A") } returns Result.success(
             GeoCoordinates(-23.1, -46.1, "SP", "São Paulo")

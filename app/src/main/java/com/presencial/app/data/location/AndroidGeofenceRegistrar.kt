@@ -70,6 +70,12 @@ class AndroidGeofenceRegistrar @Inject constructor(
             geofencingClient.addGeofences(request, geofencePendingIntent).await()
         } catch (exception: CancellationException) {
             throw exception
+        } catch (exception: SecurityException) {
+            throw GeofenceRegistrationException(
+                message = exception.message ?: "Falha ao atualizar o monitoramento de localização.",
+                retryable = false,
+                cause = exception
+            )
         } catch (exception: ApiException) {
             throw GeofenceRegistrationException(
                 message = exception.message ?: "Falha ao atualizar o monitoramento de localização.",
@@ -84,6 +90,12 @@ class AndroidGeofenceRegistrar @Inject constructor(
             geofencingClient.removeGeofences(geofencePendingIntent).await()
         } catch (exception: CancellationException) {
             throw exception
+        } catch (exception: SecurityException) {
+            throw GeofenceRegistrationException(
+                message = exception.message ?: "Falha ao remover o monitoramento de localização.",
+                retryable = false,
+                cause = exception
+            )
         } catch (exception: ApiException) {
             throw GeofenceRegistrationException(
                 message = exception.message ?: "Falha ao remover o monitoramento de localização.",

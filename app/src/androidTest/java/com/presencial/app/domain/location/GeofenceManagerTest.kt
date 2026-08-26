@@ -17,6 +17,7 @@ import io.mockk.unmockkStatic
 import io.mockk.verify
 import kotlinx.coroutines.runBlocking
 import org.junit.After
+import org.junit.Assert.assertFalse
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -69,6 +70,26 @@ class GeofenceManagerTest {
                 match { it.geofences.size == 1 },
                 any()
             )
+        }
+    }
+
+    @Test
+    fun registerGeofences_withSecurityException_throwsNonRetryableRegistrationException() = runBlocking {
+        val addresses = listOf(
+            WorkAddress(
+                id = 1, name = "Home", addressText = "Street 1",
+                latitude = 1.0, longitude = 1.0, isActive = true
+            )
+        )
+        every { geofencingClient.removeGeofences(any<PendingIntent>()) } returns Tasks.forResult(null)
+        every { geofencingClient.addGeofences(any(), any()) } returns
+            Tasks.forException(SecurityException("missing permission"))
+
+        try {
+            geofenceRegistrar.registerGeofences(addresses)
+            throw AssertionError("expected GeofenceRegistrationException")
+        } catch (exception: GeofenceRegistrationException) {
+            assertFalse(exception.retryable)
         }
     }
 }
