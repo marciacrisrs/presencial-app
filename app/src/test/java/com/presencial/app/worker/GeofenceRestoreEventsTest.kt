@@ -20,4 +20,12 @@ class GeofenceRestoreEventsTest {
         assertFalse(GeofenceRestoreEvents.isSupported(Intent.ACTION_VIEW))
         assertFalse(GeofenceRestoreEvents.isSupported(null))
     }
+
+    @Test
+    fun shouldRetryRestore_retriesUntilMaxAttempts() {
+        assertTrue(GeofenceRestoreEvents.shouldRetryRestore(0))
+        assertTrue(GeofenceRestoreEvents.shouldRetryRestore(3))
+        assertFalse(GeofenceRestoreEvents.shouldRetryRestore(4))
+        assertFalse(GeofenceRestoreEvents.shouldRetryRestore(5))
+    }
 }

@@ -8,6 +8,7 @@ import android.os.Build
 import com.google.android.gms.common.api.ApiException
 import com.google.android.gms.common.api.CommonStatusCodes
 import com.google.android.gms.location.Geofence
+import com.google.android.gms.location.GeofenceStatusCodes
 import com.google.android.gms.location.GeofencingRequest
 import com.google.android.gms.location.LocationServices
 import com.presencial.app.domain.location.GeofenceRegistrar
@@ -99,7 +100,8 @@ class AndroidGeofenceRegistrar @Inject constructor(
             CommonStatusCodes.NETWORK_ERROR,
             CommonStatusCodes.INTERNAL_ERROR,
             CommonStatusCodes.API_NOT_CONNECTED,
-            CommonStatusCodes.TIMEOUT
+            CommonStatusCodes.TIMEOUT,
+            GeofenceStatusCodes.GEOFENCE_NOT_AVAILABLE
         )
 
         fun isRetryable(statusCode: Int): Boolean = statusCode in RETRYABLE_STATUS_CODES
