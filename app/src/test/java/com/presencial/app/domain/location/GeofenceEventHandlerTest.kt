@@ -52,4 +52,14 @@ class GeofenceEventHandlerTest {
         assertEquals(AutoCheckInResult.SkippedNonWorkday, result)
         coVerify(exactly = 0) { notificationHelper.showAutoCheckInNotification() }
     }
+
+    @Test
+    fun `when absence covers today, then skip notification`() = runTest {
+        coEvery { autoGeofenceCheckInUseCase(1L) } returns AutoCheckInResult.SkippedAbsence
+
+        val result = handler.handleDwellTransition(1L)
+
+        assertEquals(AutoCheckInResult.SkippedAbsence, result)
+        coVerify(exactly = 0) { notificationHelper.showAutoCheckInNotification() }
+    }
 }
