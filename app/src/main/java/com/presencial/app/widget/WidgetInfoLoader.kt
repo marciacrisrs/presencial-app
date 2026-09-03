@@ -5,6 +5,7 @@ import com.presencial.app.data.local.PresencialDatabase
 import com.presencial.app.data.local.mapper.toDomain
 import com.presencial.app.data.preferences.PresencePolicyMapper
 import com.presencial.app.domain.model.DayStatus
+import com.presencial.app.domain.util.AbsenceCoverage
 import com.presencial.app.domain.util.GoalCalculator
 import com.presencial.app.domain.util.PresencePolicyCalculator
 import com.presencial.app.domain.util.WorkdayCalculator
@@ -41,8 +42,8 @@ object WidgetInfoLoader {
             policy
         )
 
-        val checkIns = db.checkInDao().getBetween(start, end)
-        val completed = checkIns.count { it.status == DayStatus.PRESENCIAL.name }
+        val checkIns = db.checkInDao().getBetween(start, end).map { it.toDomain() }
+        val completed = checkIns.count { AbsenceCoverage.isPresencialWorkday(it, absences) }
         val remaining = GoalCalculator.calculateRemainingDays(completed, required)
         val remainingWorkdays = WorkdayCalculator.countRemainingWorkdays(
             today,
@@ -53,13 +54,15 @@ object WidgetInfoLoader {
             .calculateAchievedPercentage(completed, required)
             .toInt()
 
-        val todayCheckIn = checkIns.find { it.dateEpochDay == today.toEpochDay() }
-        val todayStatus = when (todayCheckIn?.status) {
-            DayStatus.PRESENCIAL.name -> WidgetTodayStatus.PRESENCIAL
-            DayStatus.HOME_OFFICE.name -> WidgetTodayStatus.HOME_OFFICE
+        val todayCheckIn = checkIns.find { it.date == today }
+        val todayStatus = when {
+            AbsenceCoverage.coversFullDay(today, absences) -> WidgetTodayStatus.PENDING
+            todayCheckIn?.status == DayStatus.PRESENCIAL -> WidgetTodayStatus.PRESENCIAL
+            todayCheckIn?.status == DayStatus.HOME_OFFICE -> WidgetTodayStatus.HOME_OFFICE
             else -> WidgetTodayStatus.PENDING
         }
-        val todayIsWorkday = WorkdayCalculator.isWorkday(today, countSaturdays)
+        val todayIsWorkday = WorkdayCalculator.isWorkday(today, countSaturdays) &&
+            !AbsenceCoverage.coversFullDay(today, absences)
 
         return WidgetInfo.create(
             completed = completed,

@@ -171,4 +171,32 @@ class GetStatisticsUseCaseTest {
             cancelAndIgnoreRemainingEvents()
         }
     }
+
+    @Test
+    fun `given presencial check-in on vacation day, when invoke, then exclude it from totals`() = runTest {
+        val vacationDay = LocalDate.of(2026, 8, 10)
+        val checkIns = listOf(
+            TestDataFactory.createCheckIn(date = vacationDay, status = DayStatus.PRESENCIAL),
+            TestDataFactory.createCheckIn(date = LocalDate.of(2026, 8, 11), status = DayStatus.PRESENCIAL)
+        )
+        val absences = listOf(
+            TestDataFactory.createAbsence(
+                startDate = vacationDay,
+                endDate = vacationDay,
+                isFullDay = true
+            )
+        )
+
+        every { checkInRepository.observeAllCheckIns() } returns flowOf(checkIns)
+        every { absenceRepository.getAllAbsences() } returns flowOf(absences)
+        every { settingsRepository.settings } returns flowOf(AppSettings())
+
+        useCase(2026).test {
+            val stats = awaitItem()
+            assertEquals(1, stats.totalPresencial)
+            val augSummary = stats.monthlySummaries.find { it.yearMonth == YearMonth.of(2026, 8) }
+            assertEquals(1, augSummary?.completedDays)
+            cancelAndIgnoreRemainingEvents()
+        }
+    }
 }

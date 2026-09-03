@@ -2,6 +2,7 @@ package com.presencial.app.domain.usecase
 
 import app.cash.turbine.test
 import com.presencial.app.domain.model.AppSettings
+import com.presencial.app.domain.model.DayStatus
 import com.presencial.app.domain.repository.AbsenceRepository
 import com.presencial.app.domain.repository.CheckInRepository
 import com.presencial.app.domain.repository.SettingsRepository
@@ -127,6 +128,67 @@ class GetDashboardDataUseCaseTest {
         useCase(yearMonth).test {
             val dashboard = awaitItem()
             assertEquals(26, dashboard.workdays)
+            cancelAndIgnoreRemainingEvents()
+        }
+    }
+
+    @Test
+    fun `given presencial check-in on full-day vacation, when invoke, then completedDays excludes it`() = runTest {
+        val yearMonth = YearMonth.of(2026, 8)
+        val today = LocalDate.of(2026, 8, 10)
+        val vacationDay = LocalDate.of(2026, 8, 6)
+        timeProvider.setToday(today)
+
+        every { checkInRepository.observeCheckInsForMonth(yearMonth) } returns flowOf(
+            listOf(
+                TestDataFactory.createCheckIn(date = vacationDay, status = DayStatus.PRESENCIAL),
+                TestDataFactory.createCheckIn(date = today, status = DayStatus.PRESENCIAL)
+            )
+        )
+        every { absenceRepository.getAbsencesInRange(any(), any()) } returns flowOf(
+            listOf(
+                TestDataFactory.createAbsence(
+                    startDate = vacationDay,
+                    endDate = vacationDay,
+                    isFullDay = true
+                )
+            )
+        )
+        every { settingsRepository.settings } returns flowOf(AppSettings(40, false))
+
+        useCase(yearMonth).test {
+            val dashboard = awaitItem()
+            assertEquals(1, dashboard.completedDays)
+            assertEquals(0, dashboard.homeOfficeDays)
+            cancelAndIgnoreRemainingEvents()
+        }
+    }
+
+    @Test
+    fun `given today is full-day absence, when invoke, then today is not a workday for check-in`() = runTest {
+        val yearMonth = YearMonth.of(2026, 8)
+        val today = LocalDate.of(2026, 8, 6)
+        timeProvider.setToday(today)
+
+        every { checkInRepository.observeCheckInsForMonth(yearMonth) } returns flowOf(
+            listOf(TestDataFactory.createCheckIn(date = today, status = DayStatus.PRESENCIAL))
+        )
+        every { absenceRepository.getAbsencesInRange(any(), any()) } returns flowOf(
+            listOf(
+                TestDataFactory.createAbsence(
+                    startDate = today,
+                    endDate = today,
+                    isFullDay = true
+                )
+            )
+        )
+        every { settingsRepository.settings } returns flowOf(AppSettings(40, false))
+
+        useCase(yearMonth).test {
+            val dashboard = awaitItem()
+            assertEquals(false, dashboard.todayIsWorkday)
+            assertEquals(false, dashboard.todayIsPresencial)
+            assertEquals(0, dashboard.completedDays)
             cancelAndIgnoreRemainingEvents()
         }
     }

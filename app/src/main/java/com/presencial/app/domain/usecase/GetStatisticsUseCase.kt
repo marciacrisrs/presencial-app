@@ -4,12 +4,12 @@ import com.presencial.app.domain.model.Absence
 import com.presencial.app.domain.model.AnnualSummary
 import com.presencial.app.domain.model.AppSettings
 import com.presencial.app.domain.model.CheckIn
-import com.presencial.app.domain.model.DayStatus
 import com.presencial.app.domain.model.MonthlySummary
 import com.presencial.app.domain.model.WeeklyAttendanceSummary
 import com.presencial.app.domain.repository.AbsenceRepository
 import com.presencial.app.domain.repository.CheckInRepository
 import com.presencial.app.domain.repository.SettingsRepository
+import com.presencial.app.domain.util.AbsenceCoverage
 import com.presencial.app.domain.util.GoalCalculator
 import com.presencial.app.domain.util.PresencePolicyCalculator
 import com.presencial.app.domain.util.TimeProvider
@@ -71,11 +71,11 @@ class GetStatisticsUseCase @Inject constructor(
             )
         }.sortedByDescending { it.yearMonth }
 
-        val totalPresencial = checkIns.count { it.status == DayStatus.PRESENCIAL }
-        val totalHomeOffice = checkIns.count { it.status == DayStatus.HOME_OFFICE }
+        val totalPresencial = checkIns.count { AbsenceCoverage.isPresencialWorkday(it, absences) }
+        val totalHomeOffice = checkIns.count { AbsenceCoverage.isHomeOfficeWorkday(it, absences) }
 
         val presencialDates = checkIns
-            .filter { it.status == DayStatus.PRESENCIAL }
+            .filter { AbsenceCoverage.isPresencialWorkday(it, absences) }
             .map { it.date }
             .sorted()
 
@@ -91,7 +91,7 @@ class GetStatisticsUseCase @Inject constructor(
             totalHomeOffice = totalHomeOffice,
             longestStreak = calculateLongestStreak(presencialDates),
             currentStreak = calculateCurrentStreak(presencialDates),
-            weeklySummaries = buildWeeklySummaries(checkIns, weeklyMonth),
+            weeklySummaries = buildWeeklySummaries(checkIns, absences, weeklyMonth),
             annualSummary = annualSummary
         )
     }
@@ -123,8 +123,8 @@ class GetStatisticsUseCase @Inject constructor(
             absences,
             policy
         )
-        val completed = monthCheckIns.count { it.status == DayStatus.PRESENCIAL }
-        val homeOffice = monthCheckIns.count { it.status == DayStatus.HOME_OFFICE }
+        val completed = monthCheckIns.count { AbsenceCoverage.isPresencialWorkday(it, absences) }
+        val homeOffice = monthCheckIns.count { AbsenceCoverage.isHomeOfficeWorkday(it, absences) }
         return MonthlySummary(
             yearMonth = yearMonth,
             workdays = workdays,
@@ -168,10 +168,12 @@ class GetStatisticsUseCase @Inject constructor(
 
     private fun buildWeeklySummaries(
         checkIns: List<CheckIn>,
+        absences: List<Absence>,
         yearMonth: YearMonth
     ): List<WeeklyAttendanceSummary> {
         val monthCheckIns = checkIns.filter {
-            YearMonth.from(it.date) == yearMonth && it.status == DayStatus.PRESENCIAL
+            YearMonth.from(it.date) == yearMonth &&
+                AbsenceCoverage.isPresencialWorkday(it, absences)
         }
         val monthStart = yearMonth.atDay(1)
         val monthEnd = yearMonth.atEndOfMonth()

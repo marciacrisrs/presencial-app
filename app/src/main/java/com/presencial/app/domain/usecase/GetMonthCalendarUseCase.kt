@@ -7,6 +7,7 @@ import com.presencial.app.domain.model.DayStatus
 import com.presencial.app.domain.repository.AbsenceRepository
 import com.presencial.app.domain.repository.CheckInRepository
 import com.presencial.app.domain.repository.SettingsRepository
+import com.presencial.app.domain.util.AbsenceCoverage
 import com.presencial.app.domain.util.HolidayCalculator
 import com.presencial.app.domain.util.PresencePolicyCalculator
 import com.presencial.app.domain.util.TimeProvider
@@ -74,9 +75,7 @@ class GetMonthCalendarUseCase @Inject constructor(
             val isWorkday = WorkdayCalculator.isWorkday(current, countSaturdays)
             val savedStatus = checkInMap[current]?.status
             val savedSource = checkInMap[current]?.source ?: "MANUAL"
-            val isAbsent = absences.any { absence ->
-                !current.isBefore(absence.startDate) && !current.isAfter(absence.endDate) && absence.isFullDay
-            }
+            val isAbsent = AbsenceCoverage.coversFullDay(current, absences)
             val isPolicyRequired = PresencePolicyCalculator.isPolicyRequired(
                 current,
                 countSaturdays,

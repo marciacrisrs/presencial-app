@@ -8,6 +8,7 @@ import com.presencial.app.domain.model.DayStatus
 import com.presencial.app.domain.repository.AbsenceRepository
 import com.presencial.app.domain.repository.CheckInRepository
 import com.presencial.app.domain.repository.SettingsRepository
+import com.presencial.app.domain.util.AbsenceCoverage
 import com.presencial.app.domain.util.GoalCalculator
 import com.presencial.app.domain.util.PresencePolicyCalculator
 import com.presencial.app.domain.util.SmartMessageMetricsCalculator
@@ -55,8 +56,8 @@ class GetDashboardDataUseCase @Inject constructor(
             absences,
             policy
         )
-        val completedDays = checkIns.count { it.status == DayStatus.PRESENCIAL }
-        val homeOfficeDays = checkIns.count { it.status == DayStatus.HOME_OFFICE }
+        val completedDays = checkIns.count { AbsenceCoverage.isPresencialWorkday(it, absences) }
+        val homeOfficeDays = checkIns.count { AbsenceCoverage.isHomeOfficeWorkday(it, absences) }
         val remainingDays = GoalCalculator.calculateRemainingDays(completedDays, requiredDays)
         val achievedPercentage = GoalCalculator.calculateAchievedPercentage(completedDays, requiredDays)
         val progressFraction = GoalCalculator.calculateProgressFraction(completedDays, requiredDays)
@@ -66,7 +67,7 @@ class GetDashboardDataUseCase @Inject constructor(
         val yesterdayIsPending = WorkdayCalculator.isWorkday(yesterday, countSaturdays) &&
             yesterdayCheckIn == null
 
-        val streak = calculateStreak(checkIns, today)
+        val streak = calculateStreak(checkIns, absences, today)
 
         val params = SmartMessageMetricsCalculator.enrich(
             params = SmartMessageParams(
@@ -78,7 +79,7 @@ class GetDashboardDataUseCase @Inject constructor(
                 yearMonth = yearMonth,
                 countSaturdays = countSaturdays
             ),
-            checkIns = checkIns,
+            checkIns = checkIns.filter { !AbsenceCoverage.coversFullDay(it.date, absences) },
             today = today
         )
 
@@ -95,17 +96,23 @@ class GetDashboardDataUseCase @Inject constructor(
             progressFraction = progressFraction,
             smartMessage = getSmartMessageUseCase(params),
             countSaturdays = countSaturdays,
-            todayIsPresencial = todayCheckIn?.status == DayStatus.PRESENCIAL,
-            todayIsWorkday = WorkdayCalculator.isWorkday(today, countSaturdays),
+            todayIsPresencial = todayCheckIn?.status == DayStatus.PRESENCIAL &&
+                !AbsenceCoverage.coversFullDay(today, absences),
+            todayIsWorkday = WorkdayCalculator.isWorkday(today, countSaturdays) &&
+                !AbsenceCoverage.coversFullDay(today, absences),
             yesterdayIsPending = yesterdayIsPending,
             streak = streak,
             policyCompanyName = policy.companyName
         )
     }
 
-    private fun calculateStreak(checkIns: List<CheckIn>, today: LocalDate): Int {
+    private fun calculateStreak(
+        checkIns: List<CheckIn>,
+        absences: List<Absence>,
+        today: LocalDate
+    ): Int {
         val presencialDates = checkIns
-            .filter { it.status == DayStatus.PRESENCIAL }
+            .filter { AbsenceCoverage.isPresencialWorkday(it, absences) }
             .map { it.date }
             .toSet()
         var streak = 0

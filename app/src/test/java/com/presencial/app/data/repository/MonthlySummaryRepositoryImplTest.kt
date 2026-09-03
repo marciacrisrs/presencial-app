@@ -1,6 +1,7 @@
 package com.presencial.app.data.repository
 
 import app.cash.turbine.test
+import com.presencial.app.data.local.dao.AbsenceDao
 import com.presencial.app.data.local.dao.CheckInDao
 import com.presencial.app.data.local.dao.MonthlySummaryDao
 import com.presencial.app.domain.model.AppSettings
@@ -12,6 +13,7 @@ import io.mockk.every
 import io.mockk.mockk
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.runTest
+import java.time.LocalDate
 import java.time.YearMonth
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.BeforeEach
@@ -21,14 +23,17 @@ class MonthlySummaryRepositoryImplTest {
 
     private val monthlySummaryDao: MonthlySummaryDao = mockk()
     private val checkInDao: CheckInDao = mockk()
+    private val absenceDao: AbsenceDao = mockk()
     private val settingsRepository: SettingsRepository = mockk()
     private lateinit var repository: MonthlySummaryRepositoryImpl
 
     @BeforeEach
     fun setup() {
+        every { absenceDao.getAbsencesInRange(any(), any()) } returns flowOf(emptyList())
         repository = MonthlySummaryRepositoryImpl(
             monthlySummaryDao,
             checkInDao,
+            absenceDao,
             settingsRepository
         )
     }
@@ -96,5 +101,41 @@ class MonthlySummaryRepositoryImplTest {
         coVerify { monthlySummaryDao.upsert(match { 
             it.completedDays == 1 && it.homeOfficeDays == 1 && it.yearMonthKey == yearMonth.toString()
         }) }
+    }
+
+    @Test
+    fun `when refreshSummary with presencial on vacation day, then exclude it from completed days`() = runTest {
+        val yearMonth = YearMonth.of(2026, 8)
+        val vacationDay = LocalDate.of(2026, 8, 10)
+        val settings = AppSettings(requiredPercentage = 40, countSaturdaysAsWorkdays = false)
+        every { settingsRepository.settings } returns flowOf(settings)
+        every { absenceDao.getAbsencesInRange(any(), any()) } returns flowOf(
+            listOf(
+                TestDataFactory.createAbsenceEntity(
+                    startDateEpochDay = vacationDay.toEpochDay(),
+                    endDateEpochDay = vacationDay.toEpochDay(),
+                    isFullDay = true
+                )
+            )
+        )
+        coEvery { checkInDao.getBetween(any(), any()) } returns listOf(
+            TestDataFactory.createCheckInEntity(
+                dateEpochDay = vacationDay.toEpochDay(),
+                status = "PRESENCIAL"
+            ),
+            TestDataFactory.createCheckInEntity(
+                dateEpochDay = LocalDate.of(2026, 8, 11).toEpochDay(),
+                status = "PRESENCIAL"
+            )
+        )
+        coEvery { monthlySummaryDao.upsert(any()) } returns Unit
+
+        repository.refreshSummary(yearMonth)
+
+        coVerify {
+            monthlySummaryDao.upsert(match {
+                it.completedDays == 1 && it.yearMonthKey == yearMonth.toString()
+            })
+        }
     }
 }
