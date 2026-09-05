@@ -30,6 +30,7 @@ class SettingsFlowTest {
     val composeTestRule = createComposeRule()
 
     private val viewModel = mockk<SettingsViewModel>(relaxed = true)
+    private val weeklySummaryViewModel = mockk<WeeklyPolicySummaryViewModel>(relaxed = true)
     private val settingsFlow = MutableStateFlow(AppSettings())
     private val messageFlow = MutableStateFlow<String?>(null)
     private val workAddressesFlow = MutableStateFlow<List<WorkAddress>>(emptyList())
@@ -46,6 +47,7 @@ class SettingsFlowTest {
         every { viewModel.policyValidation } returns policyValidationFlow
         every { viewModel.cloudSyncState } returns cloudSyncStateFlow
         every { viewModel.pendingRestore } returns MutableStateFlow(null)
+        every { weeklySummaryViewModel.summaries } returns MutableStateFlow(emptyList())
     }
 
     @Test
@@ -115,6 +117,7 @@ class SettingsFlowTest {
             PresencialTheme {
                 SettingsScreen(
                     viewModel = viewModel,
+                    weeklySummaryViewModel = weeklySummaryViewModel,
                     onNavigateToAbout = onNavigateToAbout,
                     onNavigateToAbsences = onNavigateToAbsences,
                     onNavigateToWorkAddresses = onNavigateToWorkAddresses
