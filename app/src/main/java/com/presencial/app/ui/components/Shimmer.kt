@@ -9,7 +9,7 @@ import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -58,7 +58,7 @@ fun ShimmerBox(
     Box(
         modifier = modifier
             .fillMaxWidth(widthFraction)
-            .height(height)
+            .heightIn(min = height)
             .background(Color.LightGray.copy(alpha = SHIMMER_BOX_ALPHA), shape)
             .shimmer()
     )

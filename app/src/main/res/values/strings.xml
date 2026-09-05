@@ -95,7 +95,7 @@
     <string name="location_permission_background_body">Para registrar a presença automaticamente, escolha \"Permitir o tempo todo\" nas configurações do Android.</string>
     <string name="location_permission_grant">Entendi, conceder permissão</string>
     <string name="location_permission_configure">Abrir configurações</string>
-    <string name="onboarding_title">Bem-vinda ao Presencial</string>
+    <string name="onboarding_title">Boas-vindas ao Presencial</string>
     <string name="onboarding_step_indicator">Passo %1$d de %2$d</string>
     <string name="onboarding_goal_title">Qual é a sua meta de presença?</string>
     <string name="onboarding_goal_body">Escolha o percentual de dias úteis que você precisa estar no escritório. Você pode ajustar depois em Configurações.</string>
