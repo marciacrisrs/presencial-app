@@ -48,7 +48,7 @@ fun AboutScreen(onBack: () -> Unit) {
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Sobre") },
+                title = { Text(stringResource(R.string.about_title)) },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(R.string.cd_back))
@@ -98,13 +98,13 @@ private fun AboutHeader() {
     )
 
     Text(
-        text = "Presencial",
+        text = stringResource(R.string.app_name),
         style = MaterialTheme.typography.headlineMedium,
         fontWeight = FontWeight.Bold
     )
 
     Text(
-        text = "Versão ${BuildConfig.VERSION_NAME}",
+        text = stringResource(R.string.about_version, BuildConfig.VERSION_NAME),
         style = MaterialTheme.typography.bodyMedium,
         color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
     )
@@ -146,12 +146,12 @@ private fun DeveloperCard(onGithubClick: () -> Unit) {
         Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
             Column {
                 Text(
-                    text = "Desenvolvido por",
+                    text = stringResource(R.string.about_developed_by),
                     style = MaterialTheme.typography.titleSmall,
                     color = MaterialTheme.colorScheme.primary
                 )
                 Text(
-                    text = "Márcia Cristina",
+                    text = stringResource(R.string.about_developer_name),
                     style = MaterialTheme.typography.bodyLarge,
                     fontWeight = FontWeight.Medium
                 )
@@ -171,7 +171,7 @@ private fun DeveloperCard(onGithubClick: () -> Unit) {
                     tint = androidx.compose.ui.graphics.Color.Unspecified
                 )
                 Text(
-                    text = "GitHub",
+                    text = stringResource(R.string.about_github),
                     style = MaterialTheme.typography.bodyLarge,
                     color = MaterialTheme.colorScheme.secondary,
                     fontWeight = FontWeight.Medium

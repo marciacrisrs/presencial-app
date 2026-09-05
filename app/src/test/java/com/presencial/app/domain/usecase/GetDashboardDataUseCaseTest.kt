@@ -2,6 +2,7 @@ package com.presencial.app.domain.usecase
 
 import app.cash.turbine.test
 import com.presencial.app.domain.model.AppSettings
+import com.presencial.app.domain.model.DayStatus
 import com.presencial.app.domain.repository.AbsenceRepository
 import com.presencial.app.domain.repository.CheckInRepository
 import com.presencial.app.domain.repository.SettingsRepository
@@ -14,6 +15,7 @@ import kotlinx.coroutines.test.runTest
 import java.time.LocalDate
 import java.time.YearMonth
 import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Assertions.assertFalse
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
@@ -127,6 +129,88 @@ class GetDashboardDataUseCaseTest {
         useCase(yearMonth).test {
             val dashboard = awaitItem()
             assertEquals(26, dashboard.workdays)
+            cancelAndIgnoreRemainingEvents()
+        }
+    }
+
+    @Test
+    fun `given first of month with yesterday presencial, when invoke, then yesterdayIsPending is false`() = runTest {
+        val today = LocalDate.of(2026, 9, 1)
+        val yesterday = today.minusDays(1)
+        val yearMonth = YearMonth.from(today)
+        timeProvider.setToday(today)
+
+        every { checkInRepository.observeCheckInsForMonth(yearMonth) } returns flowOf(emptyList())
+        every { checkInRepository.observeCheckInsForMonth(YearMonth.from(yesterday)) } returns flowOf(
+            listOf(TestDataFactory.createCheckIn(date = yesterday, status = DayStatus.PRESENCIAL))
+        )
+        every { absenceRepository.getAbsencesInRange(any(), any()) } returns flowOf(emptyList())
+        every { settingsRepository.settings } returns flowOf(AppSettings(40, false))
+
+        useCase(yearMonth).test {
+            val dashboard = awaitItem()
+            assertFalse(dashboard.yesterdayIsPending)
+            cancelAndIgnoreRemainingEvents()
+        }
+    }
+
+    @Test
+    fun `given first of month with yesterday home office, when invoke, then yesterdayIsPending is false`() = runTest {
+        val today = LocalDate.of(2026, 9, 1)
+        val yesterday = today.minusDays(1)
+        val yearMonth = YearMonth.from(today)
+        timeProvider.setToday(today)
+
+        every { checkInRepository.observeCheckInsForMonth(yearMonth) } returns flowOf(emptyList())
+        every { checkInRepository.observeCheckInsForMonth(YearMonth.from(yesterday)) } returns flowOf(
+            listOf(TestDataFactory.createCheckIn(date = yesterday, status = DayStatus.HOME_OFFICE))
+        )
+        every { absenceRepository.getAbsencesInRange(any(), any()) } returns flowOf(emptyList())
+        every { settingsRepository.settings } returns flowOf(AppSettings(40, false))
+
+        useCase(yearMonth).test {
+            val dashboard = awaitItem()
+            assertFalse(dashboard.yesterdayIsPending)
+            cancelAndIgnoreRemainingEvents()
+        }
+    }
+
+    @Test
+    fun `given first of month with no yesterday check-in, when invoke, then yesterdayIsPending is true`() = runTest {
+        val today = LocalDate.of(2026, 9, 1)
+        val yesterday = today.minusDays(1)
+        val yearMonth = YearMonth.from(today)
+        timeProvider.setToday(today)
+
+        every { checkInRepository.observeCheckInsForMonth(yearMonth) } returns flowOf(emptyList())
+        every { checkInRepository.observeCheckInsForMonth(YearMonth.from(yesterday)) } returns flowOf(emptyList())
+        every { absenceRepository.getAbsencesInRange(any(), any()) } returns flowOf(emptyList())
+        every { settingsRepository.settings } returns flowOf(AppSettings(40, false))
+
+        useCase(yearMonth).test {
+            val dashboard = awaitItem()
+            assertTrue(dashboard.yesterdayIsPending)
+            cancelAndIgnoreRemainingEvents()
+        }
+    }
+
+    @Test
+    fun `given first of month with yesterday absence, when invoke, then yesterdayIsPending is false`() = runTest {
+        val today = LocalDate.of(2026, 9, 1)
+        val yesterday = today.minusDays(1)
+        val yearMonth = YearMonth.from(today)
+        timeProvider.setToday(today)
+
+        every { checkInRepository.observeCheckInsForMonth(yearMonth) } returns flowOf(emptyList())
+        every { checkInRepository.observeCheckInsForMonth(YearMonth.from(yesterday)) } returns flowOf(emptyList())
+        every { absenceRepository.getAbsencesInRange(any(), any()) } returns flowOf(
+            listOf(TestDataFactory.createAbsence(startDate = yesterday, endDate = yesterday))
+        )
+        every { settingsRepository.settings } returns flowOf(AppSettings(40, false))
+
+        useCase(yearMonth).test {
+            val dashboard = awaitItem()
+            assertFalse(dashboard.yesterdayIsPending)
             cancelAndIgnoreRemainingEvents()
         }
     }

@@ -26,6 +26,7 @@ fun DashboardScreen(
     viewModel: DashboardViewModel = hiltViewModel(),
     openCheckIn: Boolean = false,
     onCheckInHandled: () -> Unit = {},
+    isHomeVisible: Boolean = true,
     onNavigateToWorkAddresses: () -> Unit = {}
 ) {
     val data by viewModel.dashboardData.collectAsStateWithLifecycle()
@@ -48,8 +49,8 @@ fun DashboardScreen(
         }
     }
 
-    LaunchedEffect(openCheckIn) {
-        if (openCheckIn) onCheckInHandled()
+    LaunchedEffect(openCheckIn, isHomeVisible) {
+        if (openCheckIn && isHomeVisible) onCheckInHandled()
     }
 
     Scaffold(

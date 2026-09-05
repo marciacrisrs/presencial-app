@@ -91,8 +91,7 @@ fun PresencialNavHost(
         openCheckIn = openCheckIn,
         currentRoute = currentRoute,
         navController = navController,
-        pagerState = pagerState,
-        onCheckInHandled = onCheckInHandled
+        pagerState = pagerState
     )
 
     Scaffold(
@@ -130,8 +129,7 @@ private fun HandleCheckInNavigation(
     openCheckIn: Boolean,
     currentRoute: String?,
     navController: NavHostController,
-    pagerState: PagerState,
-    onCheckInHandled: () -> Unit
+    pagerState: PagerState
 ) {
     LaunchedEffect(openCheckIn, currentRoute, pagerState.currentPage) {
         if (!Screen.shouldOpenHomeFromCheckInNotification(
@@ -148,7 +146,6 @@ private fun HandleCheckInNavigation(
             launchSingleTop = true
             restoreState = true
         }
-        onCheckInHandled()
     }
 }
 
@@ -245,6 +242,7 @@ private fun MainTabPager(
             0 -> DashboardScreen(
                 openCheckIn = openCheckIn,
                 onCheckInHandled = onCheckInHandled,
+                isHomeVisible = pagerState.currentPage == 0,
                 onNavigateToWorkAddresses = { navController.navigate(Screen.WorkAddresses.route) }
             )
             1 -> CalendarScreen(

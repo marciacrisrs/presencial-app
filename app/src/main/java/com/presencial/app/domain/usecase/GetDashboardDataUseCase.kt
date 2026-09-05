@@ -8,6 +8,7 @@ import com.presencial.app.domain.model.DayStatus
 import com.presencial.app.domain.repository.AbsenceRepository
 import com.presencial.app.domain.repository.CheckInRepository
 import com.presencial.app.domain.repository.SettingsRepository
+import com.presencial.app.domain.util.AbsenceCoverage
 import com.presencial.app.domain.util.GoalCalculator
 import com.presencial.app.domain.util.PresencePolicyCalculator
 import com.presencial.app.domain.util.SmartMessageMetricsCalculator
@@ -28,14 +29,48 @@ class GetDashboardDataUseCase @Inject constructor(
     private val timeProvider: TimeProvider
 ) {
     operator fun invoke(yearMonth: YearMonth = timeProvider.currentMonth()): Flow<DashboardData> {
+        val today = timeProvider.today()
+        val yesterday = today.minusDays(1)
+        val yesterdayMonth = YearMonth.from(yesterday)
+
         return combine(
-            checkInRepository.observeCheckInsForMonth(yearMonth),
-            absenceRepository.getAbsencesInRange(yearMonth.atDay(1), yearMonth.atEndOfMonth()),
+            observeCheckInsForDashboard(yearMonth, yesterdayMonth),
+            absenceRepository.getAbsencesInRange(
+                minOf(yearMonth.atDay(1), yesterday),
+                maxOf(yearMonth.atEndOfMonth(), yesterday)
+            ),
             settingsRepository.settings
         ) { checkIns, absences, settings ->
             Triple(checkIns, absences, settings)
         }.map { (checkIns, absences, settings) ->
-            buildDashboard(yearMonth, checkIns, absences, settings)
+            val yesterdayCheckIn = (checkIns.monthCheckIns + checkIns.adjacentCheckIns)
+                .find { it.date == yesterday }
+            buildDashboard(
+                yearMonth = yearMonth,
+                checkIns = checkIns.monthCheckIns,
+                absences = absences,
+                settings = settings,
+                yesterdayCheckIn = yesterdayCheckIn
+            )
+        }
+    }
+
+    private fun observeCheckInsForDashboard(
+        yearMonth: YearMonth,
+        yesterdayMonth: YearMonth
+    ): Flow<DashboardCheckIns> {
+        val monthFlow = checkInRepository.observeCheckInsForMonth(yearMonth)
+        if (yesterdayMonth == yearMonth) {
+            return monthFlow.map { DashboardCheckIns(monthCheckIns = it) }
+        }
+        return combine(
+            monthFlow,
+            checkInRepository.observeCheckInsForMonth(yesterdayMonth)
+        ) { monthCheckIns, adjacentCheckIns ->
+            DashboardCheckIns(
+                monthCheckIns = monthCheckIns,
+                adjacentCheckIns = adjacentCheckIns
+            )
         }
     }
 
@@ -43,11 +78,13 @@ class GetDashboardDataUseCase @Inject constructor(
         yearMonth: YearMonth,
         checkIns: List<CheckIn>,
         absences: List<Absence>,
-        settings: AppSettings
+        settings: AppSettings,
+        yesterdayCheckIn: CheckIn?
     ): DashboardData {
         val countSaturdays = settings.countSaturdaysAsWorkdays
         val policy = settings.presencePolicy
         val today = timeProvider.today()
+        val yesterday = today.minusDays(1)
         val workdays = WorkdayCalculator.countLiquidWorkdaysInMonth(yearMonth, countSaturdays, absences)
         val requiredDays = PresencePolicyCalculator.calculateRequiredDays(
             yearMonth,
@@ -61,12 +98,6 @@ class GetDashboardDataUseCase @Inject constructor(
         val achievedPercentage = GoalCalculator.calculateAchievedPercentage(completedDays, requiredDays)
         val progressFraction = GoalCalculator.calculateProgressFraction(completedDays, requiredDays)
         val todayCheckIn = checkIns.find { it.date == today }
-        val yesterday = today.minusDays(1)
-        val yesterdayCheckIn = checkIns.find { it.date == yesterday }
-        val yesterdayIsPending = WorkdayCalculator.isWorkday(yesterday, countSaturdays) &&
-            yesterdayCheckIn == null
-
-        val streak = calculateStreak(checkIns, today)
 
         val params = SmartMessageMetricsCalculator.enrich(
             params = SmartMessageParams(
@@ -97,10 +128,26 @@ class GetDashboardDataUseCase @Inject constructor(
             countSaturdays = countSaturdays,
             todayIsPresencial = todayCheckIn?.status == DayStatus.PRESENCIAL,
             todayIsWorkday = WorkdayCalculator.isWorkday(today, countSaturdays),
-            yesterdayIsPending = yesterdayIsPending,
-            streak = streak,
+            yesterdayIsPending = isYesterdayPending(
+                yesterday = yesterday,
+                yesterdayCheckIn = yesterdayCheckIn,
+                absences = absences,
+                countSaturdays = countSaturdays
+            ),
+            streak = calculateStreak(checkIns, today),
             policyCompanyName = policy.companyName
         )
+    }
+
+    private fun isYesterdayPending(
+        yesterday: LocalDate,
+        yesterdayCheckIn: CheckIn?,
+        absences: List<Absence>,
+        countSaturdays: Boolean
+    ): Boolean {
+        if (yesterdayCheckIn != null) return false
+        if (!WorkdayCalculator.isWorkday(yesterday, countSaturdays)) return false
+        return !AbsenceCoverage.coversFullDay(yesterday, absences)
     }
 
     private fun calculateStreak(checkIns: List<CheckIn>, today: LocalDate): Int {
@@ -116,4 +163,9 @@ class GetDashboardDataUseCase @Inject constructor(
         }
         return streak
     }
+
+    private data class DashboardCheckIns(
+        val monthCheckIns: List<CheckIn>,
+        val adjacentCheckIns: List<CheckIn> = emptyList()
+    )
 }

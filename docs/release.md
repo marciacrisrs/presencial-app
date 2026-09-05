@@ -24,8 +24,11 @@ Dispara com **tag `v*`** (ex.: `v1.0.14`) ou manualmente em **Actions → Releas
 | `ANDROID_KEY_ALIAS` | Sim | Alias da chave |
 | `ANDROID_KEY_PASSWORD` | Sim | Senha da chave |
 | `PLAY_STORE_SERVICE_ACCOUNT_JSON` | Não* | JSON da conta de serviço Google Play |
+| `GOOGLE_SERVICES_JSON` | Não** | Conteúdo de `app/google-services.json` para ligar o Crashlytics no AAB |
 
 \* Sem este secret o AAB ainda é gerado; o upload para a Play é ignorado.
+
+\** Sem este secret o AAB de release sai **sem** Crashlytics. O plugin Google Services só entra quando o arquivo existe no job.
 
 ## Variables (opcional)
 
@@ -53,7 +56,9 @@ O workflow usa o sufixo da tag como `versionName` e grava em `version.properties
 
 ## Crashlytics (produção)
 
-Crashlytics só entra no APK/AAB **release** quando `app/google-services.json` existe. Builds debug não enviam coleta (`isCrashlyticsCollectionEnabled = !DEBUG`).
+Crashlytics só entra no APK/AAB **release** quando `app/google-services.json` existe. O workflow de release grava esse arquivo a partir do secret `GOOGLE_SERVICES_JSON`. Builds debug não enviam coleta (`isCrashlyticsCollectionEnabled = !DEBUG`).
+
+A política in-app (Sobre) descreve esses relatórios de falha. No Play Console, a seção **Data safety** precisa declarar Crashlytics (dados de diagnóstico / falhas do app), alinhada a esse texto.
 
 ### Como investigar um crash
 

@@ -3,6 +3,7 @@ package com.presencial.app.domain.usecase
 import com.presencial.app.domain.model.AppSettings
 import com.presencial.app.domain.model.CheckInSource
 import com.presencial.app.domain.model.DayStatus
+import com.presencial.app.domain.repository.AbsenceRepository
 import com.presencial.app.domain.repository.CheckInRepository
 import com.presencial.app.domain.repository.MonthlySummaryRepository
 import com.presencial.app.domain.repository.SettingsRepository
@@ -26,6 +27,7 @@ class AutoGeofenceCheckInUseCaseTest {
     private val checkInRepository = mockk<CheckInRepository>()
     private val monthlySummaryRepository = mockk<MonthlySummaryRepository>()
     private val settingsRepository = mockk<SettingsRepository>()
+    private val absenceRepository = mockk<AbsenceRepository>()
     private val timeProvider = mockk<TimeProvider>()
     private val widgetRefresher = mockk<WidgetRefresher>()
     private lateinit var useCase: AutoGeofenceCheckInUseCase
@@ -36,6 +38,7 @@ class AutoGeofenceCheckInUseCaseTest {
     fun setup() {
         every { timeProvider.today() } returns today
         every { settingsRepository.settings } returns flowOf(AppSettings())
+        every { absenceRepository.getAbsencesInRange(today, today) } returns flowOf(emptyList())
         coEvery { checkInRepository.getCheckIn(today) } returns null
         coEvery {
             checkInRepository.saveCheckIn(any(), any(), any(), any())
@@ -46,6 +49,7 @@ class AutoGeofenceCheckInUseCaseTest {
             checkInRepository,
             monthlySummaryRepository,
             settingsRepository,
+            absenceRepository,
             timeProvider,
             widgetRefresher
         )
@@ -79,6 +83,63 @@ class AutoGeofenceCheckInUseCaseTest {
 
         assertEquals(AutoCheckInResult.SkippedAlreadyCheckedIn, result)
         coVerify(exactly = 0) { checkInRepository.saveCheckIn(any(), any(), any(), any()) }
+    }
+
+    @Test
+    fun `when home office is already recorded, then skip`() = runTest {
+        coEvery { checkInRepository.getCheckIn(today) } returns TestDataFactory.createCheckIn(
+            date = today,
+            status = DayStatus.HOME_OFFICE
+        )
+
+        val result = useCase(workAddressId = 1L)
+
+        assertEquals(AutoCheckInResult.SkippedAlreadyCheckedIn, result)
+        coVerify(exactly = 0) { checkInRepository.saveCheckIn(any(), any(), any(), any()) }
+    }
+
+    @Test
+    fun `when full-day absence covers today, then skip`() = runTest {
+        every { absenceRepository.getAbsencesInRange(today, today) } returns flowOf(
+            listOf(
+                TestDataFactory.createAbsence(
+                    startDate = today.minusDays(1),
+                    endDate = today.plusDays(1),
+                    isFullDay = true
+                )
+            )
+        )
+
+        val result = useCase(workAddressId = 1L)
+
+        assertEquals(AutoCheckInResult.SkippedAbsence, result)
+        coVerify(exactly = 0) { checkInRepository.saveCheckIn(any(), any(), any(), any()) }
+    }
+
+    @Test
+    fun `when only partial-day absence covers today, then save auto geofence check-in`() = runTest {
+        every { absenceRepository.getAbsencesInRange(today, today) } returns flowOf(
+            listOf(
+                TestDataFactory.createAbsence(
+                    startDate = today,
+                    endDate = today,
+                    isFullDay = false,
+                    hours = 4f
+                )
+            )
+        )
+
+        val result = useCase(workAddressId = 3L)
+
+        assertEquals(AutoCheckInResult.Success, result)
+        coVerify {
+            checkInRepository.saveCheckIn(
+                today,
+                DayStatus.PRESENCIAL,
+                CheckInSource.AUTO_GEOFENCE,
+                3L
+            )
+        }
     }
 
     @Test

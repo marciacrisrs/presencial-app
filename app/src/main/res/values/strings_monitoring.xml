@@ -10,4 +10,5 @@
     <string name="monitoring_need_background">Permita localização \"O tempo todo\" para check-in em background.</string>
     <string name="monitoring_content_description_active">Monitoramento de check-in automático ativo</string>
     <string name="monitoring_content_description_incomplete">Configuração de check-in automático incompleta</string>
+    <string name="geofence_sync_failure_title">Monitoramento de localização com problema</string>
 </resources>

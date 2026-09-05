@@ -12,7 +12,9 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import com.presencial.app.R
 import com.presencial.app.domain.model.GeofenceSyncStatus
 
 @Composable
@@ -34,7 +36,7 @@ fun GeofenceSyncStatusCard(
             verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
             Text(
-                text = "Monitoramento de localização com problema",
+                text = stringResource(R.string.geofence_sync_failure_title),
                 style = MaterialTheme.typography.titleMedium
             )
             Text(
@@ -43,7 +45,7 @@ fun GeofenceSyncStatusCard(
             )
             Row(modifier = Modifier.fillMaxWidth()) {
                 Button(onClick = onRetry) {
-                    Text("Tentar novamente")
+                    Text(stringResource(R.string.action_retry))
                 }
             }
         }

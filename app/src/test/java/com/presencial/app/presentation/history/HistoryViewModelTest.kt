@@ -33,8 +33,10 @@ class HistoryViewModelTest {
 
         val viewModel = HistoryViewModel(getHistoryUseCase)
 
-        viewModel.historyMonths.test {
-            assertEquals(historyData, awaitItem())
+        viewModel.uiState.test {
+            val first = awaitItem()
+            val ready = if (first is HistoryUiState.Loading) awaitItem() else first
+            assertEquals(HistoryUiState.Ready(historyData), ready)
         }
     }
 }
