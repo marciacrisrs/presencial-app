@@ -150,7 +150,7 @@ private fun HistoryMonthCard(monthData: HistoryMonthData, onShare: () -> Unit) {
                     style = MaterialTheme.typography.titleLarge
                 )
                 IconButton(onClick = onShare) {
-                    Icon(Icons.Default.Share, contentDescription = "Compartilhar")
+                    Icon(Icons.Default.Share, contentDescription = stringResource(R.string.cd_share))
                 }
             }
             Text("Dias úteis: ${summary.workdays}  •  Meta: ${summary.requiredDays} dias")

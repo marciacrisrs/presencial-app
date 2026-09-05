@@ -5,6 +5,15 @@ All notable changes to Presencial are documented in this file.
 ## [Unreleased]
 
 ### Added
+- Navegação primária com 4 seções; Estatísticas abre a partir do Histórico (issue #66)
+- Descrições de acessibilidade para voltar, adicionar, compartilhar e navegar o calendário (issue #78)
+- Documentação de investigação de crash no fluxo de release (issue #77)
+
+### Fixed
+- Crash ao tocar na notificação de presença (issue #132)
+- Check-in automático que não disparava no dia seguinte (issue #133)
+
+### Added
 - Onboarding inicial de meta, lembrete das 18h e local opcional (issue #60)
 - Exportação de relatório mensal em CSV e Excel (.xlsx) na tela de estatísticas (issue #11)
 - Dashboard analítico: gráfico semanal, linha de evolução, resumo anual e heatmap anual (issue #12)

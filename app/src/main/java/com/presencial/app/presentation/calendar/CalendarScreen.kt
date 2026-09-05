@@ -26,9 +26,11 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.presencial.app.R
 import com.presencial.app.domain.model.CheckInSource
 import com.presencial.app.domain.model.DayStatus
 import com.presencial.app.ui.components.MonthCalendarGrid
@@ -69,14 +71,14 @@ fun CalendarScreen(
             verticalAlignment = Alignment.CenterVertically
         ) {
             IconButton(onClick = viewModel::previousMonth) {
-                Icon(Icons.Default.ChevronLeft, contentDescription = "Mês anterior")
+                Icon(Icons.Default.ChevronLeft, contentDescription = stringResource(R.string.cd_previous_month))
             }
             Text(
                 text = formatMonthYear(selectedMonth.year, selectedMonth.monthValue),
                 style = MaterialTheme.typography.titleLarge
             )
             IconButton(onClick = viewModel::nextMonth) {
-                Icon(Icons.Default.ChevronRight, contentDescription = "Próximo mês")
+                Icon(Icons.Default.ChevronRight, contentDescription = stringResource(R.string.cd_next_month))
             }
         }
 

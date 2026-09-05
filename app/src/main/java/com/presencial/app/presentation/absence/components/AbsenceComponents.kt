@@ -39,8 +39,10 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import com.presencial.app.R
 import com.presencial.app.domain.model.Absence
 import com.presencial.app.domain.model.AbsenceType
 import java.time.LocalDate
@@ -124,7 +126,7 @@ private fun AbsenceDeleteButton(onDelete: () -> Unit) {
     IconButton(onClick = onDelete) {
         Icon(
             Icons.Default.Delete,
-            contentDescription = "Remover",
+            contentDescription = stringResource(R.string.cd_remove),
             tint = MaterialTheme.colorScheme.error
         )
     }

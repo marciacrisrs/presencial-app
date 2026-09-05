@@ -143,7 +143,7 @@ fun WorkAddressTopBar(onBack: () -> Unit) {
             IconButton(onClick = onBack) {
                 Icon(
                     Icons.AutoMirrored.Filled.ArrowBack,
-                    contentDescription = "Voltar"
+                    contentDescription = stringResource(R.string.cd_back)
                 )
             }
         }
@@ -260,7 +260,7 @@ private fun EmptyAddressState() {
         modifier = Modifier.fillMaxSize(),
         contentAlignment = Alignment.Center
     ) {
-        Text("Nenhum local cadastrado")
+        Text(stringResource(R.string.work_addresses_empty))
     }
 }
 
@@ -362,7 +362,7 @@ private fun WorkAddressItem(
                 IconButton(onClick = onDelete) {
                     Icon(
                         Icons.Default.Delete,
-                        contentDescription = "Excluir",
+                        contentDescription = stringResource(R.string.cd_delete),
                         tint = MaterialTheme.colorScheme.error
                     )
                 }
