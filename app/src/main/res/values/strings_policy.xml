@@ -12,6 +12,9 @@
     <string name="policy_even_weeks_on_site">Semanas pares presenciais</string>
     <string name="policy_odd_weeks_on_site">Semanas ímpares presenciais</string>
     <string name="policy_weekly_summary_title">Resumo semanal do mês</string>
+    <string name="policy_weekly_summary_card_title">Resumo da política</string>
+    <string name="policy_weekly_summary_card_description">Veja como sua política de presença se aplica às semanas do mês.</string>
+    <string name="policy_weekly_summary_card_action">Ver resumo semanal</string>
     <string name="policy_weekly_summary_line">%1$d/%2$d – %3$d/%4$d · semana %5$s · %6$d dia(s) obrigatório(s)</string>
     <string name="policy_week_on_site">presencial</string>
     <string name="policy_week_remote">remota</string>

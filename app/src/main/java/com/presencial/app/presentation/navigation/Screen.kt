@@ -22,7 +22,7 @@ sealed class Screen(val route: String, val title: String, val icon: ImageVector?
         const val MAIN_ROUTE = "main"
         const val TAB_ARG = "tab"
 
-        val bottomNavItems = listOf(Dashboard, Calendar, History, Statistics, Settings)
+        val bottomNavItems = listOf(Dashboard, Calendar, History, Settings)
 
         fun mainRoute(tab: Int = 0): String = "$MAIN_ROUTE?$TAB_ARG=$tab"
 
@@ -38,6 +38,11 @@ sealed class Screen(val route: String, val title: String, val icon: ImageVector?
             return currentPage != 0 || !isMainDestination(currentRoute)
         }
 
+        fun pagerIndexFromSavedTab(savedTab: Int): Int {
+            if (savedTab == LEGACY_SETTINGS_TAB_INDEX) return SETTINGS_TAB_INDEX
+            return savedTab.coerceIn(0, bottomNavItems.lastIndex)
+        }
+
         fun tabFromRoute(route: String?): Int? {
             if (!isMainDestination(route)) return null
             return route
@@ -47,3 +52,6 @@ sealed class Screen(val route: String, val title: String, val icon: ImageVector?
         }
     }
 }
+
+private const val SETTINGS_TAB_INDEX = 3
+private const val LEGACY_SETTINGS_TAB_INDEX = 4

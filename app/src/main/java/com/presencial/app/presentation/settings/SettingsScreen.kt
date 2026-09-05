@@ -1,5 +1,7 @@
 package com.presencial.app.presentation.settings
 
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -29,22 +31,22 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.activity.compose.rememberLauncherForActivityResult
-import androidx.activity.result.contract.ActivityResultContracts
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
+import com.presencial.app.R
 import com.presencial.app.domain.model.GeofenceSyncStatus
+import com.presencial.app.domain.model.WeeklyPolicySummary
 import com.presencial.app.presentation.components.MonitoringStatusBanner
 import com.presencial.app.presentation.location.rememberWorkLocationPermissions
-import androidx.compose.ui.res.stringResource
-import com.presencial.app.R
 
 @OptIn(ExperimentalPermissionsApi::class)
 @Composable
 fun SettingsScreen(
     viewModel: SettingsViewModel = hiltViewModel(),
+    weeklySummaryViewModel: WeeklyPolicySummaryViewModel = hiltViewModel(),
     onNavigateToAbout: () -> Unit = {},
     onNavigateToAbsences: () -> Unit = {},
     onNavigateToWorkAddresses: () -> Unit = {}
@@ -52,6 +54,7 @@ fun SettingsScreen(
     val settings by viewModel.settings.collectAsStateWithLifecycle()
     val workAddresses by viewModel.workAddresses.collectAsStateWithLifecycle()
     val geofenceSyncStatus by viewModel.geofenceSyncStatus.collectAsStateWithLifecycle()
+    val weeklySummaries by weeklySummaryViewModel.summaries.collectAsStateWithLifecycle()
     val message by viewModel.message.collectAsStateWithLifecycle()
     val policyValidation by viewModel.policyValidation.collectAsStateWithLifecycle()
     val cloudSyncState by viewModel.cloudSyncState.collectAsStateWithLifecycle()
@@ -82,6 +85,7 @@ fun SettingsScreen(
             foregroundGranted = foregroundPermissions.allPermissionsGranted,
             backgroundGranted = backgroundPermission.allPermissionsGranted,
             geofenceSyncStatus = geofenceSyncStatus,
+            weeklySummaries = weeklySummaries,
             onGeofenceRetry = viewModel::retryGeofenceSync,
             onPresencePolicyChange = viewModel::updatePresencePolicy,
             policyValidation = policyValidation,
@@ -143,6 +147,7 @@ private data class SettingsScaffoldParams(
     val foregroundGranted: Boolean,
     val backgroundGranted: Boolean,
     val geofenceSyncStatus: GeofenceSyncStatus,
+    val weeklySummaries: List<WeeklyPolicySummary>,
     val onGeofenceRetry: () -> Unit,
     val onPresencePolicyChange: (com.presencial.app.domain.model.PresencePolicy) -> Unit,
     val policyValidation: com.presencial.app.domain.model.PolicyValidationResult,
@@ -173,6 +178,7 @@ private fun SettingsScaffold(params: SettingsScaffoldParams) {
                 foregroundGranted = params.foregroundGranted,
                 backgroundGranted = params.backgroundGranted,
                 geofenceSyncStatus = params.geofenceSyncStatus,
+                weeklySummaries = params.weeklySummaries,
                 onGeofenceRetry = params.onGeofenceRetry,
                 onPresencePolicyChange = params.onPresencePolicyChange,
                 policyValidation = params.policyValidation,
@@ -198,6 +204,7 @@ private data class SettingsContentParams(
     val foregroundGranted: Boolean,
     val backgroundGranted: Boolean,
     val geofenceSyncStatus: GeofenceSyncStatus,
+    val weeklySummaries: List<WeeklyPolicySummary>,
     val onGeofenceRetry: () -> Unit,
     val onPresencePolicyChange: (com.presencial.app.domain.model.PresencePolicy) -> Unit,
     val policyValidation: com.presencial.app.domain.model.PolicyValidationResult,
@@ -242,6 +249,8 @@ private fun SettingsContent(params: SettingsContentParams, modifier: Modifier = 
             validation = params.policyValidation,
             onPolicyChange = params.onPresencePolicyChange
         )
+
+        WeeklyPolicySummaryCard(summaries = params.weeklySummaries)
 
         SaturdaysConfigCard(
             countSaturdays = params.settings.countSaturdaysAsWorkdays,

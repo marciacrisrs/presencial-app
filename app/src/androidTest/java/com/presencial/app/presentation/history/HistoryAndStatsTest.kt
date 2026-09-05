@@ -4,10 +4,10 @@ import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onNodeWithText
+import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performScrollTo
 import com.presencial.app.domain.model.HistoryMonthData
 import com.presencial.app.domain.model.MonthlySummary
-import com.presencial.app.domain.model.WeeklyPolicySummary
 import com.presencial.app.domain.usecase.StatisticsData
 import com.presencial.app.presentation.statistics.StatisticsScreen
 import com.presencial.app.presentation.statistics.StatisticsViewModel
@@ -15,6 +15,7 @@ import com.presencial.app.ui.theme.PresencialTheme
 import io.mockk.every
 import io.mockk.mockk
 import kotlinx.coroutines.flow.MutableStateFlow
+import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
@@ -27,11 +28,9 @@ class HistoryAndStatsTest {
 
     private val historyViewModel = mockk<HistoryViewModel>(relaxed = true)
     private val statisticsViewModel = mockk<StatisticsViewModel>(relaxed = true)
-    private val weeklySummariesFlow = MutableStateFlow<List<WeeklyPolicySummary>>(emptyList())
 
     @Before
     fun setup() {
-        every { historyViewModel.weeklySummaries } returns weeklySummariesFlow
         every { statisticsViewModel.exportFileBaseName() } returns "presencial_2026-08"
     }
 
@@ -62,6 +61,24 @@ class HistoryAndStatsTest {
 
         // Verifica se "Agosto 2026" está visível (Formatado pelo HistoryMonthCard)
         composeTestRule.onNodeWithText("Agosto 2026").assertIsDisplayed()
+    }
+
+    @Test
+    fun historyScreen_statisticsButton_invokesNavigation() {
+        every { historyViewModel.historyMonths } returns MutableStateFlow(emptyList())
+        var openedStatistics = false
+
+        composeTestRule.setContent {
+            PresencialTheme {
+                HistoryScreen(
+                    viewModel = historyViewModel,
+                    onNavigateToStatistics = { openedStatistics = true }
+                )
+            }
+        }
+
+        composeTestRule.onNodeWithText("Ver estatísticas").performClick()
+        assertTrue(openedStatistics)
     }
 
     @Test

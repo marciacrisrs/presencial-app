@@ -76,7 +76,7 @@ fun PresencialNavHost(
     val tabs = Screen.bottomNavItems
     val savedTab = rememberSaveable { mutableIntStateOf(0) }
     val pagerState = rememberPagerState(
-        initialPage = savedTab.intValue.coerceIn(0, tabs.lastIndex),
+        initialPage = Screen.pagerIndexFromSavedTab(savedTab.intValue),
         pageCount = { tabs.size }
     )
     val scope = rememberCoroutineScope()
@@ -201,8 +201,9 @@ private fun PresencialNavGraph(
         ) { backStackEntry ->
             val tab = backStackEntry.arguments?.getInt(Screen.TAB_ARG) ?: 0
             LaunchedEffect(tab) {
-                if (pagerState.currentPage != tab) {
-                    pagerState.scrollToPage(tab)
+                val pagerIndex = Screen.pagerIndexFromSavedTab(tab)
+                if (pagerState.currentPage != pagerIndex) {
+                    pagerState.scrollToPage(pagerIndex)
                 }
             }
             MainTabPager(
@@ -211,6 +212,9 @@ private fun PresencialNavGraph(
                 openCheckIn = openCheckIn,
                 onCheckInHandled = onCheckInHandled
             )
+        }
+        composable(Screen.Statistics.route) {
+            StatisticsScreen()
         }
         composable(Screen.About.route) {
             AboutScreen(onBack = { navController.popBackStack() })
@@ -246,9 +250,10 @@ private fun MainTabPager(
             1 -> CalendarScreen(
                 onNavigateToAbsences = { navController.navigate(Screen.Absences.route) }
             )
-            2 -> HistoryScreen()
-            3 -> StatisticsScreen()
-            4 -> SettingsScreen(
+            2 -> HistoryScreen(
+                onNavigateToStatistics = { navController.navigate(Screen.Statistics.route) }
+            )
+            3 -> SettingsScreen(
                 onNavigateToAbout = { navController.navigate(Screen.About.route) },
                 onNavigateToAbsences = { navController.navigate(Screen.Absences.route) },
                 onNavigateToWorkAddresses = { navController.navigate(Screen.WorkAddresses.route) }
