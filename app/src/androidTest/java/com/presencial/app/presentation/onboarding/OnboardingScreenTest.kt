@@ -24,13 +24,15 @@ class OnboardingScreenTest {
                     onContinueGoal = {},
                     onContinueReminder = {},
                     onAddWorkAddress = {},
-                    onSkipLocation = {}
+                    onFinish = {}
                 )
             }
         }
+        composeTestRule.onNodeWithText("Boas-vindas ao Presencial").assertIsDisplayed()
         composeTestRule.onNodeWithText("Qual é a sua meta de presença?").assertIsDisplayed()
         composeTestRule.onNodeWithText("40%").assertIsDisplayed()
         composeTestRule.onNodeWithText("Continuar").assertIsDisplayed()
+        composeTestRule.onNodeWithText("Concluir").assertIsDisplayed()
     }
 
     @Test
@@ -45,7 +47,7 @@ class OnboardingScreenTest {
                     onContinueGoal = {},
                     onContinueReminder = {},
                     onAddWorkAddress = {},
-                    onSkipLocation = { skipped = true }
+                    onFinish = { skipped = true }
                 )
             }
         }
@@ -65,12 +67,33 @@ class OnboardingScreenTest {
                     onContinueGoal = {},
                     onContinueReminder = {},
                     onAddWorkAddress = {},
-                    onSkipLocation = {}
+                    onFinish = {}
                 )
             }
         }
         composeTestRule.onNodeWithText("Lembrete às 18h").assertIsDisplayed()
         composeTestRule.onNodeWithText("Continuar").assertIsDisplayed()
+        composeTestRule.onNodeWithText("Concluir").assertIsDisplayed()
+    }
+
+    @Test
+    fun goalStep_finishCompletesOnboarding() {
+        var finished = false
+        composeTestRule.setContent {
+            PresencialTheme {
+                OnboardingContent(
+                    step = 0,
+                    selectedPercentage = 40,
+                    onSelectPercentage = {},
+                    onContinueGoal = {},
+                    onContinueReminder = {},
+                    onAddWorkAddress = {},
+                    onFinish = { finished = true }
+                )
+            }
+        }
+        composeTestRule.onNodeWithText("Concluir").performClick()
+        org.junit.Assert.assertTrue(finished)
     }
 
     @Test
@@ -84,7 +107,7 @@ class OnboardingScreenTest {
                     onContinueGoal = {},
                     onContinueReminder = {},
                     onAddWorkAddress = {},
-                    onSkipLocation = {}
+                    onFinish = {}
                 )
             }
         }

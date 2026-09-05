@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.aspectRatio
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -21,6 +22,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
@@ -45,10 +47,10 @@ fun SmartMessageCard(
             containerColor = MaterialTheme.colorScheme.secondaryContainer.copy(alpha = CARD_ALPHA_SECONDARY)
         )
     ) {
-        Box(modifier = Modifier.padding(PADDING_MEDIUM).fillMaxWidth()) {
+        Box(modifier = Modifier.padding(PADDING_LARGE).fillMaxWidth()) {
             Text(
                 text = message,
-                style = MaterialTheme.typography.bodyMedium,
+                style = MaterialTheme.typography.bodyLarge,
                 textAlign = TextAlign.Center,
                 modifier = Modifier.fillMaxWidth()
             )
@@ -99,7 +101,8 @@ fun CircularProgressCard(
     requiredDays: Int,
     remainingLine: String,
     policyLine: String,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    ringSize: Dp = CIRCLE_SIZE_DP
 ) {
     val animatedProgress by animateFloatAsState(
         targetValue = progress,
@@ -108,6 +111,12 @@ fun CircularProgressCard(
     )
     val daysCenter = stringResource(R.string.dashboard_days_center, completedDays, requiredDays)
     val daysCaption = stringResource(R.string.dashboard_days_center_caption)
+    val strokeWidth = (ringSize.value / CIRCLE_SIZE_DP.value * STROKE_WIDTH_DP.value).dp
+    val centerStyle = if (ringSize >= LARGE_RING_THRESHOLD) {
+        MaterialTheme.typography.headlineMedium
+    } else {
+        MaterialTheme.typography.headlineSmall
+    }
 
     Card(
         modifier = modifier,
@@ -117,18 +126,20 @@ fun CircularProgressCard(
         )
     ) {
         Column(
-            modifier = Modifier.padding(PADDING_EXTRA_LARGE).fillMaxWidth(),
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(PADDING_EXTRA_LARGE),
             horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(SPACING_MEDIUM)
+            verticalArrangement = Arrangement.spacedBy(SPACING_MEDIUM, Alignment.CenterVertically)
         ) {
             Box(
-                modifier = Modifier.size(CIRCLE_SIZE_DP),
+                modifier = Modifier.size(ringSize),
                 contentAlignment = Alignment.Center
             ) {
                 CircularProgressIndicator(
                     progress = { animatedProgress },
                     modifier = Modifier.fillMaxWidth().aspectRatio(ASPECT_RATIO_SQUARE),
-                    strokeWidth = STROKE_WIDTH_DP,
+                    strokeWidth = strokeWidth,
                     strokeCap = StrokeCap.Round,
                     color = MaterialTheme.colorScheme.primary,
                     trackColor = MaterialTheme.colorScheme.surfaceVariant
@@ -136,7 +147,7 @@ fun CircularProgressCard(
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
                     Text(
                         text = daysCenter,
-                        style = MaterialTheme.typography.headlineSmall,
+                        style = centerStyle,
                         textAlign = TextAlign.Center
                     )
                     Text(
@@ -165,12 +176,14 @@ fun CircularProgressCard(
 
 private const val ANIM_DURATION_PROGRESS = 800
 private val CIRCLE_SIZE_DP = 180.dp
+private val LARGE_RING_THRESHOLD = 200.dp
 private const val CARD_ALPHA_SECONDARY = 0.5f
 private const val CARD_ALPHA_SURFACE = 0.5f
 private const val CARD_ALPHA_PRIMARY = 0.3f
 private const val ON_SURFACE_ALPHA_MEDIUM = 0.7f
 private const val ON_SURFACE_ALPHA_LOW = 0.6f
 private val PADDING_MEDIUM = 12.dp
+private val PADDING_LARGE = 16.dp
 private val PADDING_EXTRA_LARGE = 24.dp
 private val SPACING_TINY = 2.dp
 private val SPACING_MEDIUM = 16.dp

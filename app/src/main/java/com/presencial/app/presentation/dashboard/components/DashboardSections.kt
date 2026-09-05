@@ -38,6 +38,7 @@ import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.airbnb.lottie.compose.LottieAnimation
 import com.airbnb.lottie.compose.LottieCompositionSpec
@@ -62,7 +63,11 @@ fun DashboardSmartMessageSection(dashboard: DashboardData) {
 }
 
 @Composable
-fun DashboardProgressSection(dashboard: DashboardData) {
+fun DashboardProgressSection(
+    dashboard: DashboardData,
+    ringSize: Dp,
+    modifier: Modifier = Modifier
+) {
     val copy = PresenceProgressPresentation.from(
         completedDays = dashboard.completedDays,
         requiredDays = dashboard.requiredDays,
@@ -80,17 +85,26 @@ fun DashboardProgressSection(dashboard: DashboardData) {
             requiredDays = dashboard.requiredDays,
             remainingLine = copy.remainingLine,
             policyLine = copy.policyLine,
-            modifier = Modifier.fillMaxWidth()
+            modifier = modifier.fillMaxWidth(),
+            ringSize = ringSize
         )
     }
 }
 
 @Composable
-fun DashboardHeader(dashboard: DashboardData) {
+fun DashboardHeader(
+    dashboard: DashboardData,
+    logoSize: Dp = LOGO_SIZE
+) {
     val monthName = dashboard.yearMonth.month.getDisplayName(
         TextStyle.FULL,
         Locale.forLanguageTag("pt-BR")
     )
+    val titleStyle = if (logoSize >= LOGO_SIZE_COMFORTABLE) {
+        MaterialTheme.typography.headlineMedium
+    } else {
+        MaterialTheme.typography.headlineSmall
+    }
 
     AnimatedVisibility(
         visible = true,
@@ -104,11 +118,11 @@ fun DashboardHeader(dashboard: DashboardData) {
             Image(
                 painter = painterResource(id = R.drawable.logo_splash),
                 contentDescription = stringResource(R.string.dashboard_logo_content_description),
-                modifier = Modifier.size(LOGO_SIZE)
+                modifier = Modifier.size(logoSize)
             )
             Text(
                 text = "${monthName.replaceFirstChar { it.uppercase() }} ${dashboard.yearMonth.year}",
-                style = MaterialTheme.typography.headlineSmall
+                style = titleStyle
             )
         }
     }
@@ -119,7 +133,8 @@ fun DashboardActionSection(
     dashboard: DashboardData,
     onToggleTodayCheckIn: () -> Unit,
     onMarkYesterdayPresencial: () -> Unit,
-    haptic: HapticFeedback
+    haptic: HapticFeedback,
+    buttonHeight: Dp = BUTTON_HEIGHT
 ) {
     if (dashboard.todayIsWorkday) {
         CheckInButton(
@@ -127,7 +142,8 @@ fun DashboardActionSection(
             onConfirm = {
                 haptic.performHapticFeedback(HapticFeedbackType.LongPress)
                 onToggleTodayCheckIn()
-            }
+            },
+            buttonHeight = buttonHeight
         )
     }
 
@@ -177,7 +193,8 @@ internal fun YesterdayCheckInCard(onConfirm: () -> Unit) {
 @Composable
 internal fun CheckInButton(
     isPresencial: Boolean,
-    onConfirm: () -> Unit
+    onConfirm: () -> Unit,
+    buttonHeight: Dp = BUTTON_HEIGHT
 ) {
     val registerLabel = stringResource(R.string.dashboard_check_in_register)
     val registeredLabel = stringResource(R.string.dashboard_check_in_registered)
@@ -197,7 +214,7 @@ internal fun CheckInButton(
                     onClick = onConfirm,
                     modifier = Modifier
                         .fillMaxWidth()
-                        .height(BUTTON_HEIGHT)
+                        .height(buttonHeight)
                         .semantics { contentDescription = registerLabel },
                     shape = RoundedCornerShape(CORNER_RADIUS_LARGE),
                     colors = ButtonDefaults.elevatedButtonColors(
@@ -215,7 +232,7 @@ internal fun CheckInButton(
                     onClick = onConfirm,
                     modifier = Modifier
                         .fillMaxWidth()
-                        .height(BUTTON_HEIGHT)
+                        .height(buttonHeight)
                         .semantics { contentDescription = undoLabel },
                     shape = RoundedCornerShape(CORNER_RADIUS_LARGE),
                     colors = ButtonDefaults.buttonColors(
@@ -236,6 +253,7 @@ internal fun CheckInButton(
 }
 
 private val LOGO_SIZE = 32.dp
+private val LOGO_SIZE_COMFORTABLE = 48.dp
 private val HEADER_SPACING = 8.dp
 private val CONTENT_SPACING = 12.dp
 private val SUCCESS_ANIM_HEIGHT = 120.dp
