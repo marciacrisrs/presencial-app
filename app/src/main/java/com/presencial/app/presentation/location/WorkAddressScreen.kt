@@ -18,6 +18,7 @@ import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.MultiplePermissionsState
+import com.presencial.app.domain.location.GeofencePermissionSync
 import com.presencial.app.presentation.location.components.WorkAddressContent
 import com.presencial.app.presentation.location.components.WorkAddressContentParams
 import com.presencial.app.presentation.location.components.WorkAddressDialogParams
@@ -45,8 +46,10 @@ fun WorkAddressScreen(
     var showBackgroundDialog by remember { mutableStateOf(false) }
 
     val (foregroundPermissions, backgroundPermission) = rememberWorkLocationPermissions()
-    val locationPermissionsGranted =
-        foregroundPermissions.allPermissionsGranted && backgroundPermission.allPermissionsGranted
+    val locationPermissionsGranted = GeofencePermissionSync.shouldSync(
+        foregroundGranted = foregroundPermissions.allPermissionsGranted,
+        backgroundGranted = backgroundPermission.allPermissionsGranted
+    )
 
     LaunchedEffect(locationPermissionsGranted) {
         if (locationPermissionsGranted) {
