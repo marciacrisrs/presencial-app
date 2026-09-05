@@ -29,6 +29,15 @@ sealed class Screen(val route: String, val title: String, val icon: ImageVector?
         fun isMainDestination(route: String?): Boolean =
             route?.startsWith("$MAIN_ROUTE?") == true
 
+        fun shouldOpenHomeFromCheckInNotification(
+            openCheckIn: Boolean,
+            currentRoute: String?,
+            currentPage: Int
+        ): Boolean {
+            if (!openCheckIn || currentRoute == null) return false
+            return currentPage != 0 || !isMainDestination(currentRoute)
+        }
+
         fun tabFromRoute(route: String?): Int? {
             if (!isMainDestination(route)) return null
             return route
