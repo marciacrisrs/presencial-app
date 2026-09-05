@@ -76,7 +76,7 @@ fun PresencialNavHost(
     val tabs = Screen.bottomNavItems
     val savedTab = rememberSaveable { mutableIntStateOf(0) }
     val pagerState = rememberPagerState(
-        initialPage = savedTab.intValue.coerceIn(0, tabs.lastIndex),
+        initialPage = Screen.pagerIndexFromSavedTab(savedTab.intValue),
         pageCount = { tabs.size }
     )
     val scope = rememberCoroutineScope()
@@ -201,8 +201,9 @@ private fun PresencialNavGraph(
         ) { backStackEntry ->
             val tab = backStackEntry.arguments?.getInt(Screen.TAB_ARG) ?: 0
             LaunchedEffect(tab) {
-                if (pagerState.currentPage != tab) {
-                    pagerState.scrollToPage(tab.coerceIn(0, Screen.bottomNavItems.lastIndex))
+                val pagerIndex = Screen.pagerIndexFromSavedTab(tab)
+                if (pagerState.currentPage != pagerIndex) {
+                    pagerState.scrollToPage(pagerIndex)
                 }
             }
             MainTabPager(

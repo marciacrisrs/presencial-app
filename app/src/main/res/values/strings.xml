@@ -33,6 +33,8 @@
     <string name="chart_accessibility_summary">Comparecimento mensal: %s</string>
     <string name="chart_weekly_accessibility_summary">Presença semanal: %s</string>
     <string name="chart_trend_accessibility_summary">Evolução mensal: %s</string>
+    <string name="history_title">Histórico</string>
+    <string name="history_open_statistics">Ver estatísticas</string>
     <string name="statistics_title">Estatísticas</string>
     <string name="statistics_average_annual">Média anual</string>
     <string name="statistics_current_streak">Sequência atual</string>

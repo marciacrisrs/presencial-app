@@ -15,7 +15,9 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import com.presencial.app.R
 import com.presencial.app.domain.model.WeeklyPolicySummary
 import com.presencial.app.presentation.components.WeeklyPolicySummaryDialog
 
@@ -33,9 +35,12 @@ fun WeeklyPolicySummaryCard(summaries: List<WeeklyPolicySummary>) {
             modifier = Modifier.padding(20.dp),
             verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
-            Text("Resumo da política", style = MaterialTheme.typography.titleLarge)
             Text(
-                "Veja como sua política de presença se aplica às semanas do mês.",
+                stringResource(R.string.policy_weekly_summary_card_title),
+                style = MaterialTheme.typography.titleLarge
+            )
+            Text(
+                stringResource(R.string.policy_weekly_summary_card_description),
                 style = MaterialTheme.typography.bodyMedium
             )
             Button(
@@ -43,7 +48,7 @@ fun WeeklyPolicySummaryCard(summaries: List<WeeklyPolicySummary>) {
                 modifier = Modifier.fillMaxWidth(),
                 enabled = summaries.isNotEmpty()
             ) {
-                Text("Ver resumo semanal")
+                Text(stringResource(R.string.policy_weekly_summary_card_action))
             }
         }
     }

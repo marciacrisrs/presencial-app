@@ -29,9 +29,11 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.presencial.app.R
 import com.presencial.app.domain.model.HistoryMonthData
 import com.presencial.app.domain.model.MonthlySummary
 import com.presencial.app.ui.components.ShimmerBox
@@ -50,13 +52,13 @@ fun HistoryScreen(
         modifier = Modifier.fillMaxSize().padding(20.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
-        Text("Histórico", style = MaterialTheme.typography.headlineLarge)
+        Text(stringResource(R.string.history_title), style = MaterialTheme.typography.headlineLarge)
 
         Button(
             onClick = onNavigateToStatistics,
             modifier = Modifier.fillMaxWidth()
         ) {
-            Text("Ver estatísticas")
+            Text(stringResource(R.string.history_open_statistics))
         }
 
         if (historyMonths.isEmpty()) {
