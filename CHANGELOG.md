@@ -4,11 +4,18 @@ All notable changes to Presencial are documented in this file.
 
 ## [Unreleased]
 
+## [1.0.21] - 2026-09-05
+
 ### Added
 - Navegação primária com 4 seções; Estatísticas abre a partir do Histórico (issue #66)
 - Descrições de acessibilidade para voltar, adicionar, compartilhar e navegar o calendário (issue #78)
 - Documentação de investigação de crash no fluxo de release (issue #77)
 - Secret `GOOGLE_SERVICES_JSON` no workflow de release para ligar o Crashlytics no AAB
+
+### Changed
+- Saudação de onboarding neutra (“Boas-vindas ao Presencial”)
+- Onboarding e Início ocupam melhor a tela conforme a altura
+- Concluir disponível em qualquer passo do onboarding
 
 ### Fixed
 - Crash ao tocar na notificação de presença (issue #132)
