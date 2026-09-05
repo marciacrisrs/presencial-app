@@ -96,10 +96,16 @@ class WorkAddressViewModelTest {
     }
 
     @Test
-    fun `syncGeofences should delegate to sync use case`() = runTest {
+    fun `syncGeofences should not crash when registration fails`() = runTest {
+        coEvery { syncGeofencesUseCase() } throws IllegalStateException("permission denied")
+
         viewModel.syncGeofences()
 
         coVerify(exactly = 1) { syncGeofencesUseCase() }
+        assertEquals(
+            "permission denied",
+            viewModel.message.value
+        )
     }
 
     @Test

@@ -16,6 +16,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
+import java.util.concurrent.CancellationException
 import javax.inject.Inject
 
 @HiltViewModel
@@ -80,7 +81,14 @@ class WorkAddressViewModel @Inject constructor(
 
     fun syncGeofences() {
         viewModelScope.launch {
-            syncGeofencesUseCase()
+            runCatching { syncGeofencesUseCase() }
+                .onFailure { exception ->
+                    if (exception is CancellationException) throw exception
+                    if (_message.value == null) {
+                        _message.value = exception.message
+                            ?: "Não foi possível atualizar o monitoramento de localização."
+                    }
+                }
         }
     }
 

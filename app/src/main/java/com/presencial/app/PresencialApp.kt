@@ -15,6 +15,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.launch
+import java.util.concurrent.CancellationException
 import javax.inject.Inject
 
 @HiltAndroidApp
@@ -44,7 +45,13 @@ class PresencialApp : Application(), Configuration.Provider {
         notificationScheduler.scheduleDailyReminder()
         appScope.launch {
             resolveWorkAddressLocationUseCase.backfillMissingLocations()
-            syncGeofencesUseCase()
+            try {
+                syncGeofencesUseCase()
+            } catch (exception: CancellationException) {
+                throw exception
+            } catch (exception: IllegalStateException) {
+                crashReporter.recordNonFatal(exception)
+            }
             widgetRefresher.refresh()
         }
     }

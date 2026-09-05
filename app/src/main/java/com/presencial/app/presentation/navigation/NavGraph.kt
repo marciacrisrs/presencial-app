@@ -46,7 +46,6 @@ import com.presencial.app.presentation.onboarding.OnboardingScreen
 import com.presencial.app.presentation.onboarding.OnboardingViewModel
 import com.presencial.app.presentation.settings.SettingsScreen
 import com.presencial.app.presentation.statistics.StatisticsScreen
-import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 
 private const val ANIM_DURATION = 400
@@ -93,7 +92,6 @@ fun PresencialNavHost(
         currentRoute = currentRoute,
         navController = navController,
         pagerState = pagerState,
-        scope = scope,
         onCheckInHandled = onCheckInHandled
     )
 
@@ -133,11 +131,18 @@ private fun HandleCheckInNavigation(
     currentRoute: String?,
     navController: NavHostController,
     pagerState: PagerState,
-    scope: CoroutineScope,
     onCheckInHandled: () -> Unit
 ) {
-    if (openCheckIn && (pagerState.currentPage != 0 || !Screen.isMainDestination(currentRoute))) {
-        scope.launch { pagerState.animateScrollToPage(0) }
+    LaunchedEffect(openCheckIn, currentRoute, pagerState.currentPage) {
+        if (!Screen.shouldOpenHomeFromCheckInNotification(
+                openCheckIn = openCheckIn,
+                currentRoute = currentRoute,
+                currentPage = pagerState.currentPage
+            )
+        ) {
+            return@LaunchedEffect
+        }
+        pagerState.animateScrollToPage(0)
         navController.navigate(Screen.mainRoute(0)) {
             popUpTo(navController.graph.findStartDestination().id) { saveState = true }
             launchSingleTop = true

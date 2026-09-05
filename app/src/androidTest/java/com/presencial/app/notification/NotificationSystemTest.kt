@@ -37,6 +37,11 @@ class NotificationSystemTest {
     }
 
     @Test
+    fun notificationHelper_showAutoCheckInNotification_doesNotCrash() {
+        NotificationHelper(context).showAutoCheckInNotification()
+    }
+
+    @Test
     fun notificationScheduler_scheduleDailyReminder_enqueuesWork() {
         NotificationScheduler(context).scheduleDailyReminder()
 

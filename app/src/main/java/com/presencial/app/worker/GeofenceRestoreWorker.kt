@@ -4,10 +4,12 @@ import android.content.Context
 import androidx.hilt.work.HiltWorker
 import androidx.work.CoroutineWorker
 import androidx.work.WorkerParameters
+import com.presencial.app.domain.location.GeofenceRegistrationException
 import com.presencial.app.domain.usecase.SyncGeofencesUseCase
 import com.presencial.app.domain.widget.WidgetRefresher
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedInject
+import java.util.concurrent.CancellationException
 
 @HiltWorker
 class GeofenceRestoreWorker @AssistedInject constructor(
@@ -18,9 +20,17 @@ class GeofenceRestoreWorker @AssistedInject constructor(
 ) : CoroutineWorker(context, params) {
 
     override suspend fun doWork(): Result {
-        syncGeofencesUseCase()
-        widgetRefresher.refresh()
-        return Result.success()
+        return try {
+            syncGeofencesUseCase()
+            widgetRefresher.refresh()
+            Result.success()
+        } catch (exception: CancellationException) {
+            throw exception
+        } catch (exception: GeofenceRegistrationException) {
+            if (exception.retryable) Result.retry() else Result.failure()
+        } catch (_: IllegalStateException) {
+            Result.retry()
+        }
     }
 
     companion object {

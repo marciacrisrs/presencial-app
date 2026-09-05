@@ -8,6 +8,7 @@ import android.os.Build
 import com.google.android.gms.common.api.ApiException
 import com.google.android.gms.common.api.CommonStatusCodes
 import com.google.android.gms.location.Geofence
+import com.google.android.gms.location.GeofenceStatusCodes
 import com.google.android.gms.location.GeofencingRequest
 import com.google.android.gms.location.LocationServices
 import com.presencial.app.domain.location.GeofenceRegistrar
@@ -50,7 +51,7 @@ class AndroidGeofenceRegistrar @Inject constructor(
                     .setRequestId(address.id.toString())
                     .setCircularRegion(address.latitude, address.longitude, address.radius)
                     .setExpirationDuration(Geofence.NEVER_EXPIRE)
-                    .setTransitionTypes(Geofence.GEOFENCE_TRANSITION_DWELL)
+                    .setTransitionTypes(CHECK_IN_TRANSITIONS)
                     .setLoiteringDelay(LOITERING_DELAY_MS.toInt())
                     .build()
             }
@@ -61,7 +62,7 @@ class AndroidGeofenceRegistrar @Inject constructor(
             }
 
             val request = GeofencingRequest.Builder().apply {
-                setInitialTrigger(GeofencingRequest.INITIAL_TRIGGER_DWELL)
+                setInitialTrigger(INITIAL_TRIGGERS)
                 addGeofences(geofences)
             }.build()
 
@@ -70,6 +71,8 @@ class AndroidGeofenceRegistrar @Inject constructor(
             geofencingClient.addGeofences(request, geofencePendingIntent).await()
         } catch (exception: CancellationException) {
             throw exception
+        } catch (exception: SecurityException) {
+            throw permissionDenied(exception)
         } catch (exception: ApiException) {
             throw GeofenceRegistrationException(
                 message = exception.message ?: "Falha ao atualizar o monitoramento de localização.",
@@ -84,6 +87,8 @@ class AndroidGeofenceRegistrar @Inject constructor(
             geofencingClient.removeGeofences(geofencePendingIntent).await()
         } catch (exception: CancellationException) {
             throw exception
+        } catch (exception: SecurityException) {
+            throw permissionDenied(exception)
         } catch (exception: ApiException) {
             throw GeofenceRegistrationException(
                 message = exception.message ?: "Falha ao remover o monitoramento de localização.",
@@ -95,13 +100,24 @@ class AndroidGeofenceRegistrar @Inject constructor(
 
     private companion object {
         const val LOITERING_DELAY_MS = 30_000L
+        const val CHECK_IN_TRANSITIONS =
+            Geofence.GEOFENCE_TRANSITION_ENTER or Geofence.GEOFENCE_TRANSITION_DWELL
+        const val INITIAL_TRIGGERS =
+            GeofencingRequest.INITIAL_TRIGGER_ENTER or GeofencingRequest.INITIAL_TRIGGER_DWELL
         val RETRYABLE_STATUS_CODES = setOf(
             CommonStatusCodes.NETWORK_ERROR,
             CommonStatusCodes.INTERNAL_ERROR,
             CommonStatusCodes.API_NOT_CONNECTED,
-            CommonStatusCodes.TIMEOUT
+            CommonStatusCodes.TIMEOUT,
+            GeofenceStatusCodes.GEOFENCE_NOT_AVAILABLE
         )
 
         fun isRetryable(statusCode: Int): Boolean = statusCode in RETRYABLE_STATUS_CODES
+
+        fun permissionDenied(exception: SecurityException) = GeofenceRegistrationException(
+            message = exception.message ?: "Permissão de localização insuficiente.",
+            retryable = false,
+            cause = exception
+        )
     }
 }

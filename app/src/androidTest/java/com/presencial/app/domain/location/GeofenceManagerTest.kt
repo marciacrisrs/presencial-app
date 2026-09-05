@@ -4,8 +4,8 @@ import android.app.PendingIntent
 import android.content.Context
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import com.google.android.gms.location.Geofence
 import com.google.android.gms.location.GeofencingClient
-import com.google.android.gms.location.GeofencingRequest
 import com.google.android.gms.location.LocationServices
 import com.google.android.gms.tasks.Tasks
 import com.presencial.app.data.location.AndroidGeofenceRegistrar
@@ -60,13 +60,18 @@ class GeofenceManagerTest {
         )
 
         val completedTask = Tasks.forResult<Void>(null)
+        every { geofencingClient.removeGeofences(any<PendingIntent>()) } returns completedTask
         every { geofencingClient.addGeofences(any(), any()) } returns completedTask
 
         geofenceRegistrar.registerGeofences(addresses)
 
         verify {
             geofencingClient.addGeofences(
-                match { it.geofences.size == 1 },
+                match { request ->
+                    request.geofences.size == 1 &&
+                        request.geofences.single().transitionTypes ==
+                        (Geofence.GEOFENCE_TRANSITION_ENTER or Geofence.GEOFENCE_TRANSITION_DWELL)
+                },
                 any()
             )
         }

@@ -24,6 +24,7 @@ class NotificationHelper @Inject constructor(
         const val NOTIFICATION_ID = 1001
         const val AUTO_NOTIFICATION_ID = 2001
         private const val REQUEST_CODE_CHECKIN = 0
+        private const val REQUEST_CODE_AUTO_CHECKIN = 1
     }
 
     fun createChannel() {
@@ -40,14 +41,7 @@ class NotificationHelper @Inject constructor(
     fun showCheckInReminder() {
         if (!canPostNotifications()) return
         createChannel()
-        val intent = Intent(context, MainActivity::class.java).apply {
-            flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP
-            putExtra(MainActivity.EXTRA_OPEN_CHECKIN, true)
-        }
-        val pendingIntent = PendingIntent.getActivity(
-            context, REQUEST_CODE_CHECKIN, intent,
-            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
-        )
+        val pendingIntent = activityPendingIntent(REQUEST_CODE_CHECKIN, openCheckIn = true)
 
         val notification = NotificationCompat.Builder(context, CHANNEL_ID)
             .setSmallIcon(R.drawable.ic_notification)
@@ -64,15 +58,32 @@ class NotificationHelper @Inject constructor(
     fun showAutoCheckInNotification() {
         if (!canPostNotifications()) return
         createChannel()
+        val pendingIntent = activityPendingIntent(REQUEST_CODE_AUTO_CHECKIN, openCheckIn = true)
         val notification = NotificationCompat.Builder(context, CHANNEL_ID)
             .setSmallIcon(R.drawable.ic_notification)
             .setContentTitle(context.getString(R.string.notification_auto_checkin_title))
             .setContentText(context.getString(R.string.notification_auto_checkin_message))
             .setPriority(NotificationCompat.PRIORITY_DEFAULT)
+            .setContentIntent(pendingIntent)
             .setAutoCancel(true)
             .build()
 
         context.getSystemService(NotificationManager::class.java).notify(AUTO_NOTIFICATION_ID, notification)
+    }
+
+    private fun activityPendingIntent(requestCode: Int, openCheckIn: Boolean): PendingIntent {
+        val intent = Intent(context, MainActivity::class.java).apply {
+            flags = Intent.FLAG_ACTIVITY_NEW_TASK or
+                Intent.FLAG_ACTIVITY_CLEAR_TOP or
+                Intent.FLAG_ACTIVITY_SINGLE_TOP
+            putExtra(MainActivity.EXTRA_OPEN_CHECKIN, openCheckIn)
+        }
+        return PendingIntent.getActivity(
+            context,
+            requestCode,
+            intent,
+            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+        )
     }
 
     private fun canPostNotifications(): Boolean {
