@@ -26,9 +26,11 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.presencial.app.R
 import com.presencial.app.domain.model.CheckInSource
 import com.presencial.app.domain.model.DayStatus
 import com.presencial.app.ui.components.MonthCalendarGrid
@@ -57,9 +59,9 @@ fun CalendarScreen(
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Text("Calendário", style = MaterialTheme.typography.headlineLarge)
+            Text(stringResource(R.string.calendar_title), style = MaterialTheme.typography.headlineLarge)
             TextButton(onClick = onNavigateToAbsences) {
-                Text("Ausências")
+                Text(stringResource(R.string.calendar_absences))
             }
         }
 
@@ -69,14 +71,14 @@ fun CalendarScreen(
             verticalAlignment = Alignment.CenterVertically
         ) {
             IconButton(onClick = viewModel::previousMonth) {
-                Icon(Icons.Default.ChevronLeft, contentDescription = "Mês anterior")
+                Icon(Icons.Default.ChevronLeft, contentDescription = stringResource(R.string.cd_previous_month))
             }
             Text(
                 text = formatMonthYear(selectedMonth.year, selectedMonth.monthValue),
                 style = MaterialTheme.typography.titleLarge
             )
             IconButton(onClick = viewModel::nextMonth) {
-                Icon(Icons.Default.ChevronRight, contentDescription = "Próximo mês")
+                Icon(Icons.Default.ChevronRight, contentDescription = stringResource(R.string.cd_next_month))
             }
         }
 
@@ -104,7 +106,7 @@ private fun DayEditorDialog(
     onDismiss: () -> Unit
 ) {
     val monthName = day.date.month.getDisplayName(TextStyle.FULL, Locale.forLanguageTag("pt-BR"))
-    val dateLabel = "${day.date.dayOfMonth} de $monthName"
+    val dateLabel = stringResource(R.string.calendar_edit_date, day.date.dayOfMonth, monthName)
 
     var selectedStatus by remember {
         mutableStateOf(
@@ -117,11 +119,11 @@ private fun DayEditorDialog(
 
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text("Editar — $dateLabel") },
+        title = { Text(stringResource(R.string.calendar_edit_title, dateLabel)) },
         text = {
             Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 DayInfoDetails(day)
-                Text("Selecione o status do dia:")
+                Text(stringResource(R.string.calendar_select_status))
                 StatusSelector(
                     selectedStatus = selectedStatus,
                     onStatusSelected = { selectedStatus = it }
@@ -130,7 +132,7 @@ private fun DayEditorDialog(
         },
         confirmButton = {
             TextButton(onClick = { onStatusSelected(selectedStatus) }) {
-                Text("Salvar")
+                Text(stringResource(R.string.action_save))
             }
         },
         dismissButton = {
@@ -146,7 +148,7 @@ private fun DayEditorDialog(
 private fun DayInfoDetails(day: com.presencial.app.domain.model.DayInfo) {
     day.holidayName?.let {
         Text(
-            "🎉 Feriado: $it",
+            stringResource(R.string.calendar_holiday_label, it),
             style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.primary
         )
@@ -171,9 +173,9 @@ private fun StatusSelector(
         horizontalArrangement = Arrangement.spacedBy(8.dp)
     ) {
         val options = listOf(
-            DayStatus.PRESENCIAL to "🏢 Presencial",
-            DayStatus.HOME_OFFICE to "🏠 Home Office",
-            DayStatus.ABSENCE to "❌ Ausência"
+            DayStatus.PRESENCIAL to stringResource(R.string.calendar_option_presencial),
+            DayStatus.HOME_OFFICE to stringResource(R.string.calendar_option_home_office),
+            DayStatus.ABSENCE to stringResource(R.string.calendar_option_absence)
         )
 
         options.forEach { (status, label) ->
@@ -193,10 +195,10 @@ private fun DialogDismissButtons(
 ) {
     Row {
         TextButton(onClick = onClear) {
-            Text("Limpar")
+            Text(stringResource(R.string.calendar_clear))
         }
         TextButton(onClick = onDismiss) {
-            Text("Cancelar")
+            Text(stringResource(R.string.action_cancel))
         }
     }
 }

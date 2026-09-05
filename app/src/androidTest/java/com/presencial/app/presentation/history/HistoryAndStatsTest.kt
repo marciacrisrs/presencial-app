@@ -50,8 +50,8 @@ class HistoryAndStatsTest {
                 autoCheckInDays = 3
             )
         )
-        val historyFlow = MutableStateFlow(historyMonths)
-        every { historyViewModel.historyMonths } returns historyFlow
+        val historyFlow = MutableStateFlow(HistoryUiState.Ready(historyMonths))
+        every { historyViewModel.uiState } returns historyFlow
 
         composeTestRule.setContent {
             PresencialTheme {
@@ -65,7 +65,7 @@ class HistoryAndStatsTest {
 
     @Test
     fun historyScreen_statisticsButton_invokesNavigation() {
-        every { historyViewModel.historyMonths } returns MutableStateFlow(emptyList())
+        every { historyViewModel.uiState } returns MutableStateFlow(HistoryUiState.Ready(emptyList()))
         var openedStatistics = false
 
         composeTestRule.setContent {
@@ -79,6 +79,19 @@ class HistoryAndStatsTest {
 
         composeTestRule.onNodeWithText("Ver estatísticas").performClick()
         assertTrue(openedStatistics)
+    }
+
+    @Test
+    fun historyScreen_emptyState_showsMessageInsteadOfSkeleton() {
+        every { historyViewModel.uiState } returns MutableStateFlow(HistoryUiState.Ready(emptyList()))
+
+        composeTestRule.setContent {
+            PresencialTheme {
+                HistoryScreen(viewModel = historyViewModel)
+            }
+        }
+
+        composeTestRule.onNodeWithText("Nenhum mês registrado ainda").assertIsDisplayed()
     }
 
     @Test

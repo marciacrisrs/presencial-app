@@ -11,4 +11,14 @@
     <string name="calendar_holiday_suffix">, %1$s</string>
     <string name="calendar_today_suffix">, hoje</string>
     <string name="calendar_required_suffix">, dia obrigatório</string>
+    <string name="calendar_title">Calendário</string>
+    <string name="calendar_absences">Ausências</string>
+    <string name="calendar_edit_title">Editar — %1$s</string>
+    <string name="calendar_edit_date">%1$d de %2$s</string>
+    <string name="calendar_select_status">Selecione o status do dia:</string>
+    <string name="calendar_option_presencial">🏢 Presencial</string>
+    <string name="calendar_option_home_office">🏠 Home Office</string>
+    <string name="calendar_option_absence">❌ Ausência</string>
+    <string name="calendar_holiday_label">🎉 Feriado: %1$s</string>
+    <string name="calendar_clear">Limpar</string>
 </resources>

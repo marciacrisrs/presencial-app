@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="cd_back">Voltar</string>
+    <string name="cd_add">Adicionar</string>
+    <string name="cd_add_absence">Adicionar Ausência</string>
+    <string name="cd_share">Compartilhar</string>
+    <string name="cd_delete">Excluir</string>
+    <string name="cd_remove">Remover</string>
+    <string name="cd_previous_month">Mês anterior</string>
+    <string name="cd_next_month">Próximo mês</string>
+    <string name="work_addresses_empty">Nenhum local cadastrado</string>
+    <string name="absence_empty">Nenhuma ausência registrada</string>
+</resources>

@@ -20,11 +20,11 @@ Aplicativo Android para controle de comparecimento presencial no trabalho. Calcu
 
 - **Calendário mensal** — visualização colorida por status com edição de dias passados
 
-- **Histórico** — resumo de todos os meses registrados, resumo semanal da política e compartilhamento
+- **Histórico** — resumo de todos os meses registrados e compartilhamento; Estatísticas abre daqui
 
-- **Estatísticas** — gráficos de evolução, média anual, sequências e exportação PDF, CSV e Excel
+- **Estatísticas** — tela dedicada com gráficos de evolução, média anual, sequências e exportação PDF, CSV e Excel
 
-- **Configurações** — política de presença (percentual livre, dias fixos, semanas alternadas), sábados como dias úteis e backup JSON via pasta escolhida no Android
+- **Configurações** — política de presença (percentual livre, dias fixos, semanas alternadas), resumo semanal, sábados como dias úteis e backup JSON via pasta escolhida no Android
 
 - **Ausências** — registro de férias, day off, licenças e ausências com desconto automático na meta mensal
 
@@ -32,7 +32,7 @@ Aplicativo Android para controle de comparecimento presencial no trabalho. Calcu
 
 - **Widget** — progresso mensal, status do dia, alerta quando a meta exige atenção e toque para abrir o app
 
-- **Sobre** — versão do app, política de privacidade (dados locais por padrão; backup em pasta opcional) e link para o desenvolvedor
+- **Sobre** — versão do app, política de privacidade (dados locais por padrão; backup em pasta opcional; Crashlytics em builds de produção) e link para o desenvolvedor
 
 - **Tema claro/escuro** — Material Design 3 com suporte a Dynamic Color (Material You)
 
@@ -217,7 +217,8 @@ Para habilitar o Firebase Crashlytics em builds de produção:
 
 1. Crie um projeto no [Firebase Console](https://console.firebase.google.com/).
 2. Baixe `google-services.json` e coloque em `app/google-services.json` (use `app/google-services.json.sample` como referência).
-3. Gere um build release — o Crashlytics será ativado automaticamente quando o arquivo estiver presente.
+3. Para o AAB da Play, grave o mesmo JSON no secret `GOOGLE_SERVICES_JSON` (Settings → Secrets). O workflow **Release AAB** escreve o arquivo antes do bundle.
+4. Gere um build release — o Crashlytics será ativado automaticamente quando o arquivo estiver presente.
 
 ### Revisão de código (CodeRabbit)
 

@@ -230,7 +230,7 @@ private fun SettingsContent(params: SettingsContentParams, modifier: Modifier = 
             .padding(PADDING_SCREEN.dp),
         verticalArrangement = Arrangement.spacedBy(SPACING_ITEMS.dp)
     ) {
-        Text("Configurações", style = MaterialTheme.typography.headlineLarge)
+        Text(stringResource(R.string.settings_title), style = MaterialTheme.typography.headlineLarge)
 
         MonitoringStatusBanner(
             activeAddressCount = params.activeWorkAddressCount,
@@ -312,9 +312,9 @@ private fun SaturdaysConfigCard(countSaturdays: Boolean, onToggle: (Boolean) -> 
             verticalAlignment = Alignment.CenterVertically
         ) {
             Column(modifier = Modifier.weight(1f)) {
-                Text("Sábados como dias úteis", style = MaterialTheme.typography.titleLarge)
+                Text(stringResource(R.string.settings_saturdays_title), style = MaterialTheme.typography.titleLarge)
                 Text(
-                    "Por padrão, sábados não contam como dias úteis",
+                    stringResource(R.string.settings_saturdays_description),
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurface.copy(alpha = ALPHA_ON_SURFACE_MEDIUM)
                 )
@@ -336,7 +336,7 @@ private fun OtherSettingsCard(onAbsences: () -> Unit, onWorkAddresses: () -> Uni
             modifier = Modifier.padding(PADDING_SCREEN.dp),
             verticalArrangement = Arrangement.spacedBy(SPACING_CARD_CONTENT.dp)
         ) {
-            Text("Outros", style = MaterialTheme.typography.titleLarge)
+            Text(stringResource(R.string.settings_other_title), style = MaterialTheme.typography.titleLarge)
             Button(
                 onClick = onAbsences,
                 modifier = Modifier.fillMaxWidth(),
@@ -345,7 +345,7 @@ private fun OtherSettingsCard(onAbsences: () -> Unit, onWorkAddresses: () -> Uni
                     contentColor = MaterialTheme.colorScheme.onSecondaryContainer
                 )
             ) {
-                Text("Gerenciar Ausências")
+                Text(stringResource(R.string.settings_manage_absences))
             }
             Button(
                 onClick = onWorkAddresses,
@@ -355,7 +355,7 @@ private fun OtherSettingsCard(onAbsences: () -> Unit, onWorkAddresses: () -> Uni
                     contentColor = MaterialTheme.colorScheme.onSecondaryContainer
                 )
             ) {
-                Text("Locais de Trabalho (Check-in Automático)")
+                Text(stringResource(R.string.settings_work_addresses))
             }
             Button(
                 onClick = onAbout,
@@ -365,7 +365,7 @@ private fun OtherSettingsCard(onAbsences: () -> Unit, onWorkAddresses: () -> Uni
                     contentColor = MaterialTheme.colorScheme.onSecondaryContainer
                 )
             ) {
-                Text("Sobre o Aplicativo")
+                Text(stringResource(R.string.settings_about))
             }
         }
     }

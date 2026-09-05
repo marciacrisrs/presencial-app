@@ -104,6 +104,46 @@ class DashboardScreenTest {
         verify { viewModel.markYesterdayPresencial() }
     }
 
+    @Test
+    fun openCheckIn_doesNotConsumeWhenHomeIsNotVisible() {
+        dashboardData.value = createMockDashboardData()
+        var handled = false
+
+        composeTestRule.setContent {
+            PresencialTheme {
+                DashboardScreen(
+                    viewModel = viewModel,
+                    openCheckIn = true,
+                    isHomeVisible = false,
+                    onCheckInHandled = { handled = true }
+                )
+            }
+        }
+
+        composeTestRule.waitForIdle()
+        org.junit.Assert.assertFalse(handled)
+    }
+
+    @Test
+    fun openCheckIn_consumesWhenHomeIsVisible() {
+        dashboardData.value = createMockDashboardData()
+        var handled = false
+
+        composeTestRule.setContent {
+            PresencialTheme {
+                DashboardScreen(
+                    viewModel = viewModel,
+                    openCheckIn = true,
+                    isHomeVisible = true,
+                    onCheckInHandled = { handled = true }
+                )
+            }
+        }
+
+        composeTestRule.waitForIdle()
+        assertTrue(handled)
+    }
+
     private fun createMockDashboardData(
         yesterdayIsPending: Boolean = false
     ) = DashboardData(

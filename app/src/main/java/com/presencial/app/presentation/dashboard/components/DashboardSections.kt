@@ -164,11 +164,11 @@ internal fun YesterdayCheckInCard(onConfirm: () -> Unit) {
             verticalAlignment = Alignment.CenterVertically
         ) {
             Column(modifier = Modifier.weight(WEIGHT_EQUAL)) {
-                Text("Esqueceu de ontem?", style = MaterialTheme.typography.titleSmall)
-                Text("Registre sua presença anterior", style = MaterialTheme.typography.bodySmall)
+                Text(stringResource(R.string.dashboard_yesterday_title), style = MaterialTheme.typography.titleSmall)
+                Text(stringResource(R.string.dashboard_yesterday_body), style = MaterialTheme.typography.bodySmall)
             }
             TextButton(onClick = onConfirm) {
-                Text("Registrar")
+                Text(stringResource(R.string.dashboard_yesterday_action))
             }
         }
     }

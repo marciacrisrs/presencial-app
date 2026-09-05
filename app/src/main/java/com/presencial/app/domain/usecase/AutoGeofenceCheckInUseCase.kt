@@ -2,9 +2,11 @@ package com.presencial.app.domain.usecase
 
 import com.presencial.app.domain.model.CheckInSource
 import com.presencial.app.domain.model.DayStatus
+import com.presencial.app.domain.repository.AbsenceRepository
 import com.presencial.app.domain.repository.CheckInRepository
 import com.presencial.app.domain.repository.MonthlySummaryRepository
 import com.presencial.app.domain.repository.SettingsRepository
+import com.presencial.app.domain.util.AbsenceCoverage
 import com.presencial.app.domain.util.TimeProvider
 import com.presencial.app.domain.util.WorkdayCalculator
 import com.presencial.app.domain.widget.WidgetRefresher
@@ -16,12 +18,14 @@ sealed class AutoCheckInResult {
     data object Success : AutoCheckInResult()
     data object SkippedAlreadyCheckedIn : AutoCheckInResult()
     data object SkippedNonWorkday : AutoCheckInResult()
+    data object SkippedAbsence : AutoCheckInResult()
 }
 
 class AutoGeofenceCheckInUseCase @Inject constructor(
     private val checkInRepository: CheckInRepository,
     private val monthlySummaryRepository: MonthlySummaryRepository,
     private val settingsRepository: SettingsRepository,
+    private val absenceRepository: AbsenceRepository,
     private val timeProvider: TimeProvider,
     private val widgetRefresher: WidgetRefresher
 ) {
@@ -33,8 +37,13 @@ class AutoGeofenceCheckInUseCase @Inject constructor(
             return AutoCheckInResult.SkippedNonWorkday
         }
 
+        val absences = absenceRepository.getAbsencesInRange(today, today).first()
+        if (AbsenceCoverage.coversFullDay(today, absences)) {
+            return AutoCheckInResult.SkippedAbsence
+        }
+
         val existing = checkInRepository.getCheckIn(today)
-        if (existing?.status == DayStatus.PRESENCIAL) {
+        if (existing != null) {
             return AutoCheckInResult.SkippedAlreadyCheckedIn
         }
 

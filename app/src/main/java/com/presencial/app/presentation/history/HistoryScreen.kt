@@ -45,7 +45,7 @@ fun HistoryScreen(
     viewModel: HistoryViewModel = hiltViewModel(),
     onNavigateToStatistics: () -> Unit = {}
 ) {
-    val historyMonths by viewModel.historyMonths.collectAsStateWithLifecycle()
+    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val context = LocalContext.current
 
     Column(
@@ -61,27 +61,50 @@ fun HistoryScreen(
             Text(stringResource(R.string.history_open_statistics))
         }
 
-        if (historyMonths.isEmpty()) {
-            HistorySkeleton()
-        } else {
-            LazyColumn(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                itemsIndexed(
-                    items = historyMonths.sortedByDescending { it.summary.yearMonth },
-                    key = { _, item -> item.summary.yearMonth }
-                ) { index, monthData ->
-                    AnimatedVisibility(
-                        visible = true,
-                        enter = fadeIn(animationSpec = tween(ANIM_DURATION, index * ANIM_DELAY)) +
-                            slideInVertically(
-                                animationSpec = tween(ANIM_DURATION, index * ANIM_DELAY)
-                            ) { it / 2 }
-                    ) {
-                        HistoryMonthCard(
-                            monthData = monthData,
-                            onShare = { shareSummary(context, monthData.summary) }
-                        )
-                    }
-                }
+        when (val state = uiState) {
+            HistoryUiState.Loading -> HistorySkeleton()
+            is HistoryUiState.Ready -> if (state.months.isEmpty()) {
+                HistoryEmpty()
+            } else {
+                HistoryMonthList(
+                    historyMonths = state.months,
+                    onShare = { shareSummary(context, it) }
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun HistoryEmpty() {
+    Text(
+        text = stringResource(R.string.history_empty),
+        style = MaterialTheme.typography.bodyLarge,
+        modifier = Modifier.fillMaxWidth()
+    )
+}
+
+@Composable
+private fun HistoryMonthList(
+    historyMonths: List<HistoryMonthData>,
+    onShare: (MonthlySummary) -> Unit
+) {
+    LazyColumn(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+        itemsIndexed(
+            items = historyMonths.sortedByDescending { it.summary.yearMonth },
+            key = { _, item -> item.summary.yearMonth }
+        ) { index, monthData ->
+            AnimatedVisibility(
+                visible = true,
+                enter = fadeIn(animationSpec = tween(ANIM_DURATION, index * ANIM_DELAY)) +
+                    slideInVertically(
+                        animationSpec = tween(ANIM_DURATION, index * ANIM_DELAY)
+                    ) { it / 2 }
+            ) {
+                HistoryMonthCard(
+                    monthData = monthData,
+                    onShare = { onShare(monthData.summary) }
+                )
             }
         }
     }
@@ -93,17 +116,21 @@ private fun shareSummary(context: android.content.Context, summary: MonthlySumma
         Locale.forLanguageTag("pt-BR")
     )
     val text = buildString {
-        append("📊 Presencial — $monthName ${summary.yearMonth.year}\n")
-        append("Dias úteis: ${summary.workdays}\n")
-        append("Meta: ${summary.requiredDays} dias (${summary.requiredPercentage}%)\n")
-        append("Cumpridos: ${summary.completedDays}\n")
-        append("Percentual: ${"%.1f".format(summary.achievedPercentage)}%")
+        append(context.getString(R.string.history_share_header, monthName, summary.yearMonth.year))
+        append('\n')
+        append(context.getString(R.string.history_share_workdays, summary.workdays))
+        append('\n')
+        append(context.getString(R.string.history_share_goal, summary.requiredDays, summary.requiredPercentage))
+        append('\n')
+        append(context.getString(R.string.history_share_completed, summary.completedDays))
+        append('\n')
+        append(context.getString(R.string.history_share_percentage, summary.achievedPercentage))
     }
     val intent = Intent(Intent.ACTION_SEND).apply {
         type = "text/plain"
         putExtra(Intent.EXTRA_TEXT, text)
     }
-    context.startActivity(Intent.createChooser(intent, "Compartilhar resumo"))
+    context.startActivity(Intent.createChooser(intent, context.getString(R.string.history_share_chooser)))
 }
 
 @Composable
@@ -150,14 +177,26 @@ private fun HistoryMonthCard(monthData: HistoryMonthData, onShare: () -> Unit) {
                     style = MaterialTheme.typography.titleLarge
                 )
                 IconButton(onClick = onShare) {
-                    Icon(Icons.Default.Share, contentDescription = "Compartilhar")
+                    Icon(Icons.Default.Share, contentDescription = stringResource(R.string.cd_share))
                 }
             }
-            Text("Dias úteis: ${summary.workdays}  •  Meta: ${summary.requiredDays} dias")
-            Text("Cumpridos: ${summary.completedDays}  •  ${"%.0f".format(summary.achievedPercentage)}%")
+            Text(
+                stringResource(
+                    R.string.history_month_workdays_goal,
+                    summary.workdays,
+                    summary.requiredDays
+                )
+            )
+            Text(
+                stringResource(
+                    R.string.history_month_completed,
+                    summary.completedDays,
+                    summary.achievedPercentage
+                )
+            )
             if (monthData.autoCheckInDays > 0) {
                 Text(
-                    "📍 ${monthData.autoCheckInDays} check-in(s) automático(s)",
+                    stringResource(R.string.history_month_auto_checkins, monthData.autoCheckInDays),
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.secondary
                 )

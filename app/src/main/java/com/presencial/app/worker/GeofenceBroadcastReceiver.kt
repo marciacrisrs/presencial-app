@@ -55,6 +55,8 @@ class GeofenceBroadcastReceiver : BroadcastReceiver() {
                         Log.d(TAG, "Check-in automático ignorado: já registrado hoje")
                     AutoCheckInResult.SkippedNonWorkday ->
                         Log.d(TAG, "Check-in automático ignorado: dia não útil")
+                    AutoCheckInResult.SkippedAbsence ->
+                        Log.d(TAG, "Check-in automático ignorado: ausência registrada hoje")
                     AutoCheckInResult.Success -> Unit
                 }
             } finally {

@@ -30,9 +30,11 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.presencial.app.R
 import com.presencial.app.presentation.absence.components.AbsenceItem
 import com.presencial.app.presentation.absence.components.AddAbsenceDialog
 
@@ -90,7 +92,7 @@ private fun AbsenceTopBar(onBack: () -> Unit) {
         title = { Text("Ausências") },
         navigationIcon = {
             IconButton(onClick = onBack) {
-                Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Voltar")
+                Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(R.string.cd_back))
             }
         }
     )
@@ -99,7 +101,7 @@ private fun AbsenceTopBar(onBack: () -> Unit) {
 @Composable
 private fun AbsenceFAB(onClick: () -> Unit) {
     FloatingActionButton(onClick = onClick) {
-        Icon(Icons.Default.Add, contentDescription = "Adicionar Ausência")
+        Icon(Icons.Default.Add, contentDescription = stringResource(R.string.cd_add_absence))
     }
 }
 
@@ -109,7 +111,7 @@ private fun AbsenceEmptyState(padding: PaddingValues) {
         modifier = Modifier.fillMaxSize().padding(padding),
         contentAlignment = Alignment.Center
     ) {
-        Text("Nenhuma ausência registrada", style = MaterialTheme.typography.bodyLarge)
+        Text(stringResource(R.string.absence_empty), style = MaterialTheme.typography.bodyLarge)
     }
 }
 
