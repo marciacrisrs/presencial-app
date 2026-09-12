@@ -13,6 +13,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.res.stringResource
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.compose.LifecycleEventEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.presencial.app.R
@@ -37,6 +39,14 @@ fun DashboardScreen(
     val checkInSuccessMessage = stringResource(R.string.dashboard_check_in_success)
     val checkInRemovedMessage = stringResource(R.string.dashboard_check_in_removed)
     val yesterdaySuccessMessage = stringResource(R.string.dashboard_yesterday_check_in_success)
+
+    LaunchedEffect(isHomeVisible) {
+        if (isHomeVisible) viewModel.refreshIfDateChanged()
+    }
+
+    LifecycleEventEffect(Lifecycle.Event.ON_START) {
+        viewModel.refreshIfDateChanged()
+    }
 
     LaunchedEffect(Unit) {
         viewModel.uiEvents.collect { event ->

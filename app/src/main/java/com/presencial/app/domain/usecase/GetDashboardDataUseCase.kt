@@ -29,20 +29,20 @@ class GetDashboardDataUseCase @Inject constructor(
     private val timeProvider: TimeProvider
 ) {
     operator fun invoke(yearMonth: YearMonth = timeProvider.currentMonth()): Flow<DashboardData> {
-        val today = timeProvider.today()
-        val yesterday = today.minusDays(1)
-        val yesterdayMonth = YearMonth.from(yesterday)
+        val yesterdayForRange = timeProvider.today().minusDays(1)
+        val yesterdayMonth = YearMonth.from(yesterdayForRange)
 
         return combine(
             observeCheckInsForDashboard(yearMonth, yesterdayMonth),
             absenceRepository.getAbsencesInRange(
-                minOf(yearMonth.atDay(1), yesterday),
-                maxOf(yearMonth.atEndOfMonth(), yesterday)
+                minOf(yearMonth.atDay(1), yesterdayForRange),
+                maxOf(yearMonth.atEndOfMonth(), yesterdayForRange)
             ),
             settingsRepository.settings
         ) { checkIns, absences, settings ->
             Triple(checkIns, absences, settings)
         }.map { (checkIns, absences, settings) ->
+            val yesterday = timeProvider.today().minusDays(1)
             val yesterdayCheckIn = (checkIns.monthCheckIns + checkIns.adjacentCheckIns)
                 .find { it.date == yesterday }
             buildDashboard(

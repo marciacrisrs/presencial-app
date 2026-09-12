@@ -11,6 +11,7 @@ import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
+import io.mockk.verify
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Assertions.assertEquals
@@ -107,5 +108,34 @@ class DashboardViewModelTest {
         viewModel.markYesterdayPresencial()
 
         coVerify { toggleTodayCheckInUseCase(date = yesterday, markPresencial = true) }
+    }
+
+    @Test
+    fun `refreshIfDateChanged reloads dashboard for the new day`() = runTest {
+        val august = TestDataFactory.createDashboardData(yearMonth = YearMonth.of(2026, 8))
+        val september = TestDataFactory.createDashboardData(yearMonth = YearMonth.of(2026, 9))
+        every { getDashboardDataUseCase(YearMonth.of(2026, 8)) } returns flowOf(august)
+        every { getDashboardDataUseCase(YearMonth.of(2026, 9)) } returns flowOf(september)
+
+        viewModel = DashboardViewModel(
+            getDashboardDataUseCase,
+            toggleTodayCheckInUseCase,
+            timeProvider,
+            workAddressRepository
+        )
+
+        viewModel.dashboardData.test {
+            assertEquals(august, awaitItem())
+            every { timeProvider.today() } returns LocalDate.of(2026, 9, 1)
+            viewModel.refreshIfDateChanged()
+            assertEquals(september, awaitItem())
+        }
+    }
+
+    @Test
+    fun `refreshIfDateChanged does not reload when the day is unchanged`() = runTest {
+        viewModel.refreshIfDateChanged()
+
+        verify(exactly = 1) { getDashboardDataUseCase(YearMonth.of(2026, 8)) }
     }
 }

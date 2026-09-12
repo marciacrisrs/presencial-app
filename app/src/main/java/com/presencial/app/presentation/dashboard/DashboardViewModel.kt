@@ -9,12 +9,16 @@ import com.presencial.app.domain.usecase.GetDashboardDataUseCase
 import com.presencial.app.domain.usecase.ToggleTodayCheckInUseCase
 import com.presencial.app.domain.util.TimeProvider
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
+import java.time.YearMonth
 import javax.inject.Inject
 
 @HiltViewModel
@@ -25,7 +29,11 @@ class DashboardViewModel @Inject constructor(
     workAddressRepository: WorkAddressRepository
 ) : ViewModel() {
 
-    val dashboardData: StateFlow<DashboardData?> = getDashboardDataUseCase(timeProvider.currentMonth())
+    private val dashboardDay = MutableStateFlow(timeProvider.today())
+
+    @OptIn(ExperimentalCoroutinesApi::class)
+    val dashboardData: StateFlow<DashboardData?> = dashboardDay
+        .flatMapLatest { day -> getDashboardDataUseCase(YearMonth.from(day)) }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(STOP_TIMEOUT_MS), null)
 
     val workAddresses: StateFlow<List<WorkAddress>> = workAddressRepository.getAllAddresses()
@@ -33,6 +41,13 @@ class DashboardViewModel @Inject constructor(
 
     private val uiEventChannel = Channel<DashboardUiEvent>(Channel.BUFFERED)
     val uiEvents = uiEventChannel.receiveAsFlow()
+
+    fun refreshIfDateChanged() {
+        val today = timeProvider.today()
+        if (dashboardDay.value != today) {
+            dashboardDay.value = today
+        }
+    }
 
     fun toggleTodayCheckIn(markPresencial: Boolean) {
         viewModelScope.launch {
