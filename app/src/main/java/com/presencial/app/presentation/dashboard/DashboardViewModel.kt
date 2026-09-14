@@ -29,6 +29,7 @@ class DashboardViewModel @Inject constructor(
     workAddressRepository: WorkAddressRepository
 ) : ViewModel() {
 
+    // The dashboard month follows the calendar day so a long-lived process can refresh after midnight.
     private val dashboardDay = MutableStateFlow(timeProvider.today())
 
     @OptIn(ExperimentalCoroutinesApi::class)
