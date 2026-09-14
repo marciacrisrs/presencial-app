@@ -54,8 +54,7 @@ class DashboardViewModelTest {
     fun `dashboardData should reflect use case flow`() = runTest {
         val data = TestDataFactory.createDashboardData()
         every { getDashboardDataUseCase(any()) } returns flowOf(data)
-        
-        // Re-init to use the new flow
+
         viewModel = DashboardViewModel(
             getDashboardDataUseCase,
             toggleTodayCheckInUseCase,
@@ -134,8 +133,15 @@ class DashboardViewModelTest {
 
     @Test
     fun `refreshIfDateChanged does not reload when the day is unchanged`() = runTest {
-        viewModel.refreshIfDateChanged()
+        every { getDashboardDataUseCase(YearMonth.of(2026, 8)) } returns flowOf(
+            TestDataFactory.createDashboardData(yearMonth = YearMonth.of(2026, 8))
+        )
 
-        verify(exactly = 1) { getDashboardDataUseCase(YearMonth.of(2026, 8)) }
+        viewModel.dashboardData.test {
+            awaitItem()
+            viewModel.refreshIfDateChanged()
+
+            verify(exactly = 1) { getDashboardDataUseCase(YearMonth.of(2026, 8)) }
+        }
     }
 }
