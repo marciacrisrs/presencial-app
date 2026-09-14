@@ -29,7 +29,7 @@ class DashboardViewModel @Inject constructor(
     workAddressRepository: WorkAddressRepository
 ) : ViewModel() {
 
-    // Keep the calendar day as the refresh key so an overnight process can load the new month.
+    // Use the calendar day as the refresh key so an overnight process can load the new month.
     private val dashboardDay = MutableStateFlow(timeProvider.today())
 
     @OptIn(ExperimentalCoroutinesApi::class)
