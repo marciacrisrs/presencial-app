@@ -22,6 +22,9 @@ jobs:
           distribution: temurin
           java-version: '17'
 
+      - name: Grant execute permission
+        run: chmod +x gradlew
+
       - name: Generate verification metadata
         run: ./gradlew help --write-verification-metadata sha256 --no-daemon
 
