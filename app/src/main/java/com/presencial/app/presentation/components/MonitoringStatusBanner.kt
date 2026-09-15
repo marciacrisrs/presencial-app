@@ -33,12 +33,60 @@ fun MonitoringStatusBanner(
     if (activeAddressCount == 0) return
 
     val isFullyConfigured = foregroundGranted && backgroundGranted
+    val content = monitoringBannerContent(
+        isFullyConfigured = isFullyConfigured,
+        foregroundGranted = foregroundGranted,
+        activeAddressCount = activeAddressCount
+    )
     val containerColor = if (isFullyConfigured) {
         MaterialTheme.colorScheme.primaryContainer
     } else {
         MaterialTheme.colorScheme.errorContainer
     }
-    val contentDescription = stringResource(
+    val iconTint = if (isFullyConfigured) {
+        MaterialTheme.colorScheme.primary
+    } else {
+        MaterialTheme.colorScheme.error
+    }
+    val icon = if (isFullyConfigured) Icons.Default.CheckCircle else Icons.Default.Warning
+
+    Card(
+        onClick = onClick,
+        modifier = modifier
+            .fillMaxWidth()
+            .semantics { this.contentDescription = content.description },
+        colors = CardDefaults.cardColors(containerColor = containerColor)
+    ) {
+        Row(
+            modifier = Modifier.padding(16.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Icon(
+                imageVector = icon,
+                contentDescription = null,
+                tint = iconTint
+            )
+            Column(modifier = Modifier.padding(start = 12.dp)) {
+                Text(text = content.title, style = MaterialTheme.typography.titleSmall)
+                Text(text = content.body, style = MaterialTheme.typography.bodySmall)
+            }
+        }
+    }
+}
+
+private data class MonitoringBannerContent(
+    val description: String,
+    val title: String,
+    val body: String
+)
+
+@Composable
+private fun monitoringBannerContent(
+    isFullyConfigured: Boolean,
+    foregroundGranted: Boolean,
+    activeAddressCount: Int
+): MonitoringBannerContent {
+    val description = stringResource(
         if (isFullyConfigured) {
             R.string.monitoring_content_description_active
         } else {
@@ -54,40 +102,16 @@ fun MonitoringStatusBanner(
     } else {
         stringResource(R.string.monitoring_incomplete_title)
     }
-    val description = when {
-        isFullyConfigured -> stringResource(R.string.monitoring_active_description)
-        !foregroundGranted -> stringResource(R.string.monitoring_need_foreground)
-        else -> stringResource(R.string.monitoring_need_background)
-    }
+    val body = monitoringDescription(isFullyConfigured, foregroundGranted)
+    return MonitoringBannerContent(description, title, body)
+}
 
-    Card(
-        onClick = onClick,
-        modifier = modifier
-            .fillMaxWidth()
-            .semantics { this.contentDescription = contentDescription },
-        colors = CardDefaults.cardColors(containerColor = containerColor)
-    ) {
-        Row(
-            modifier = Modifier.padding(16.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Icon(
-                imageVector = if (isFullyConfigured) {
-                    Icons.Default.CheckCircle
-                } else {
-                    Icons.Default.Warning
-                },
-                contentDescription = null,
-                tint = if (isFullyConfigured) {
-                    MaterialTheme.colorScheme.primary
-                } else {
-                    MaterialTheme.colorScheme.error
-                }
-            )
-            Column(modifier = Modifier.padding(start = 12.dp)) {
-                Text(text = title, style = MaterialTheme.typography.titleSmall)
-                Text(text = description, style = MaterialTheme.typography.bodySmall)
-            }
-        }
-    }
+@Composable
+private fun monitoringDescription(
+    isFullyConfigured: Boolean,
+    foregroundGranted: Boolean
+): String = when {
+    isFullyConfigured -> stringResource(R.string.monitoring_active_description)
+    !foregroundGranted -> stringResource(R.string.monitoring_need_foreground)
+    else -> stringResource(R.string.monitoring_need_background)
 }
