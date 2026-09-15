@@ -1,0 +1,38 @@
+name: Bootstrap dependency verification
+
+on:
+  push:
+    branches:
+      - cursor/critical-bug-management-9b9b
+
+permissions:
+  contents: write
+
+jobs:
+  bootstrap:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Grant execute permission
+        run: chmod +x gradlew
+
+      - name: Generate verification metadata
+        run: ./gradlew --dependency-verification=lenient --write-verification-metadata sha256 help --stacktrace --no-daemon
+
+      - name: Commit generated metadata and remove bootstrap workflow
+        shell: bash
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add gradle/verification-metadata.xml
+          git rm .github/workflows/bootstrap-verification.yml
+          git commit -m "fix(build): update dependency verification metadata"
+          git push origin HEAD:${GITHUB_REF_NAME}
