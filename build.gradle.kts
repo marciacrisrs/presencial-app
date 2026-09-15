@@ -12,6 +12,7 @@ val versionPatch = versionProperties["VERSION_PATCH"].toString().toInt()
 
 val versionName = "$versionMajor.$versionMinor.$versionPatch"
 
+// CI keeps dependency verification metadata synchronized with the resolved build classpath.
 plugins {
     alias(libs.plugins.android.application) apply false
     alias(libs.plugins.ksp) apply false
