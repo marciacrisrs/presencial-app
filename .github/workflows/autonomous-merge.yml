@@ -10,7 +10,7 @@ on:
     types: [completed]
 
 permissions:
-  contents: write
+  contents: read
   pull-requests: write
   checks: read
 
@@ -46,7 +46,9 @@ jobs:
           DRAFT=$(jq -r '.draft' <<<"$DATA")
           MERGEABLE=$(jq -r '.mergeable' <<<"$DATA")
           HEAD_SHA=$(jq -r '.head.sha' <<<"$DATA")
+          NODE_ID=$(jq -r '.node_id' <<<"$DATA")
           echo "head_sha=$HEAD_SHA" >> "$GITHUB_OUTPUT"
+          echo "node_id=$NODE_ID" >> "$GITHUB_OUTPUT"
           [[ "$STATE" == "open" && "$DRAFT" == "false" && "$MERGEABLE" != "false" ]]
           mapfile -t SENSITIVE < <(gh api "repos/${{ github.repository }}/pulls/$PR/files?per_page=100" --paginate --jq '.[].filename' | grep -E '^(.github/|.*(Dockerfile|docker-compose|compose\.ya?ml)$)' || true)
           if (( ${#SENSITIVE[@]} > 0 )); then
@@ -83,11 +85,13 @@ jobs:
             exit 1
           fi
 
-      - name: Enable GitHub auto-merge
+      - name: Enable GitHub auto-merge only
         if: steps.inspect.outcome == 'success'
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          PR: ${{ steps.pr.outputs.pr }}
+          PR_NODE_ID: ${{ steps.inspect.outputs.node_id }}
         run: |
           set -euo pipefail
-          gh pr merge "$PR" --auto --squash --delete-branch=false
+          gh api graphql \
+            -f query='mutation($pr:ID!){enablePullRequestAutoMerge(input:{pullRequestId:$pr,mergeMethod:SQUASH}){pullRequest{autoMergeRequest{enabledAt}}}}' \
+            -F pr="$PR_NODE_ID"
