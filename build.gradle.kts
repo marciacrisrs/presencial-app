@@ -23,6 +23,32 @@ plugins {
     alias(libs.plugins.sonarqube)
     alias(libs.plugins.google.services) apply false
     alias(libs.plugins.firebase.crashlytics) apply false
+    id("org.cyclonedx.bom") version "3.3.0"
+}
+
+allprojects {
+    dependencyLocking {
+        lockAllConfigurations()
+        lockMode = org.gradle.api.artifacts.dsl.LockMode.STRICT
+    }
+}
+
+tasks.register("resolveAndLockAll") {
+    group = "dependency management"
+    description = "Resolves all lockable configurations and writes Gradle dependency lockfiles."
+    notCompatibleWithConfigurationCache("Resolves configurations dynamically to persist dependency locks")
+    doFirst {
+        require(gradle.startParameter.isWriteDependencyLocks) {
+            "Run this task with --write-locks"
+        }
+    }
+    doLast {
+        allprojects.forEach { project ->
+            project.configurations
+                .filter { it.isCanBeResolved }
+                .forEach { it.resolve() }
+        }
+    }
 }
 
 subprojects {
