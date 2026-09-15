@@ -35,18 +35,16 @@ allprojects {
 
 tasks.register("resolveAndLockAll") {
     group = "dependency management"
-    description = "Resolves all lockable configurations and writes Gradle dependency lockfiles."
+    description = "Resolves production and Android test dependencies through normal build tasks and writes Gradle locks."
     notCompatibleWithConfigurationCache("Resolves configurations dynamically to persist dependency locks")
+    dependsOn(
+        ":app:assembleDebug",
+        ":app:assembleDebugAndroidTest",
+        ":app:testDebugUnitTest"
+    )
     doFirst {
         require(gradle.startParameter.isWriteDependencyLocks) {
             "Run this task with --write-locks"
-        }
-    }
-    doLast {
-        allprojects.forEach { project ->
-            project.configurations
-                .filter { it.isCanBeResolved }
-                .forEach { it.resolve() }
         }
     }
 }
