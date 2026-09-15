@@ -51,54 +51,84 @@ class PresencialWidget : GlanceAppWidget() {
             }
         }
         provideContent {
-            PresencialWidgetContent()
+            val info = WidgetGlanceState.read(currentState<Preferences>()) ?: loaded
+            GlanceTheme {
+                WidgetContent(info)
+            }
         }
     }
+}
 
-    @Composable
-    private fun PresencialWidgetContent() {
-        val prefs = currentState<Preferences>()
-        val info = WidgetGlanceState.read(prefs)
-        val colors = WidgetColors.from()
-        val context = androidx.glance.LocalContext.current
-        val intent = Intent(context, MainActivity::class.java).apply {
-            flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP
-        }
+@Composable
+private fun WidgetContent(info: WidgetInfo) {
+    val context = androidx.glance.LocalContext.current
+    val colors = WidgetColors.from()
 
-        Column(
-            modifier = GlanceModifier
-                .fillMaxSize()
-                .background(colors.background)
-                .cornerRadius(WIDGET_CORNER_RADIUS.dp)
-                .padding(WIDGET_PADDING.dp)
-                .clickable(actionStartActivity(intent)),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalAlignment = Alignment.CenterHorizontally
-        ) {
+    val modifier = GlanceModifier
+        .fillMaxSize()
+        .background(R.color.widget_background)
+        .cornerRadius(WIDGET_CORNER_RADIUS.dp)
+        .clickable(
+            actionStartActivity(
+                Intent(context, MainActivity::class.java).apply {
+                    flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP
+                }
+            )
+        )
+        .padding(WIDGET_PADDING.dp)
+
+    Column(
+        modifier = modifier,
+        verticalAlignment = Alignment.Vertical.CenterVertically,
+        horizontalAlignment = Alignment.Horizontal.CenterHorizontally
+    ) {
+        Text(
+            text = context.getString(R.string.widget_title_month, info.monthName),
+            style = TextStyle(
+                color = colors.secondaryText,
+                fontSize = 9.sp,
+                fontWeight = FontWeight.Medium,
+                textAlign = TextAlign.Center
+            )
+        )
+
+        Spacer(modifier = GlanceModifier.height(4.dp))
+
+        Text(
+            text = headlineFor(info, context),
+            style = TextStyle(
+                color = colors.headline(info.status),
+                fontSize = 15.sp,
+                fontWeight = FontWeight.Bold,
+                textAlign = TextAlign.Center
+            )
+        )
+
+        val remaining = remainingLine(info, context)
+        if (remaining.isNotEmpty()) {
+            Spacer(modifier = GlanceModifier.height(4.dp))
             Text(
-                text = info.monthName,
+                text = remaining,
                 style = TextStyle(
                     color = colors.secondaryText,
                     fontSize = 12.sp,
-                    fontWeight = FontWeight.Bold,
+                    fontWeight = FontWeight.Medium,
                     textAlign = TextAlign.Center
                 )
             )
+        }
+
+        if (info.todayIsWorkday) {
             Spacer(modifier = GlanceModifier.height(4.dp))
             Text(
-                text = "${info.completed}/${info.required}",
+                text = todayLabel(info.todayStatus, context),
                 style = TextStyle(
-                    color = colors.headline(info.status),
-                    fontSize = 20.sp,
-                    fontWeight = FontWeight.Bold,
-                    textAlign = TextAlign.Center
-                )
-            )
-            Text(
-                text = "${info.achievedPercentage}%",
-                style = TextStyle(
-                    color = colors.primaryText,
-                    fontSize = 12.sp,
+                    color = when (info.todayStatus) {
+                        WidgetTodayStatus.PRESENCIAL -> colors.success
+                        WidgetTodayStatus.HOME_OFFICE -> colors.primaryText
+                        WidgetTodayStatus.PENDING -> colors.secondaryText
+                    },
+                    fontSize = 10.sp,
                     textAlign = TextAlign.Center
                 )
             )
@@ -106,8 +136,30 @@ class PresencialWidget : GlanceAppWidget() {
     }
 }
 
+private fun todayLabel(status: WidgetTodayStatus, context: Context): String = when (status) {
+    WidgetTodayStatus.PRESENCIAL -> context.getString(R.string.widget_today_presencial)
+    WidgetTodayStatus.HOME_OFFICE -> context.getString(R.string.widget_today_home_office)
+    WidgetTodayStatus.PENDING -> context.getString(R.string.widget_today_pending)
+}
+
+private fun headlineFor(info: WidgetInfo, context: Context): String =
+    if (info.required <= 0) {
+        context.getString(R.string.widget_configure_goal)
+    } else {
+        context.getString(R.string.widget_compact_progress, info.completed, info.required)
+    }
+
+private fun remainingLine(info: WidgetInfo, context: Context): String = when {
+    info.required <= 0 -> ""
+    info.status == WidgetStatus.GOAL_MET -> context.getString(R.string.widget_goal_met)
+    else -> context.resources.getQuantityString(
+        R.plurals.widget_remaining_days,
+        info.remaining,
+        info.remaining
+    )
+}
+
 private data class WidgetColors(
-    val background: ColorProvider,
     val success: ColorProvider,
     val warning: ColorProvider,
     val primaryText: ColorProvider,
@@ -122,7 +174,6 @@ private data class WidgetColors(
     companion object {
         @SuppressLint("RestrictedApi")
         fun from(): WidgetColors = WidgetColors(
-            background = ColorProvider(R.color.widget_background),
             success = ColorProvider(R.color.widget_success),
             warning = ColorProvider(R.color.widget_warning),
             primaryText = ColorProvider(R.color.widget_primary_text),
@@ -142,15 +193,11 @@ class PresencialWidgetReceiver : GlanceAppWidgetReceiver() {
         appWidgetManager: AppWidgetManager,
         appWidgetIds: IntArray
     ) {
-        val pendingResult = goAsync()
+        // GlanceAppWidgetReceiver already calls goAsync(); a second call returns null
+        // and pendingResult.finish() crashes the process on Samsung.
+        super.onUpdate(context, appWidgetManager, appWidgetIds)
         CoroutineScope(SupervisorJob() + Dispatchers.IO).launch {
-            try {
-                appWidgetIds.forEach { appWidgetId ->
-                    glanceAppWidget.update(context, androidx.glance.appwidget.AppWidgetId(appWidgetId))
-                }
-            } finally {
-                pendingResult.finish()
-            }
+            WidgetUpdater.updateAll(context)
         }
     }
 }
