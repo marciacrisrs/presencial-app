@@ -10,6 +10,7 @@ import com.presencial.app.util.FakeTimeProvider
 import com.presencial.app.util.TestDataFactory
 import io.mockk.every
 import io.mockk.mockk
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.runTest
 import java.time.LocalDate
@@ -211,6 +212,34 @@ class GetDashboardDataUseCaseTest {
         useCase(yearMonth).test {
             val dashboard = awaitItem()
             assertFalse(dashboard.yesterdayIsPending)
+            cancelAndIgnoreRemainingEvents()
+        }
+    }
+
+    @Test
+    fun `given date changes before next emission, yesterday and today follow the new day`() = runTest {
+        val yearMonth = YearMonth.of(2026, 9)
+        timeProvider.setToday(LocalDate.of(2026, 9, 11))
+        val settings = MutableStateFlow(AppSettings(40, false))
+        val checkIns = listOf(
+            TestDataFactory.createCheckIn(date = LocalDate.of(2026, 9, 10), status = DayStatus.PRESENCIAL)
+        )
+
+        every { checkInRepository.observeCheckInsForMonth(yearMonth) } returns flowOf(checkIns)
+        every { absenceRepository.getAbsencesInRange(any(), any()) } returns flowOf(emptyList())
+        every { settingsRepository.settings } returns settings
+
+        useCase(yearMonth).test {
+            val first = awaitItem()
+            assertFalse(first.yesterdayIsPending)
+            assertFalse(first.todayIsPresencial)
+
+            timeProvider.setToday(LocalDate.of(2026, 9, 12))
+            settings.value = AppSettings(requiredPercentage = 40, countSaturdaysAsWorkdays = true)
+
+            val next = awaitItem()
+            assertTrue(next.yesterdayIsPending)
+            assertFalse(next.todayIsPresencial)
             cancelAndIgnoreRemainingEvents()
         }
     }
