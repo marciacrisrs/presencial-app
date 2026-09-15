@@ -21,7 +21,7 @@ plugins {
     alias(libs.plugins.sonarqube)
     alias(libs.plugins.google.services) apply false
     alias(libs.plugins.firebase.crashlytics) apply false
-    id("org.cyclonedx.bom") version "3.3.0"
+    id("org.cyclonedx.bom") version "3.4.1"
 }
 
 allprojects {
