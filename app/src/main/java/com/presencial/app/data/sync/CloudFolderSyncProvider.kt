@@ -3,6 +3,7 @@ package com.presencial.app.data.sync
 import android.content.Context
 import android.content.Intent
 import android.net.Uri
+import androidx.core.net.toUri
 import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.edit
@@ -110,7 +111,7 @@ class CloudFolderSyncProvider @Inject constructor(
 
     private suspend fun getTreeUri(): Uri? {
         val value = dataStore.data.map { it[Keys.TREE_URI] }.first() ?: return null
-        return Uri.parse(value)
+        return value.toUri()
     }
 
     private object Keys {

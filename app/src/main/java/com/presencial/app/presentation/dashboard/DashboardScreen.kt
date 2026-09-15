@@ -19,6 +19,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.presencial.app.R
 import com.presencial.app.presentation.dashboard.components.DashboardContent
+import com.presencial.app.presentation.dashboard.components.DashboardContentCallbacks
 import com.presencial.app.presentation.dashboard.components.DashboardSkeleton
 import com.presencial.app.presentation.location.rememberWorkLocationPermissions
 
@@ -79,10 +80,12 @@ fun DashboardScreen(
                 activeWorkAddressCount = workAddresses.count { it.isActive },
                 foregroundGranted = foregroundPermissions.allPermissionsGranted,
                 backgroundGranted = backgroundPermission.allPermissionsGranted,
-                onToggleTodayCheckIn = { viewModel.toggleTodayCheckIn(!dashboard.todayIsPresencial) },
-                onMarkYesterdayPresencial = viewModel::markYesterdayPresencial,
-                onNavigateToWorkAddresses = onNavigateToWorkAddresses,
                 haptic = haptic,
+                callbacks = DashboardContentCallbacks(
+                    onToggleTodayCheckIn = { viewModel.toggleTodayCheckIn(!dashboard.todayIsPresencial) },
+                    onMarkYesterdayPresencial = viewModel::markYesterdayPresencial,
+                    onNavigateToWorkAddresses = onNavigateToWorkAddresses
+                ),
                 scrollToActions = openCheckIn
             )
         }

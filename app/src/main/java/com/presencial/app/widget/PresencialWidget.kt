@@ -3,6 +3,7 @@ package com.presencial.app.widget
 import android.appwidget.AppWidgetManager
 import android.content.Context
 import android.content.Intent
+import androidx.annotation.SuppressLint
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -171,6 +172,7 @@ private data class WidgetColors(
     }
 
     companion object {
+        @SuppressLint("RestrictedApi")
         fun from(): WidgetColors = WidgetColors(
             success = ColorProvider(R.color.widget_success),
             warning = ColorProvider(R.color.widget_warning),

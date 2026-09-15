@@ -9,9 +9,9 @@ import com.google.android.gms.location.GeofencingEvent
 import com.presencial.app.domain.location.GeofenceEventHandler
 import com.presencial.app.domain.location.GeofenceRequestParser
 import com.presencial.app.domain.usecase.AutoCheckInResult
-import dagger.hilt.android.EntryPointAccessors
 import dagger.hilt.EntryPoint
 import dagger.hilt.InstallIn
+import dagger.hilt.android.EntryPointAccessors
 import dagger.hilt.components.SingletonComponent
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -24,7 +24,7 @@ class GeofenceBroadcastReceiver : BroadcastReceiver() {
 
     @EntryPoint
     @InstallIn(SingletonComponent::class)
-    interface GeofenceEntryPoint {
+    fun interface GeofenceEntryPoint {
         fun geofenceEventHandler(): GeofenceEventHandler
     }
 

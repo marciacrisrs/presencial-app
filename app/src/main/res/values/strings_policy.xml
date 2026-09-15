@@ -2,7 +2,6 @@
 <resources>
     <string name="policy_card_title">Política de presença</string>
     <string name="policy_card_description">Configure as regras da sua empresa: percentual livre, dias fixos e semanas alternadas.</string>
-    <string name="policy_company_name_label">Nome da empresa</string>
     <string name="policy_free_percentage_title">Percentual livre</string>
     <string name="policy_free_percentage_description">Ligado: escolha qualquer percentual. Desligado: use 20%%, 40%%, 60%% ou 80%%.</string>
     <string name="policy_fixed_weekdays_title">Dias fixos presenciais</string>
@@ -20,13 +19,4 @@
     <string name="policy_week_remote">remota</string>
     <string name="policy_validation_error">⚠ %1$s</string>
     <string name="policy_validation_warning">ℹ %1$s</string>
-    <string name="dashboard_goal_with_company">Regra: %1$d%% dos dias úteis · %2$s</string>
-    <string name="dashboard_goal_default">Regra: %1$d%% dos dias úteis</string>
-    <string name="dashboard_days_progress">%1$d de %2$d dias presenciais</string>
-    <string name="dashboard_days_center">%1$d de %2$d</string>
-    <string name="dashboard_days_center_caption">dias presenciais</string>
-    <string name="dashboard_remaining_none">Meta atingida</string>
-    <string name="dashboard_remaining_one">Falta 1 dia</string>
-    <string name="dashboard_remaining_many">Faltam %d dias</string>
-    <string name="dashboard_workdays_context">%d dias úteis neste mês</string>
 </resources>

@@ -1,5 +1,5 @@
 package com.presencial.app.domain.widget
 
-interface WidgetRefresher {
+fun interface WidgetRefresher {
     suspend fun refresh()
 }
