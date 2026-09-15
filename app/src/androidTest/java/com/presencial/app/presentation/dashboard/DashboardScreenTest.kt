@@ -60,6 +60,7 @@ class DashboardScreenTest {
             }
         }
 
+        verify { viewModel.refreshIfDateChanged() }
         // Verify month/year is shown
         composeTestRule.onNodeWithText("Agosto 2026").assertIsDisplayed()
         composeTestRule.onNodeWithText("5 de 15").assertIsDisplayed()
