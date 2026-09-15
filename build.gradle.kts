@@ -41,6 +41,13 @@ subprojects {
 
 tasks.register("resolveAndLockAll") {
     group = "dependency management"
+    description = "Resolves production and Android test dependencies through normal build tasks and writes Gradle locks."
+    notCompatibleWithConfigurationCache("Resolves configurations dynamically to persist dependency locks")
+    dependsOn(
+        ":app:assembleDebug",
+        ":app:assembleDebugAndroidTest",
+        ":app:testDebugUnitTest"
+    )
     description = "Resolves all lockable configurations and writes Gradle dependency lockfiles."
     notCompatibleWithConfigurationCache("Resolves configurations dynamically to persist dependency locks")
     doFirst {
