@@ -49,28 +49,32 @@ jobs:
           NODE_ID=$(jq -r '.node_id' <<<"$DATA")
           echo "head_sha=$HEAD_SHA" >> "$GITHUB_OUTPUT"
           echo "node_id=$NODE_ID" >> "$GITHUB_OUTPUT"
+          echo "safe_to_merge=false" >> "$GITHUB_OUTPUT"
           [[ "$STATE" == "open" && "$DRAFT" == "false" && "$MERGEABLE" != "false" ]]
+
           mapfile -t SENSITIVE < <(gh api "repos/${{ github.repository }}/pulls/$PR/files?per_page=100" --paginate --jq '.[].filename' | grep -E '^(.github/|.*(Dockerfile|docker-compose|compose\.ya?ml)$)' || true)
           if (( ${#SENSITIVE[@]} > 0 )); then
-            echo "Sensitive files changed; autonomous merge is disabled."
+            echo "Sensitive files changed; autonomous merge is disabled for this PR."
             printf '%s\n' "${SENSITIVE[@]}"
-            exit 1
+            exit 0
           fi
 
+          echo "safe_to_merge=true" >> "$GITHUB_OUTPUT"
+
       - name: Verify CodeRabbit approval for current commit
-        if: steps.inspect.outcome == 'success'
+        if: steps.inspect.outcome == 'success' && steps.inspect.outputs.safe_to_merge == 'true'
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           PR: ${{ steps.pr.outputs.pr }}
           SHA: ${{ steps.inspect.outputs.head_sha }}
         run: |
           set -euo pipefail
-          STATE=$(gh api "repos/${{ github.repository }}/pulls/$PR/reviews" --paginate --jq --arg sha "$SHA" '[.[] | select(.user.login | test("coderabbit"; "i")) | select(.commit_id == $sha)] | sort_by(.submitted_at) | last | .state // ""')
+          STATE=$(gh api "repos/${{ github.repository }}/pulls/$PR/reviews" --paginate --jq '[.[] | select(.user.login | test("coderabbit"; "i")) | select(.commit_id == env.SHA)] | sort_by(.submitted_at) | last | .state // ""')
           echo "CodeRabbit review for $SHA: ${STATE:-none}"
           [[ "$STATE" == "APPROVED" ]]
 
       - name: Verify every completed check on current commit
-        if: steps.inspect.outcome == 'success'
+        if: steps.inspect.outcome == 'success' && steps.inspect.outputs.safe_to_merge == 'true'
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           SHA: ${{ steps.inspect.outputs.head_sha }}
@@ -86,7 +90,7 @@ jobs:
           fi
 
       - name: Enable GitHub auto-merge only
-        if: steps.inspect.outcome == 'success'
+        if: steps.inspect.outcome == 'success' && steps.inspect.outputs.safe_to_merge == 'true'
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           PR_NODE_ID: ${{ steps.inspect.outputs.node_id }}
