@@ -118,7 +118,7 @@ junit-platform-launcher = { group = "org.junit.platform", name = "junit-platform
 json-library = { group = "org.json", name = "json", version.ref = "json" }
 androidx-security-crypto = { group = "androidx.security", name = "security-crypto", version.ref = "securityCrypto" }
 firebase-bom = { group = "com.google.firebase", name = "firebase-bom", version.ref = "firebaseBom" }
-firebase-crashlytics = { group = "com.google.firebase", name = "firebase-crashlytics-ktx" }
+firebase-crashlytics = { group = "com.google.firebase", name = "firebase-crashlytics" }
 fastexcel = { group = "org.dhatim", name = "fastexcel", version.ref = "fastexcel" }
 
 [plugins]
