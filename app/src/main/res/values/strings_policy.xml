@@ -19,4 +19,6 @@
     <string name="policy_week_remote">remota</string>
     <string name="policy_validation_error">⚠ %1$s</string>
     <string name="policy_validation_warning">ℹ %1$s</string>
+    <string name="dashboard_days_center">%1$d de %2$d</string>
+    <string name="dashboard_days_center_caption">dias presenciais</string>
 </resources>
