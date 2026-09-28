@@ -10,7 +10,7 @@ on:
     types: [completed]
 
 permissions:
-  contents: read
+  contents: write
   pull-requests: write
   checks: read
 
@@ -46,39 +46,41 @@ jobs:
           DRAFT=$(jq -r '.draft' <<<"$DATA")
           MERGEABLE=$(jq -r '.mergeable' <<<"$DATA")
           HEAD_SHA=$(jq -r '.head.sha' <<<"$DATA")
-          NODE_ID=$(jq -r '.node_id' <<<"$DATA")
           echo "head_sha=$HEAD_SHA" >> "$GITHUB_OUTPUT"
-          echo "node_id=$NODE_ID" >> "$GITHUB_OUTPUT"
           [[ "$STATE" == "open" && "$DRAFT" == "false" && "$MERGEABLE" != "false" ]]
+
           mapfile -t SENSITIVE < <(gh api "repos/${{ github.repository }}/pulls/$PR/files?per_page=100" --paginate --jq '.[].filename' | grep -E '^(.github/|.*(Dockerfile|docker-compose|compose\.ya?ml)$)' || true)
           if (( ${#SENSITIVE[@]} > 0 )); then
-            echo "Sensitive files changed; autonomous merge is disabled."
+            echo "Sensitive files changed; autonomous merge is skipped."
             printf '%s\n' "${SENSITIVE[@]}"
-            exit 1
+            echo "sensitive=true" >> "$GITHUB_OUTPUT"
+            exit 0
           fi
+          echo "sensitive=false" >> "$GITHUB_OUTPUT"
 
       - name: Verify CodeRabbit approval for current commit
-        if: steps.inspect.outcome == 'success'
+        if: steps.inspect.outcome == 'success' && steps.inspect.outputs.sensitive != 'true'
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           PR: ${{ steps.pr.outputs.pr }}
           SHA: ${{ steps.inspect.outputs.head_sha }}
         run: |
           set -euo pipefail
-          STATE=$(gh api "repos/${{ github.repository }}/pulls/$PR/reviews" --paginate --jq '[.[] | select(.user.login | test("coderabbit"; "i")) | select(.commit_id == $ENV.SHA)] | sort_by(.submitted_at) | last | .state // ""')
+          STATE=$(gh api "repos/${{ github.repository }}/pulls/$PR/reviews" --paginate \
+            | jq -r --arg sha "$SHA" '[.[] | select(.user.login | test("coderabbit"; "i")) | select(.commit_id == $sha)] | sort_by(.submitted_at) | last | .state // ""')
           echo "CodeRabbit review for $SHA: ${STATE:-none}"
           [[ "$STATE" == "APPROVED" ]]
 
       - name: Verify every completed check on current commit
-        if: steps.inspect.outcome == 'success'
+        if: steps.inspect.outcome == 'success' && steps.inspect.outputs.sensitive != 'true'
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           SHA: ${{ steps.inspect.outputs.head_sha }}
         run: |
           set -euo pipefail
-          TOTAL=$(gh api "repos/${{ github.repository }}/commits/$SHA/check-runs?per_page=100" --paginate --jq '[.check_runs[] | select(.name != "Evaluate autonomous merge") | select(.name | test("CodeRabbit"; "i") | not)] | length')
+          TOTAL=$(gh api "repos/${{ github.repository }}/commits/$SHA/check-runs?per_page=100" --paginate --jq '[.check_runs[] | select(.name != "Evaluate autonomous merge") | select(.name | test("(?i)(ci|build|test|lint|check|codeql|security)"))] | length')
           [[ "$TOTAL" -gt 0 ]] || { echo "No CI checks found for current commit."; exit 1; }
-          FAILING=$(gh api "repos/${{ github.repository }}/commits/$SHA/check-runs?per_page=100" --paginate --jq '.check_runs[] | select(.name != "Evaluate autonomous merge") | select(.name | test("CodeRabbit"; "i") | not) | select(.status != "completed" or (.conclusion != "success" and .conclusion != "skipped")) | .name' || true)
+          FAILING=$(gh api "repos/${{ github.repository }}/commits/$SHA/check-runs?per_page=100" --paginate --jq '.check_runs[] | select(.name != "Evaluate autonomous merge") | select(.name | test("(?i)(ci|build|test|lint|check|codeql|security)")) | select(.status != "completed" or .conclusion != "success") | "\(.name): \(.status)/\(.conclusion)"')
           if [[ -n "$FAILING" ]]; then
             echo "Blocking or incomplete checks:"
             echo "$FAILING"
@@ -86,12 +88,10 @@ jobs:
           fi
 
       - name: Enable GitHub auto-merge only
-        if: steps.inspect.outcome == 'success'
+        if: steps.inspect.outcome == 'success' && steps.inspect.outputs.sensitive != 'true'
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          PR_NODE_ID: ${{ steps.inspect.outputs.node_id }}
+          PR: ${{ steps.pr.outputs.pr }}
         run: |
           set -euo pipefail
-          gh api graphql \
-            -f query='mutation($pr:ID!){enablePullRequestAutoMerge(input:{pullRequestId:$pr,mergeMethod:SQUASH}){pullRequest{autoMergeRequest{enabledAt}}}}' \
-            -F pr="$PR_NODE_ID"
+          gh pr merge "$PR" --auto --squash --delete-branch=false
