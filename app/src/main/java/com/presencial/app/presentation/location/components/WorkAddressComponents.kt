@@ -77,13 +77,17 @@ fun WorkAddressDialogs(params: WorkAddressDialogParams) {
             address = address,
             permissionsGranted = params.foregroundPermissions.allPermissionsGranted,
             isGeocoding = params.isGeocoding,
-            onDismiss = params.onStopEditing,
-            onConfirm = params.onSaveAddress,
-            onGeocodeRequest = params.onGeocodeRequest,
-            onUseCurrentLocation = params.onUseCurrentLocation,
-            geocodedLocation = params.geocodedLocation,
-            currentGpsLocation = params.currentGpsLocation,
-            onLocationConsumed = params.onLocationConsumed
+            callbacks = WorkAddressDialogCallbacks(
+                onDismiss = params.onStopEditing,
+                onConfirm = params.onSaveAddress,
+                onGeocodeRequest = params.onGeocodeRequest,
+                onUseCurrentLocation = params.onUseCurrentLocation,
+                onLocationConsumed = params.onLocationConsumed
+            ),
+            locations = WorkAddressDialogLocations(
+                geocodedLocation = params.geocodedLocation,
+                currentGpsLocation = params.currentGpsLocation
+            )
         )
     }
 }

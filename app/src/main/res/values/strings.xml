@@ -5,9 +5,7 @@
     <string name="widget_name">Presencial</string>
     <string name="widget_desc">Progresso mensal de presença, status do dia e toque para abrir o app.</string>
     <string name="widget_title_month">PRESENÇA EM %s</string>
-    <string name="widget_progress_format">%1$d / %2$d</string>
     <string name="widget_compact_progress">%1$d de %2$d dias</string>
-    <string name="widget_percentage_format">%d%% da meta</string>
     <string name="widget_goal_met">Meta atingida</string>
     <string name="widget_configure_goal">Configure sua meta</string>
     <string name="widget_today_presencial">Hoje: presencial ✓</string>
@@ -15,12 +13,10 @@
     <string name="widget_today_pending">Hoje: pendente</string>
     <string name="widget_preview_month">PRESENÇA EM AGOSTO</string>
     <string name="widget_preview_progress">8 de 13 dias</string>
-    <string name="widget_preview_percentage">62% da meta</string>
     <string name="widget_preview_remaining">Faltam 5 dias</string>
     <string name="widget_preview_today">Hoje: presencial ✓</string>
     <string name="notification_channel_name">Lembretes de presença</string>
     <string name="notification_channel_desc">Lembretes diários para registrar presença presencial</string>
-    <string name="notification_title">18h</string>
     <string name="notification_checkin_message">Você trabalhou presencialmente hoje?</string>
     <string name="notification_auto_checkin_title">Check-in automático</string>
     <string name="notification_auto_checkin_message">Sua presença foi registrada automaticamente ao chegar no trabalho.</string>
@@ -105,7 +101,6 @@
     <string name="onboarding_location_title">Onde fica o escritório?</string>
     <string name="onboarding_location_body">Opcional. Cadastre o local para o check-in automático quando você chegar. Pode pular e configurar depois.</string>
     <string name="onboarding_location_add">Adicionar local</string>
-    <string name="onboarding_location_skip">Pular por agora</string>
     <string name="onboarding_continue">Continuar</string>
     <string name="onboarding_finish">Concluir</string>
 </resources>
