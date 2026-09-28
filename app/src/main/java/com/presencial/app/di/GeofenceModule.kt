@@ -10,8 +10,8 @@ import javax.inject.Singleton
 
 @Module
 @InstallIn(SingletonComponent::class)
-abstract class GeofenceModule {
+interface GeofenceModule {
     @Binds
     @Singleton
-    abstract fun bindGeofenceRegistrar(impl: AndroidGeofenceRegistrar): GeofenceRegistrar
+    fun bindGeofenceRegistrar(impl: AndroidGeofenceRegistrar): GeofenceRegistrar
 }

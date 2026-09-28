@@ -14,18 +14,26 @@ import androidx.compose.runtime.setValue
 import com.presencial.app.domain.model.WorkAddress
 import com.presencial.app.presentation.location.WorkAddressDialogState
 
+data class WorkAddressDialogCallbacks(
+    val onDismiss: () -> Unit,
+    val onConfirm: (WorkAddressDialogResult) -> Unit,
+    val onGeocodeRequest: (String) -> Unit,
+    val onUseCurrentLocation: () -> Unit,
+    val onLocationConsumed: () -> Unit
+)
+
+data class WorkAddressDialogLocations(
+    val geocodedLocation: Pair<Double, Double>?,
+    val currentGpsLocation: Pair<Double, Double>?
+)
+
 @Composable
 internal fun WorkAddressDialog(
     address: WorkAddress?,
     permissionsGranted: Boolean,
     isGeocoding: Boolean,
-    onDismiss: () -> Unit,
-    onConfirm: (WorkAddressDialogResult) -> Unit,
-    onGeocodeRequest: (String) -> Unit,
-    onUseCurrentLocation: () -> Unit,
-    geocodedLocation: Pair<Double, Double>?,
-    currentGpsLocation: Pair<Double, Double>?,
-    onLocationConsumed: () -> Unit
+    callbacks: WorkAddressDialogCallbacks,
+    locations: WorkAddressDialogLocations
 ) {
     val isNewAddress = address == null || address.id == 0L
 
@@ -45,19 +53,19 @@ internal fun WorkAddressDialog(
         mutableDoubleStateOf(address?.longitude ?: 0.0)
     }
 
-    LaunchedEffect(geocodedLocation) {
-        geocodedLocation?.let { (lat, lng) ->
+    LaunchedEffect(locations.geocodedLocation) {
+        locations.geocodedLocation?.let { (lat, lng) ->
             latitude = lat
             longitude = lng
-            onLocationConsumed()
+            callbacks.onLocationConsumed()
         }
     }
 
-    LaunchedEffect(currentGpsLocation) {
-        currentGpsLocation?.let { (lat, lng) ->
+    LaunchedEffect(locations.currentGpsLocation) {
+        locations.currentGpsLocation?.let { (lat, lng) ->
             latitude = lat
             longitude = lng
-            onLocationConsumed()
+            callbacks.onLocationConsumed()
         }
     }
 
@@ -84,7 +92,7 @@ internal fun WorkAddressDialog(
     }
 
     AlertDialog(
-        onDismissRequest = onDismiss,
+        onDismissRequest = callbacks.onDismiss,
         title = { DialogTitle(state) },
         text = {
             DialogContent(
@@ -96,15 +104,15 @@ internal fun WorkAddressDialog(
                     latitude = lat
                     longitude = lng
                 },
-                onGeocodeClick = { onGeocodeRequest(addressText) },
-                onUseCurrentLocation = onUseCurrentLocation
+                onGeocodeClick = { callbacks.onGeocodeRequest(addressText) },
+                onUseCurrentLocation = callbacks.onUseCurrentLocation
             )
         },
         confirmButton = {
             WorkAddressConfirmButton(
                 state = state,
                 onConfirm = {
-                    onConfirm(
+                    callbacks.onConfirm(
                         WorkAddressDialogResult(
                             id = address?.id ?: 0L,
                             name = name,
@@ -119,7 +127,7 @@ internal fun WorkAddressDialog(
             )
         },
         dismissButton = {
-            TextButton(onClick = onDismiss) {
+            TextButton(onClick = callbacks.onDismiss) {
                 Text("Cancelar")
             }
         }

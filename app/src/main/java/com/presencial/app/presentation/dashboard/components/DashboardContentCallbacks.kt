@@ -18,16 +18,20 @@ import androidx.compose.ui.unit.dp
 import com.presencial.app.domain.model.DashboardData
 import com.presencial.app.presentation.components.MonitoringStatusBanner
 
+data class DashboardContentCallbacks(
+    val onToggleTodayCheckIn: () -> Unit,
+    val onMarkYesterdayPresencial: () -> Unit,
+    val onNavigateToWorkAddresses: () -> Unit
+)
+
 @Composable
 fun DashboardContent(
     dashboard: DashboardData,
     activeWorkAddressCount: Int,
     foregroundGranted: Boolean,
     backgroundGranted: Boolean,
-    onToggleTodayCheckIn: () -> Unit,
-    onMarkYesterdayPresencial: () -> Unit,
-    onNavigateToWorkAddresses: () -> Unit,
     haptic: HapticFeedback,
+    callbacks: DashboardContentCallbacks,
     scrollToActions: Boolean = false
 ) {
     val scrollState = rememberScrollState()
@@ -57,7 +61,7 @@ fun DashboardContent(
                 activeAddressCount = activeWorkAddressCount,
                 foregroundGranted = foregroundGranted,
                 backgroundGranted = backgroundGranted,
-                onClick = onNavigateToWorkAddresses
+                onClick = callbacks.onNavigateToWorkAddresses
             )
 
             DashboardSmartMessageSection(dashboard)
@@ -72,8 +76,8 @@ fun DashboardContent(
 
             DashboardActionSection(
                 dashboard = dashboard,
-                onToggleTodayCheckIn = onToggleTodayCheckIn,
-                onMarkYesterdayPresencial = onMarkYesterdayPresencial,
+                onToggleTodayCheckIn = callbacks.onToggleTodayCheckIn,
+                onMarkYesterdayPresencial = callbacks.onMarkYesterdayPresencial,
                 haptic = haptic,
                 buttonHeight = layout.buttonHeight
             )
