@@ -325,7 +325,11 @@ private fun SaturdaysConfigCard(countSaturdays: Boolean, onToggle: (Boolean) -> 
 }
 
 @Composable
-private fun OtherSettingsCard(onAbsences: () -> Unit, onWorkAddresses: () -> Unit, onAbout: () -> Unit) {
+private fun OtherSettingsCard(
+    onAbsences: () -> Unit,
+    onWorkAddresses: () -> Unit,
+    onAbout: () -> Unit
+) {
     Card(
         shape = RoundedCornerShape(CORNER_RADIUS_CARD.dp),
         colors = CardDefaults.cardColors(
@@ -337,37 +341,24 @@ private fun OtherSettingsCard(onAbsences: () -> Unit, onWorkAddresses: () -> Uni
             verticalArrangement = Arrangement.spacedBy(SPACING_CARD_CONTENT.dp)
         ) {
             Text(stringResource(R.string.settings_other_title), style = MaterialTheme.typography.titleLarge)
-            Button(
-                onClick = onAbsences,
-                modifier = Modifier.fillMaxWidth(),
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = MaterialTheme.colorScheme.secondaryContainer,
-                    contentColor = MaterialTheme.colorScheme.onSecondaryContainer
-                )
-            ) {
-                Text(stringResource(R.string.settings_manage_absences))
-            }
-            Button(
-                onClick = onWorkAddresses,
-                modifier = Modifier.fillMaxWidth(),
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = MaterialTheme.colorScheme.secondaryContainer,
-                    contentColor = MaterialTheme.colorScheme.onSecondaryContainer
-                )
-            ) {
-                Text(stringResource(R.string.settings_work_addresses))
-            }
-            Button(
-                onClick = onAbout,
-                modifier = Modifier.fillMaxWidth(),
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = MaterialTheme.colorScheme.secondaryContainer,
-                    contentColor = MaterialTheme.colorScheme.onSecondaryContainer
-                )
-            ) {
-                Text(stringResource(R.string.settings_about))
-            }
+            SettingsActionButton(R.string.settings_manage_absences, onAbsences)
+            SettingsActionButton(R.string.settings_work_addresses, onWorkAddresses)
+            SettingsActionButton(R.string.settings_about, onAbout)
         }
+    }
+}
+
+@Composable
+private fun SettingsActionButton(labelRes: Int, onClick: () -> Unit) {
+    Button(
+        onClick = onClick,
+        modifier = Modifier.fillMaxWidth(),
+        colors = ButtonDefaults.buttonColors(
+            containerColor = MaterialTheme.colorScheme.secondaryContainer,
+            contentColor = MaterialTheme.colorScheme.onSecondaryContainer
+        )
+    ) {
+        Text(stringResource(labelRes))
     }
 }
 

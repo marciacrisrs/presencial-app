@@ -22,13 +22,13 @@ class AndroidSmartMessageTextProvider @Inject constructor(
         context.getString(R.string.smart_msg_must_attend_all)
 
     override fun weeklyRequired(days: Int): String =
-        context.getString(R.string.smart_msg_weekly_required, days)
+        context.resources.getQuantityString(R.plurals.smart_msg_weekly_required, days, days)
 
     override fun homeOfficeUntilFriday(): String =
         context.getString(R.string.smart_msg_home_office_until_friday)
 
     override fun closeToGoal(remaining: Int): String =
-        context.getString(R.string.smart_msg_close_to_goal, remaining)
+        context.resources.getQuantityString(R.plurals.smart_msg_close_to_goal, remaining, remaining)
 
     override fun monthStartSuggestion(): String =
         context.getString(R.string.smart_msg_month_start)
