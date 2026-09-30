@@ -43,6 +43,7 @@ import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.MultiplePermissionsState
 import com.presencial.app.domain.model.WorkAddress
 import com.presencial.app.presentation.components.MonitoringStatusBanner
+import com.presencial.app.presentation.location.LocationProminentDisclosure
 import com.presencial.app.presentation.location.model.WorkAddressViewModel
 
 @OptIn(ExperimentalPermissionsApi::class)
@@ -115,8 +116,10 @@ fun WorkAddressContent(params: WorkAddressContentParams) {
         PermissionSection(
             foregroundGranted = params.foregroundPermissions.allPermissionsGranted,
             backgroundGranted = params.backgroundPermission.allPermissionsGranted,
-            onForegroundPermission = {
-                params.foregroundPermissions.launchMultiplePermissionRequest()
+            onForegroundPermission = { accepted ->
+                LocationProminentDisclosure.requestSystemPermission(accepted) {
+                    params.foregroundPermissions.launchMultiplePermissionRequest()
+                }
             },
             onBackgroundPermission = params.onBackgroundClick
         )
@@ -202,7 +205,7 @@ private fun LocationOnboardingHero() {
 private fun PermissionSection(
     foregroundGranted: Boolean,
     backgroundGranted: Boolean,
-    onForegroundPermission: () -> Unit,
+    onForegroundPermission: (accepted: Boolean) -> Unit,
     onBackgroundPermission: () -> Unit
 ) {
     AnimatedVisibility(
@@ -213,7 +216,7 @@ private fun PermissionSection(
             title = stringResource(R.string.location_permission_foreground_title),
             description = stringResource(R.string.location_permission_foreground_body),
             buttonText = stringResource(R.string.location_permission_grant),
-            onClick = onForegroundPermission
+            onClick = { onForegroundPermission(true) }
         )
     }
 
@@ -310,21 +313,16 @@ private fun BackgroundPermissionDialog(
 ) {
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text("Localização \"O tempo todo\"") },
-        text = {
-            Text(
-                "Para que o app registre seu comparecimento automaticamente, " +
-                "selecione a opção \"Permitir o tempo todo\" na próxima tela de configurações."
-            )
-        },
+        title = { Text(stringResource(R.string.location_permission_background_dialog_title)) },
+        text = { Text(stringResource(R.string.location_permission_background_body)) },
         confirmButton = {
             TextButton(onClick = onConfirm) {
-                Text("Ir para Configurações")
+                Text(stringResource(R.string.location_permission_background_confirm))
             }
         },
         dismissButton = {
             TextButton(onClick = onDismiss) {
-                Text("Cancelar")
+                Text(stringResource(R.string.location_permission_background_dismiss))
             }
         }
     )
