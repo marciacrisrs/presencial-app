@@ -26,7 +26,10 @@ class SettingsDataStore @Inject constructor(
 ) : SettingsRepository {
 
     init {
-        runBlocking { cleanupLegacyPreferences() }
+        runBlocking {
+            cleanupLegacyPreferences()
+            hydrateFromWidgetPrefsIfNeeded()
+        }
     }
 
     private object Keys {
@@ -121,21 +124,49 @@ class SettingsDataStore @Inject constructor(
         dataStore.edit { it.remove(LEGACY_OPENAI_API_KEY) }
     }
 
+    private suspend fun hydrateFromWidgetPrefsIfNeeded() {
+        val prefs = dataStore.data.first()
+        val widgetPrefs = context.getSharedPreferences(WIDGET_PREFS, Context.MODE_PRIVATE)
+        val snapshot = WidgetSettingsMirror.restoreFromWidgetPrefs(
+            dataStoreHasRequiredPercentage = prefs.contains(Keys.REQUIRED_PERCENTAGE),
+            dataStoreHasPolicy = prefs.contains(Keys.PRESENCE_POLICY),
+            widgetRequiredPercentage = widgetPrefs.takeIf { it.contains(PREF_REQUIRED_PERCENTAGE) }
+                ?.getInt(PREF_REQUIRED_PERCENTAGE, DEFAULT_PERCENTAGE),
+            widgetCountSaturdays = widgetPrefs.takeIf { it.contains(PREF_COUNT_SATURDAYS) }
+                ?.getBoolean(PREF_COUNT_SATURDAYS, false),
+            widgetPolicyJson = widgetPrefs.getString(PREF_PRESENCE_POLICY, null)
+        ) ?: return
+
+        dataStore.edit { stored ->
+            stored[Keys.REQUIRED_PERCENTAGE] = snapshot.requiredPercentage
+            stored[Keys.COUNT_SATURDAYS] = snapshot.countSaturdaysAsWorkdays
+            stored[Keys.PRESENCE_POLICY] = PresencePolicyMapper.toJson(snapshot.presencePolicy)
+        }
+        syncToSharedPreferences(
+            snapshot.requiredPercentage,
+            snapshot.countSaturdaysAsWorkdays,
+            snapshot.presencePolicy
+        )
+    }
+
     private fun syncToSharedPreferences(
         percentage: Int?,
         countSaturdays: Boolean?,
         policy: PresencePolicy?
     ) {
         context.getSharedPreferences(WIDGET_PREFS, Context.MODE_PRIVATE).edit().apply {
-            percentage?.let { putInt("required_percentage", it) }
-            countSaturdays?.let { putBoolean("count_saturdays_as_workdays", it) }
-            policy?.let { putString("presence_policy_json", PresencePolicyMapper.toJson(it)) }
+            percentage?.let { putInt(PREF_REQUIRED_PERCENTAGE, it) }
+            countSaturdays?.let { putBoolean(PREF_COUNT_SATURDAYS, it) }
+            policy?.let { putString(PREF_PRESENCE_POLICY, PresencePolicyMapper.toJson(it)) }
             apply()
         }
     }
 
     companion object {
         private const val WIDGET_PREFS = "presencial_settings"
+        private const val PREF_REQUIRED_PERCENTAGE = "required_percentage"
+        private const val PREF_COUNT_SATURDAYS = "count_saturdays_as_workdays"
+        private const val PREF_PRESENCE_POLICY = "presence_policy_json"
         private const val DEFAULT_PERCENTAGE = 40
         private val LEGACY_OPENAI_API_KEY = stringPreferencesKey("openai_api_key")
     }

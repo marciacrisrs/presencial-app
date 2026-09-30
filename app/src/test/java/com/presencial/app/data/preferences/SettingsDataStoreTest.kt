@@ -37,6 +37,8 @@ class SettingsDataStoreTest {
     fun setup() {
         every { context.getSharedPreferences(any(), any()) } returns sharedPrefs
         every { sharedPrefs.edit() } returns sharedPrefsEditor
+        every { sharedPrefs.contains(any()) } returns false
+        every { sharedPrefs.getString(any(), any()) } returns null
         every { dataStore.data } returns dataStoreFlow
         coEvery { dataStore.updateData(any()) } coAnswers {
             @Suppress("UNCHECKED_CAST")
@@ -195,5 +197,21 @@ class SettingsDataStoreTest {
         settingsDataStore.completeOnboarding()
 
         coVerify { dataStore.updateData(any()) }
+    }
+
+    @Test
+    fun `when DataStore is empty after Auto Backup, then hydrate policy from widget prefs`() {
+        every { sharedPrefs.contains("required_percentage") } returns true
+        every { sharedPrefs.contains("count_saturdays_as_workdays") } returns true
+        every { sharedPrefs.getInt("required_percentage", 40) } returns 60
+        every { sharedPrefs.getBoolean("count_saturdays_as_workdays", false) } returns true
+        every { sharedPrefs.getString("presence_policy_json", null) } returns PresencePolicyMapper.toJson(
+            PresencePolicy(companyName = "Acme", freePercentageEnabled = true, freePercentage = 60)
+        )
+
+        SettingsDataStore(context, dataStore)
+
+        io.mockk.verify { sharedPrefsEditor.putInt("required_percentage", 60) }
+        io.mockk.verify { sharedPrefsEditor.putBoolean("count_saturdays_as_workdays", true) }
     }
 }
