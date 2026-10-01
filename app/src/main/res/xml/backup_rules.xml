@@ -1,6 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <full-backup-content>
     <include domain="database" path="presencial.db"/>
+    <include domain="database" path="presencial.db-wal"/>
+    <include domain="database" path="presencial.db-shm"/>
     <include domain="sharedpref" path="presencial_settings.xml"/>
     <include domain="file" path="datastore/presencial_settings.preferences_pb"/>
 </full-backup-content>
