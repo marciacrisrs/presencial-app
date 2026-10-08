@@ -19,6 +19,31 @@ class ReleaseVersionBumpTest {
     }
 
     @Test
+    fun `falha ao abrir o pull request de versao nao cancela o envio para a Play`() {
+        val workflow = workflow("android-release.yml")
+        val create = workflow.indexOf("gh pr create")
+        val play = workflow.indexOf("Publish to Play internal testing")
+
+        assertTrue(create >= 0)
+        assertTrue(play > create, "O envio para a Play continua depois da tentativa de abrir o PR")
+        assertTrue(
+            workflow.substring(create, play).contains("|| echo \"::warning::"),
+            "Se o token do Actions não puder abrir o PR, o job segue para a Play"
+        )
+    }
+
+    @Test
+    fun `envio para a Play nao manda a edicao para revisao automaticamente`() {
+        val workflow = workflow("android-release.yml")
+        val play = workflow.indexOf("Publish to Play internal testing")
+        assertTrue(play >= 0)
+        assertTrue(
+            workflow.substring(play).contains("changesNotSentForReview: true"),
+            "A API da Play recusa o commit quando a edição iria para revisão sozinha"
+        )
+    }
+
+    @Test
     fun `dependency locks abre pull request em vez de enviar direto para main`() {
         val workflow = workflow("dependency-locks.yml")
 
