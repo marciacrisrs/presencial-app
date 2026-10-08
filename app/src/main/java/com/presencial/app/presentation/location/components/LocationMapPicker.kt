@@ -2,8 +2,6 @@ package com.presencial.app.presentation.location.components
 
 
 
-import android.annotation.SuppressLint
-
 import android.webkit.WebResourceRequest
 
 import android.webkit.WebSettings
@@ -39,8 +37,6 @@ import androidx.compose.ui.viewinterop.AndroidView
 val LocalSkipLocationMap = staticCompositionLocalOf { false }
 
 
-
-@SuppressLint("SetJavaScriptEnabled")
 
 @Composable
 
@@ -81,13 +77,18 @@ fun LocationMapPicker(
 
         if (hasValidCoords) {
 
-            webViewRef?.evaluateJavascript(
+            webViewRef?.let { webView ->
+                val currentUrl = webView.url
+                if (currentUrl != null && currentUrl.startsWith(ASSET_URL_PREFIX) && webView.settings.javaScriptEnabled) {
+                    webView.evaluateJavascript(
 
-                "setMarker($latitude, $longitude);",
+                        "setMarker($latitude, $longitude);",
 
-                null
+                        null
 
-            )
+                    )
+                }
+            }
 
         }
 
@@ -109,7 +110,7 @@ fun LocationMapPicker(
 
                 settings.apply {
 
-                    javaScriptEnabled = true
+                    javaScriptEnabled = false
 
                     domStorageEnabled = true
 
@@ -133,7 +134,11 @@ fun LocationMapPicker(
 
                     override fun onPageFinished(view: WebView, url: String) {
 
-                        view.evaluateJavascript("invalidateMapSize();", null)
+                        val isTrustedAsset = url.startsWith(ASSET_URL_PREFIX)
+                        view.settings.javaScriptEnabled = isTrustedAsset
+                        if (isTrustedAsset) {
+                            view.evaluateJavascript("invalidateMapSize();", null)
+                        }
 
                     }
 
