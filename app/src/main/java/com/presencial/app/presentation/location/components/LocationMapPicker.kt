@@ -68,9 +68,11 @@ fun LocationMapPicker(
             .height(200.dp),
         factory = { context ->
             WebView(context).apply {
+                val mapUrl = buildMapUrl(initialLat, initialLng)
                 settings.apply {
                     // Leaflet in osm_map.html only runs during document parse.
-                    javaScriptEnabled = true
+                    // Enable JavaScript only for trusted local asset content.
+                    javaScriptEnabled = mapUrl.startsWith(ASSET_URL_PREFIX)
                     domStorageEnabled = true
                     cacheMode = WebSettings.LOAD_DEFAULT
                     mixedContentMode = WebSettings.MIXED_CONTENT_NEVER_ALLOW
@@ -100,7 +102,7 @@ fun LocationMapPicker(
                     override fun shouldOverrideUrlLoading(view: WebView, url: String): Boolean =
                         handleUrl(url, onLocationChanged)
                 }
-                loadUrl(buildMapUrl(initialLat, initialLng))
+                loadUrl(mapUrl)
                 webViewRef = this
             }
         },
