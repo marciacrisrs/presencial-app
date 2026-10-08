@@ -15,8 +15,12 @@ class LocationMapPickerJsTest {
 
         val beforeLoad = source.substring(0, loadUrlIndex)
         assertTrue(
-            beforeLoad.contains("javaScriptEnabled = true"),
+            beforeLoad.contains("javaScriptEnabled = mapUrl.startsWith(ASSET_URL_PREFIX)"),
             "Leaflet scripts in osm_map.html run only during document parse, so JS must be on before loadUrl"
+        )
+        assertTrue(
+            source.contains("ASSET_URL_PREFIX/osm_map.html"),
+            "The picker only loads the bundled map, so the trusted-asset check is true before parse"
         )
         assertFalse(
             beforeLoad.contains("javaScriptEnabled = false"),
