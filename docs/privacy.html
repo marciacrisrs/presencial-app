@@ -38,6 +38,10 @@
       line-height: 1.25;
       margin: 0 0 0.5rem;
     }
+    h2 {
+      font-size: 1.15rem;
+      margin: 1.75rem 0 0.5rem;
+    }
     .app {
       margin: 0 0 1.5rem;
       color: var(--muted);
@@ -61,9 +65,13 @@
 
     <p>Por padrão, todos os dados permanecem no dispositivo.</p>
 
+    <h2>Localização</h2>
+    <p>O Presencial acessa e coleta dados de localização do dispositivo — precisa, aproximada e em segundo plano, mesmo com o aplicativo fechado — para registrar sua presença automaticamente quando você permanece no local de trabalho cadastrado. Se você permitir, a localização atual também pode preencher o endereço de trabalho. Esses dados de localização ficam no aparelho e não são enviados a servidores do Presencial.</p>
+    <p>Location: the app accesses and collects device location data, including precise, approximate, and background location, to record attendance at the saved workplace. This location data stays on the device and is not uploaded to Presencial servers.</p>
+
     <p>Se você escolher uma pasta em Configurações, um backup JSON é gravado nessa pasta pelo Storage Access Framework do Android. A pasta pode ser local ou pertencer a um provedor de armazenamento em nuvem, conforme o app de armazenamento escolhido por você; o Presencial não usa OAuth nem acessa sua conta do provedor.</p>
 
-    <p>A busca de endereço usa geocodificação do sistema (pode enviar o texto do endereço ao Google/Apple). O mapa carrega tiles do OpenStreetMap via internet. Mensagens na home são geradas localmente, sem envio a serviços externos.</p>
+    <p>A busca de endereço usa geocodificação do sistema (pode enviar o texto do endereço ao Google/Apple). A geocodificação reversa pode enviar as coordenadas ao mesmo serviço para obter cidade e estado. O mapa carrega tiles do OpenStreetMap via internet para a área exibida, que pode ser o local de trabalho ou a sua posição. Mensagens na home são geradas localmente, sem envio a serviços externos.</p>
 
     <p>Em versões de produção da Play Store, relatórios de falha (stack trace, modelo do aparelho e versão do app, sem dados de presença) podem ser enviados ao Firebase Crashlytics para corrigir bugs. Builds de depuração não coletam esses relatórios.</p>
 

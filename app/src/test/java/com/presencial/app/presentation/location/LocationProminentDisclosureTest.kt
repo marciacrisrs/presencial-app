@@ -21,6 +21,17 @@ class LocationProminentDisclosureTest {
     }
 
     @Test
+    fun `politica de privacidade divulga coleta de localizacao inclusive em segundo plano`() {
+        val inApp = File("src/main/res/values/strings_privacy.xml").readText()
+        val hosted = File("../docs/privacy.html").readText()
+        listOf(inApp, hosted).forEach { policy ->
+            assertTrue(LocationProminentDisclosure.disclosesLocationDataUse(policy))
+            assertTrue(policy.contains("segundo plano"))
+        }
+        assertTrue(hosted.contains("background location"))
+    }
+
+    @Test
     fun `permissao do sistema so abre depois do consentimento`() {
         var requested = false
         LocationProminentDisclosure.requestSystemPermission(accepted = false) { requested = true }
