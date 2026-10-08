@@ -25,16 +25,11 @@ permissions:
   contents: write
   id-token: write
   attestations: write
+  pull-requests: write
 
 jobs:
   bundle:
     name: Bundle release AAB
-    permissions:
-      contents: write
-      id-token: write
-      attestations: write
-      pull-requests: write
-      actions: write
     runs-on: ubuntu-latest
     timeout-minutes: 60
     env:
@@ -197,11 +192,8 @@ jobs:
               --base main \
               --head "$branch" \
               --title "chore(release): ${VERSION_NAME} (${VERSION_CODE})" \
-              --body "Bump de versão gerado pelo Release AAB. O ruleset de main exige pull request e os checks obrigatórios antes do merge."
+              --body "Bump de versão gerado pelo Release AAB. O ruleset de main exige este pull request. Um commit seu neste branch dispara os checks, porque o token do Actions não inicia outros workflows."
           fi
-          for workflow in android.yml codeql.yml dependency-review.yml scorecard.yml; do
-            gh workflow run "$workflow" --ref "$branch"
-          done
 
       - name: Publish to Play internal testing
         if: ${{ env.PLAY_STORE_SERVICE_ACCOUNT_JSON != '' && (github.event_name != 'workflow_dispatch' || !inputs.skip_play_upload) }}

@@ -8,14 +8,11 @@ on:
 
 permissions:
   contents: write
+  pull-requests: write
 
 jobs:
   lock:
     name: Generate dependency locks
-    permissions:
-      contents: write
-      pull-requests: write
-      actions: write
     runs-on: ubuntu-24.04
     timeout-minutes: 20
     steps:
@@ -58,8 +55,5 @@ jobs:
               --base main \
               --head "$branch" \
               --title "build: update Gradle dependency locks" \
-              --body "Lockfiles gerados em main. O ruleset exige pull request e os checks obrigatórios antes do merge."
+              --body "Lockfiles gerados em main. O ruleset exige pull request. Um commit seu neste branch dispara os checks, porque o token do Actions não inicia outros workflows."
           fi
-          for workflow in android.yml codeql.yml dependency-review.yml scorecard.yml; do
-            gh workflow run "$workflow" --ref "$branch"
-          done

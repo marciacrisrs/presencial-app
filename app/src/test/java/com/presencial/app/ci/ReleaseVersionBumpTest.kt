@@ -13,10 +13,9 @@ class ReleaseVersionBumpTest {
 
         assertFalse(workflow.contains("HEAD:main"))
         assertFalse(workflow.contains("HEAD:\${GITHUB_REF_NAME}"))
+        assertFalse(workflow.contains("actions: write"))
         assertTrue(workflow.contains("gh pr create"))
-        assertTrue(workflow.contains("gh workflow run"))
         assertTrue(workflow.contains("pull-requests: write"))
-        assertTrue(workflow.contains("actions: write"))
     }
 
     @Test
@@ -24,30 +23,9 @@ class ReleaseVersionBumpTest {
         val workflow = workflow("dependency-locks.yml")
 
         assertFalse(Regex("(?m)^\\s*git push\\s*$").containsMatchIn(workflow))
+        assertFalse(workflow.contains("actions: write"))
         assertTrue(workflow.contains("gh pr create"))
-        assertTrue(workflow.contains("gh workflow run"))
-    }
-
-    @Test
-    fun `actions write fica no job e nao no token do workflow inteiro`() {
-        listOf("android-release.yml", "dependency-locks.yml").forEach { name ->
-            val workflow = workflow(name)
-            val header = workflow.substringBefore("jobs:")
-            assertFalse(header.contains("actions: write"), name)
-            assertTrue(workflow.substringAfter("jobs:").contains("actions: write"), name)
-        }
-    }
-
-    @Test
-    fun `checks obrigatorios aceitam disparo para o commit do bump`() {
-        listOf(
-            "android.yml",
-            "codeql.yml",
-            "dependency-review.yml",
-            "scorecard.yml",
-        ).forEach { name ->
-            assertTrue(workflow(name).contains("workflow_dispatch:"), name)
-        }
+        assertTrue(workflow.contains("pull-requests: write"))
     }
 
     private fun workflow(name: String): String {

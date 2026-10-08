@@ -12,7 +12,7 @@ Dispara com **tag `v*`** (ex.: `v1.0.14`) ou manualmente em **Actions → Releas
 4. Opcionalmente roda `verifyCi` (lint, detekt, testes, cobertura)
 5. Gera AAB release assinado
 6. Publica artefatos no GitHub Actions
-7. Abre um pull request com o bump de versão (`chore/release-<versão>`) e dispara os checks obrigatórios. O merge continua manual, porque `main` não aceita push direto
+7. Abre um pull request com o bump de versão (`chore/release-<versão>`). O merge continua manual. Um commit seu nesse branch dispara os checks, porque o token do Actions não inicia outros workflows
 8. Envia para faixa **internal** da Play (`completed` por padrão)
 
 ## Secrets GitHub (Settings → Secrets and variables → Actions)
