@@ -192,7 +192,8 @@ jobs:
               --base main \
               --head "$branch" \
               --title "chore(release): ${VERSION_NAME} (${VERSION_CODE})" \
-              --body "Bump de versão gerado pelo Release AAB. O ruleset de main exige este pull request. Um commit seu neste branch dispara os checks, porque o token do Actions não inicia outros workflows."
+              --body "Bump de versão gerado pelo Release AAB. O ruleset de main exige este pull request. Um commit seu neste branch dispara os checks, porque o token do Actions não inicia outros workflows." \
+              || echo "::warning::Não foi possível abrir o pull request de versão com o token do Actions. O branch ${branch} já foi publicado."
           fi
 
       - name: Publish to Play internal testing
