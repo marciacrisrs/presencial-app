@@ -8,12 +8,14 @@ on:
 
 permissions:
   contents: write
-  pull-requests: write
-  actions: write
 
 jobs:
   lock:
     name: Generate dependency locks
+    permissions:
+      contents: write
+      pull-requests: write
+      actions: write
     runs-on: ubuntu-24.04
     timeout-minutes: 20
     steps:

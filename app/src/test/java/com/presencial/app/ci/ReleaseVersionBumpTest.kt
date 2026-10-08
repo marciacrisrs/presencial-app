@@ -29,6 +29,16 @@ class ReleaseVersionBumpTest {
     }
 
     @Test
+    fun `actions write fica no job e nao no token do workflow inteiro`() {
+        listOf("android-release.yml", "dependency-locks.yml").forEach { name ->
+            val workflow = workflow(name)
+            val header = workflow.substringBefore("jobs:")
+            assertFalse(header.contains("actions: write"), name)
+            assertTrue(workflow.substringAfter("jobs:").contains("actions: write"), name)
+        }
+    }
+
+    @Test
     fun `checks obrigatorios aceitam disparo para o commit do bump`() {
         listOf(
             "android.yml",
