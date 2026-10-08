@@ -8,6 +8,8 @@ on:
 
 permissions:
   contents: write
+  pull-requests: write
+  actions: write
 
 jobs:
   lock:
@@ -34,8 +36,11 @@ jobs:
           chmod +x gradlew
           ./gradlew resolveAndLockAll --write-locks --stacktrace --no-daemon
 
-      - name: Commit generated lockfiles
+      - name: Open lockfile pull request
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
+          set -euo pipefail
           if git diff --quiet --exit-code -- '**/gradle.lockfile' '**/buildscript-gradle.lockfile'; then
             echo "Dependency lockfiles are already up to date."
             exit 0
@@ -44,4 +49,15 @@ jobs:
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add '**/gradle.lockfile' '**/buildscript-gradle.lockfile'
           git commit -m "build: update Gradle dependency locks"
-          git push
+          branch="chore/dependency-locks"
+          git push --force origin "HEAD:refs/heads/${branch}"
+          if ! gh pr view "$branch" --json url --jq .url >/dev/null 2>&1; then
+            gh pr create \
+              --base main \
+              --head "$branch" \
+              --title "build: update Gradle dependency locks" \
+              --body "Lockfiles gerados em main. O ruleset exige pull request e os checks obrigatórios antes do merge."
+          fi
+          for workflow in android.yml codeql.yml dependency-review.yml scorecard.yml; do
+            gh workflow run "$workflow" --ref "$branch"
+          done

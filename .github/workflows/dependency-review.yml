@@ -4,6 +4,7 @@ on:
   pull_request:
     branches:
       - main
+  workflow_dispatch:
 
 permissions:
   contents: read
@@ -14,6 +15,18 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Dependency Review
+        if: github.event_name == 'pull_request'
         uses: actions/dependency-review-action@a1d282b36b6f3519aa1f3fc636f609c47dddb294 # v5.0.0
         with:
           fail-on-severity: moderate
+      - name: Dependency Review for dispatched ref
+        if: github.event_name == 'workflow_dispatch'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          base="${{ github.event.repository.default_branch }}"
+          count=$(gh api "repos/${GITHUB_REPOSITORY}/dependency-graph/compare/${base}...${GITHUB_SHA}" \
+            --jq '[(.changes // [])[] | (.vulnerabilities // [])[] | select(.severity == "moderate" or .severity == "high" or .severity == "critical")] | length')
+          echo "New moderate+ vulnerabilities: ${count}"
+          test "$count" -eq 0

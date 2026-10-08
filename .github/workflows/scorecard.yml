@@ -7,6 +7,7 @@ on:
   pull_request:
     branches:
       - main
+  workflow_dispatch:
   schedule:
     - cron: "23 9 * * 1"
 
@@ -33,7 +34,7 @@ jobs:
         with:
           results_file: scorecard-results.sarif
           results_format: sarif
-          publish_results: ${{ github.event_name != 'pull_request' }}
+          publish_results: ${{ github.event_name != 'pull_request' && github.ref == 'refs/heads/main' }}
 
       - name: Upload Scorecard results
         uses: github/codeql-action/upload-sarif@b96794f015dfd88f77b49b1c93e0fa7110f94c63 # v4
