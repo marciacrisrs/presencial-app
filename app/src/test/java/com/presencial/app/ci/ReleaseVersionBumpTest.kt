@@ -33,6 +33,17 @@ class ReleaseVersionBumpTest {
     }
 
     @Test
+    fun `envio para a Play nao manda a edicao para revisao automaticamente`() {
+        val workflow = workflow("android-release.yml")
+        val play = workflow.indexOf("Publish to Play internal testing")
+        assertTrue(play >= 0)
+        assertTrue(
+            workflow.substring(play).contains("changesNotSentForReview: true"),
+            "A API da Play recusa o commit quando a edição iria para revisão sozinha"
+        )
+    }
+
+    @Test
     fun `dependency locks abre pull request em vez de enviar direto para main`() {
         val workflow = workflow("dependency-locks.yml")
 

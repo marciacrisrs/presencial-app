@@ -205,6 +205,7 @@ jobs:
           releaseFiles: app/build/outputs/bundle/release/*.aab
           tracks: internal
           status: ${{ env.PLAY_RELEASE_STATUS }}
+          changesNotSentForReview: true
           releaseName: ${{ steps.version.outputs.name }} (${{ steps.version.outputs.code }})
           mappingFile: app/build/outputs/mapping/release/mapping.txt
           debugSymbols: ${{ steps.native_symbols.outputs.path }}
