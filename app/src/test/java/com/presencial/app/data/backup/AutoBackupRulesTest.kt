@@ -13,6 +13,7 @@ class AutoBackupRulesTest {
         val includes = includePaths(repoFile("app/src/main/res/xml/backup_rules.xml"), "include")
 
         assertTrue(includes.contains(DATABASE_NAME), "Room database must remain in Auto Backup")
+        assertRoomWalSidecarsIncluded(includes)
         assertTrue(
             includes.contains(WIDGET_SHARED_PREFS),
             "Widget SharedPreferences mirror must remain in Auto Backup"
@@ -31,6 +32,7 @@ class AutoBackupRulesTest {
 
         listOf(cloudIncludes, transferIncludes).forEach { includes ->
             assertTrue(includes.contains(DATABASE_NAME), "Room database must remain in Auto Backup")
+            assertRoomWalSidecarsIncluded(includes)
             assertTrue(
                 includes.contains(WIDGET_SHARED_PREFS),
                 "Widget SharedPreferences mirror must remain in Auto Backup"
@@ -40,6 +42,17 @@ class AutoBackupRulesTest {
                 "Dashboard settings live in DataStore, not SharedPreferences"
             )
         }
+    }
+
+    private fun assertRoomWalSidecarsIncluded(includes: Set<Pair<String, String>>) {
+        assertTrue(
+            includes.contains(DATABASE_WAL),
+            "Room uses WAL; backing up only presencial.db drops uncheckpointed check-ins"
+        )
+        assertTrue(
+            includes.contains(DATABASE_SHM),
+            "Room WAL restore also needs the shared-memory sidecar"
+        )
     }
 
     private fun includePaths(
@@ -69,6 +82,8 @@ class AutoBackupRulesTest {
 
     private companion object {
         val DATABASE_NAME = "database" to "presencial.db"
+        val DATABASE_WAL = "database" to "presencial.db-wal"
+        val DATABASE_SHM = "database" to "presencial.db-shm"
         val WIDGET_SHARED_PREFS = "sharedpref" to "presencial_settings.xml"
         val DATASTORE_SETTINGS = "file" to "datastore/presencial_settings.preferences_pb"
     }
