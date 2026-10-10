@@ -1,5 +1,6 @@
 # Presencial
 
+Baixe na Play Store: https://play.google.com/store/apps/details?id=com.presencial.app
 
 
 Presencial nasceu de um problema real: acompanhar uma meta mensal de presença sem precisar fazer contas manualmente.
