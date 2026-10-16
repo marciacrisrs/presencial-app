@@ -8,7 +8,12 @@ import com.presencial.app.util.TestDataFactory
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.mockk
+import java.util.concurrent.atomic.AtomicInteger
+import java.util.concurrent.atomic.AtomicReference
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.runTest
+import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
@@ -143,4 +148,60 @@ class SyncGeofencesUseCaseTest {
             coVerify { syncStatusRepository.markFailure("permission denied") }
             coVerify(exactly = 0) { syncStatusRepository.markSuccess() }
         }
+
+    @Test
+    fun `when addresses change during a retry delay, then retry uses the latest list`() = runTest {
+        val address = TestDataFactory.createWorkAddress(isActive = true)
+        val activeAddresses = AtomicReference(listOf(address))
+        coEvery { workAddressRepository.getActiveAddresses() } answers { activeAddresses.get() }
+        coEvery { geofenceRegistrar.registerGeofences(any()) } coAnswers {
+            activeAddresses.set(emptyList())
+            throw GeofenceRegistrationException("network unavailable", retryable = true)
+        }
+
+        useCase()
+
+        coVerify(exactly = 1) { geofenceRegistrar.registerGeofences(listOf(address)) }
+        coVerify(exactly = 1) { geofenceRegistrar.removeGeofences() }
+        coVerify { syncStatusRepository.markSuccess() }
+        coVerify(exactly = 0) { syncStatusRepository.markFailure(any()) }
+    }
+
+    @Test
+    fun `when two syncs overlap, then registrar calls stay serial and the waiter sees fresh addresses`() =
+        runTest {
+            val address = TestDataFactory.createWorkAddress(isActive = true)
+            val activeAddresses = AtomicReference(listOf(address))
+            val inFlight = AtomicInteger(0)
+            val maxInFlight = AtomicInteger(0)
+            coEvery { workAddressRepository.getActiveAddresses() } answers { activeAddresses.get() }
+            coEvery { geofenceRegistrar.registerGeofences(any()) } coAnswers {
+                val current = inFlight.incrementAndGet()
+                maxInFlight.updateAndGet { maxOf(it, current) }
+                delay(REGISTRAR_HOLD_MS)
+                inFlight.decrementAndGet()
+            }
+            coEvery { geofenceRegistrar.removeGeofences() } coAnswers {
+                val current = inFlight.incrementAndGet()
+                maxInFlight.updateAndGet { maxOf(it, current) }
+                delay(REGISTRAR_HOLD_MS)
+                inFlight.decrementAndGet()
+            }
+
+            val first = launch { useCase() }
+            testScheduler.runCurrent()
+            activeAddresses.set(emptyList())
+            val second = launch { useCase() }
+            first.join()
+            second.join()
+
+            assertEquals(1, maxInFlight.get())
+            coVerify(exactly = 1) { geofenceRegistrar.registerGeofences(listOf(address)) }
+            coVerify(exactly = 1) { geofenceRegistrar.removeGeofences() }
+            coVerify(exactly = 2) { syncStatusRepository.markSuccess() }
+        }
+
+    private companion object {
+        const val REGISTRAR_HOLD_MS = 1_000L
+    }
 }
